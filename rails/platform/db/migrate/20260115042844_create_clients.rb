@@ -2,8 +2,8 @@ class CreateClients < ActiveRecord::Migration[8.0]
   def change
     create_table :clients do |t|
       t.references :tenant, null: false, foreign_key: true
-      t.string :code
-      t.string :name
+      t.string :code, null: false
+      t.string :name, null: false
       t.string :name_kana
       t.string :postal_code
       t.text :address
@@ -15,6 +15,6 @@ class CreateClients < ActiveRecord::Migration[8.0]
 
       t.timestamps
     end
-    add_index :clients, :code, unique: true
+    add_index :clients, %i[tenant_id code], unique: true
   end
 end
