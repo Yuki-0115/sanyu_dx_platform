@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_15_060000) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_15_070000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -101,8 +101,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_060000) do
     t.text "labor_details"
     t.text "outsourcing_details"
     t.decimal "transportation_cost", precision: 15, scale: 2
+    t.bigint "revised_by_id"
+    t.datetime "revised_at"
     t.index ["foreman_id"], name: "index_daily_reports_on_foreman_id"
     t.index ["project_id"], name: "index_daily_reports_on_project_id"
+    t.index ["revised_by_id"], name: "index_daily_reports_on_revised_by_id"
     t.index ["tenant_id", "project_id", "report_date"], name: "idx_on_tenant_id_project_id_report_date_7d91023d27", unique: true
     t.index ["tenant_id"], name: "index_daily_reports_on_tenant_id"
   end
@@ -276,6 +279,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_060000) do
   add_foreign_key "budgets", "tenants"
   add_foreign_key "clients", "tenants"
   add_foreign_key "daily_reports", "employees", column: "foreman_id"
+  add_foreign_key "daily_reports", "employees", column: "revised_by_id"
   add_foreign_key "daily_reports", "projects"
   add_foreign_key "daily_reports", "tenants"
   add_foreign_key "employees", "partners"
