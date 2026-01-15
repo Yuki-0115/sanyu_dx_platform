@@ -26,33 +26,16 @@ GitHub remote設定後に `gh issue create` で登録してください。
 
 ---
 
-## Issue #2: 日報入力内容が案件の実績原価に反映されない
+## Issue #2: 日報入力内容が案件の実績原価に反映されない ✅ 完了
 
 ### 概要
 日報で入力した労務費・材料費・外注費・輸送費が、案件（Project）の実績原価（actual_cost）に集計・反映されていない。
 
-### 原因 / 背景
-- 日報に原価関連フィールド（labor_details, materials_used, outsourcing_details, transportation_cost）は追加済み
-- しかしこれらを集計してProjectのactual_costに反映するロジックが未実装
-
-### 解決策 / 対応内容
-1. DailyReportに金額フィールドを追加（現在はテキストのみ）
-   - `labor_cost` (decimal)
-   - `material_cost` (decimal)
-   - `outsourcing_cost` (decimal)
-   - `transportation_cost` は既存
-2. Projectモデルに `calculate_actual_cost` メソッド追加
-3. DailyReport確定時にProjectのactual_costを再計算
-4. または、`Project#actual_cost` をメソッドとして動的に計算
-
-### 影響範囲
-- `app/models/project.rb`
-- `app/models/daily_report.rb`
-- `db/migrate/` （日報に金額カラム追加）
-- `app/views/daily_reports/_form.html.erb`
-
-### セキュリティ影響
-なし
+### 対応完了（2026-01-15）
+- DailyReportに金額フィールド追加（labor_cost, material_cost, outsourcing_cost）
+- Project.calculated_actual_costで確定済み日報から動的計算
+- 日報フォームに原価金額入力欄を追加（青色ボックス内）
+- commit: ebedef6
 
 ---
 

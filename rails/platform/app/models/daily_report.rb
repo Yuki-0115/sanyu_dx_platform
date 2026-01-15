@@ -15,7 +15,7 @@ class DailyReport < ApplicationRecord
   }.freeze
 
   # Associations
-  belongs_to :project
+  belongs_to :project, optional: true  # 常用（外部現場）の場合はnil
   belongs_to :foreman, class_name: "Employee"
   belongs_to :revised_by, class_name: "Employee", optional: true
 
@@ -27,17 +27,27 @@ class DailyReport < ApplicationRecord
 
   # Validations
   validates :report_date, presence: true
-  validates :report_date, uniqueness: { scope: %i[tenant_id project_id] }
+  validates :report_date, uniqueness: { scope: %i[tenant_id project_id] }, unless: :is_external?
   validates :status, inclusion: { in: STATUSES }
   validates :weather, inclusion: { in: WEATHERS }, allow_blank: true
+  validates :external_site_name, presence: true, if: :is_external?
+  validates :project_id, presence: true, unless: :is_external?
 
   # Defaults
   attribute :status, :string, default: "draft"
+  attribute :is_external, :boolean, default: false
 
   # Scopes
   scope :draft, -> { where(status: "draft") }
   scope :confirmed, -> { where(status: "confirmed") }
   scope :by_date, ->(date) { where(report_date: date) }
+  scope :internal, -> { where(is_external: false) }
+  scope :external, -> { where(is_external: true) }
+
+  # 現場名（案件名 or 外部現場名）
+  def site_name
+    is_external? ? external_site_name : project&.name
+  end
 
   # Instance methods
   def confirm!

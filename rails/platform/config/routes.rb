@@ -26,6 +26,13 @@ Rails.application.routes.draw do
     end
   end
 
+  # 常用日報（外部現場）
+  resources :external_daily_reports, only: %i[index new create show edit update] do
+    member do
+      post :confirm
+    end
+  end
+
   # Offsets (仮社員相殺)
   resources :offsets do
     member do

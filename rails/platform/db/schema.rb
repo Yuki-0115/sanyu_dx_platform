@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_15_090000) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_15_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -88,7 +88,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_090000) do
 
   create_table "daily_reports", force: :cascade do |t|
     t.bigint "tenant_id", null: false
-    t.bigint "project_id", null: false
+    t.bigint "project_id"
     t.bigint "foreman_id", null: false
     t.date "report_date", null: false
     t.string "weather"
@@ -108,6 +108,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_090000) do
     t.decimal "labor_cost", precision: 15, scale: 2, default: "0.0"
     t.decimal "material_cost", precision: 15, scale: 2, default: "0.0"
     t.decimal "outsourcing_cost", precision: 15, scale: 2, default: "0.0"
+    t.boolean "is_external", default: false, null: false
+    t.string "external_site_name"
     t.index ["foreman_id"], name: "index_daily_reports_on_foreman_id"
     t.index ["project_id"], name: "index_daily_reports_on_project_id"
     t.index ["revised_by_id"], name: "index_daily_reports_on_revised_by_id"

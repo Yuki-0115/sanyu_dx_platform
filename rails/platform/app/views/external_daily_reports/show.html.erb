@@ -1,0 +1,137 @@
+<div class="max-w-4xl mx-auto">
+  <div class="mb-6 flex justify-between items-start">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">常用日報</h1>
+      <p class="mt-1 text-sm text-gray-500">
+        <%= @daily_report.external_site_name %> - <%= @daily_report.report_date.strftime("%Y年%m月%d日") %>
+      </p>
+    </div>
+    <div class="flex space-x-3">
+      <% if @daily_report.status == "draft" %>
+        <%= button_to "確定", confirm_external_daily_report_path(@daily_report),
+            method: :post,
+            class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700" %>
+      <% end %>
+      <%= link_to "編集", edit_external_daily_report_path(@daily_report),
+          class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+      <%= link_to "一覧へ", external_daily_reports_path,
+          class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    </div>
+  </div>
+
+  <!-- ステータス表示 -->
+  <div class="mb-6">
+    <% case @daily_report.status %>
+    <% when "draft" %>
+      <span class="px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800">下書き</span>
+    <% when "confirmed" %>
+      <span class="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800">
+        確定（<%= @daily_report.confirmed_at&.strftime("%Y/%m/%d %H:%M") %>）
+      </span>
+    <% when "revised" %>
+      <span class="px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800">
+        修正済（<%= @daily_report.revised_at&.strftime("%Y/%m/%d %H:%M") %> by <%= @daily_report.revised_by&.name %>）
+      </span>
+    <% end %>
+  </div>
+
+  <!-- 基本情報 -->
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">基本情報</h3>
+    <dl class="grid grid-cols-2 gap-4">
+      <div>
+        <dt class="text-sm font-medium text-gray-500">報告日</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @daily_report.report_date.strftime("%Y年%m月%d日") %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">現場名</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @daily_report.external_site_name %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">天気</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= DailyReport::WEATHER_LABELS[@daily_report.weather] || "-" %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">職長</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @daily_report.foreman&.name %></dd>
+      </div>
+    </dl>
+    <% if @daily_report.work_content.present? %>
+      <div class="mt-4">
+        <dt class="text-sm font-medium text-gray-500">作業内容</dt>
+        <dd class="mt-1 text-sm text-gray-900 whitespace-pre-wrap"><%= @daily_report.work_content %></dd>
+      </div>
+    <% end %>
+    <% if @daily_report.notes.present? %>
+      <div class="mt-4">
+        <dt class="text-sm font-medium text-gray-500">備考</dt>
+        <dd class="mt-1 text-sm text-gray-900 whitespace-pre-wrap"><%= @daily_report.notes %></dd>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 原価情報 -->
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">原価情報</h3>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-blue-50 rounded-lg mb-4">
+      <div class="text-center">
+        <dt class="text-xs text-gray-500">労務費</dt>
+        <dd class="text-lg font-semibold text-gray-900"><%= number_to_currency(@daily_report.labor_cost || 0, unit: "¥", precision: 0) %></dd>
+      </div>
+      <div class="text-center">
+        <dt class="text-xs text-gray-500">材料費</dt>
+        <dd class="text-lg font-semibold text-gray-900"><%= number_to_currency(@daily_report.material_cost || 0, unit: "¥", precision: 0) %></dd>
+      </div>
+      <div class="text-center">
+        <dt class="text-xs text-gray-500">外注費</dt>
+        <dd class="text-lg font-semibold text-gray-900"><%= number_to_currency(@daily_report.outsourcing_cost || 0, unit: "¥", precision: 0) %></dd>
+      </div>
+      <div class="text-center">
+        <dt class="text-xs text-gray-500">輸送費</dt>
+        <dd class="text-lg font-semibold text-gray-900"><%= number_to_currency(@daily_report.transportation_cost || 0, unit: "¥", precision: 0) %></dd>
+      </div>
+    </div>
+    <div class="text-right">
+      <span class="text-sm text-gray-500">合計：</span>
+      <span class="text-xl font-bold text-gray-900"><%= number_to_currency(@daily_report.total_cost, unit: "¥", precision: 0) %></span>
+    </div>
+  </div>
+
+  <!-- 出面一覧 -->
+  <div class="bg-white shadow rounded-lg p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">出面一覧</h3>
+    <% working_attendances = @daily_report.attendances.select { |a| a.attendance_type != "absent" } %>
+    <% if working_attendances.any? %>
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">氏名</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">出勤区分</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">労働時間</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">走行距離</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% working_attendances.each do |attendance| %>
+            <tr>
+              <td class="px-4 py-3 text-sm text-gray-900">
+                <%= attendance.employee&.name || attendance.partner_worker_name || "不明" %>
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-500">
+                <%= { "full" => "全日", "half" => "半日", "absent" => "欠勤" }[attendance.attendance_type] %>
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-500">
+                <%= attendance.hours_worked ? "#{attendance.hours_worked}h" : "-" %>
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-500">
+                <%= attendance.travel_distance ? "#{attendance.travel_distance}km" : "-" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="text-sm text-gray-500">出勤者なし</p>
+    <% end %>
+  </div>
+</div>
