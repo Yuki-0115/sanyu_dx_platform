@@ -44,7 +44,7 @@ class LineWorksNotifier
   def notify_budget_confirmed(budget)
     notify(
       type: :budget_confirmed,
-      message: "実行予算が確定しました\n案件名: #{budget.project&.name}\n予算額: #{format_currency(budget.total_amount)}",
+      message: "実行予算が確定しました\n案件名: #{budget.project&.name}\n予算額: #{format_currency(budget.total_cost)}",
       data: { budget_id: budget.id, project_id: budget.project_id }
     )
   end

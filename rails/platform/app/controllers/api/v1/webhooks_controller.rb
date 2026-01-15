@@ -68,7 +68,7 @@ module Api
           budget: {
             id: budget.id,
             project_name: budget.project&.name,
-            total_amount: budget.total_amount,
+            total_cost: budget.total_cost,
             confirmed_at: budget.confirmed_at
           },
           message: "実行予算が確定しました: #{budget.project&.name}"
