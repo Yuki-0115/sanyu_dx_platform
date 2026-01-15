@@ -4,6 +4,9 @@ class Employee < ApplicationRecord
   include TenantScoped
   include Auditable
 
+  # Devise modules
+  devise :database_authenticatable, :recoverable, :rememberable, :trackable, :validatable
+
   # Constants
   EMPLOYMENT_TYPES = %w[regular temporary].freeze
   ROLES = %w[admin management accounting sales engineering construction worker].freeze
@@ -22,7 +25,7 @@ class Employee < ApplicationRecord
   validates :name, presence: true
   validates :employment_type, presence: true, inclusion: { in: EMPLOYMENT_TYPES }
   validates :role, presence: true, inclusion: { in: ROLES }
-  validates :email, uniqueness: { scope: :tenant_id }, allow_blank: true
+  validates :email, presence: true, uniqueness: { scope: :tenant_id }
 
   # Scopes
   scope :regular, -> { where(employment_type: "regular") }
@@ -43,5 +46,28 @@ class Employee < ApplicationRecord
 
   def management?
     role == "management"
+  end
+
+  # Role check methods
+  ROLES.each do |r|
+    define_method("#{r}?") { role == r } unless method_defined?("#{r}?")
+  end
+
+  # Check if user can access a feature based on role
+  def can_access?(feature)
+    permissions = {
+      admin: :all,
+      management: %i[dashboard projects estimates budgets daily_reports invoices offsets],
+      accounting: %i[dashboard invoices payments offsets expenses],
+      sales: %i[dashboard projects estimates clients],
+      engineering: %i[dashboard projects budgets daily_reports],
+      construction: %i[dashboard projects daily_reports attendances expenses],
+      worker: %i[daily_reports attendances]
+    }
+
+    allowed = permissions[role.to_sym]
+    return true if allowed == :all
+
+    allowed&.include?(feature.to_sym)
   end
 end

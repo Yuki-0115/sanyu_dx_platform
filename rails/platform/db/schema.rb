@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_15_043546) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_15_044453) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -117,8 +117,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_043546) do
     t.string "role", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.string "reset_password_token"
+    t.datetime "reset_password_sent_at"
+    t.datetime "remember_created_at"
+    t.integer "sign_in_count", default: 0, null: false
+    t.datetime "current_sign_in_at"
+    t.datetime "last_sign_in_at"
+    t.string "current_sign_in_ip"
+    t.string "last_sign_in_ip"
     t.index ["employment_type"], name: "index_employees_on_employment_type"
     t.index ["partner_id"], name: "index_employees_on_partner_id"
+    t.index ["reset_password_token"], name: "index_employees_on_reset_password_token", unique: true
     t.index ["role"], name: "index_employees_on_role"
     t.index ["tenant_id", "code"], name: "index_employees_on_tenant_id_and_code", unique: true
     t.index ["tenant_id", "email"], name: "index_employees_on_tenant_id_and_email", unique: true
