@@ -176,4 +176,135 @@
 
 ---
 
-**Last Updated**: 2025-01-15
+## n8n API連携
+
+**テスト日**:
+**テスター**:
+
+### APIエンドポイント疎通確認
+
+#### 前提条件
+- Dockerコンテナが起動済み
+- N8N_API_KEY が .env.local に設定済み
+
+#### 手順（curl使用）
+
+```bash
+# 案件一覧取得
+curl -X GET "http://localhost:3001/api/v1/projects" \
+  -H "X-API-Key: development_api_key_change_in_production" \
+  -H "X-Tenant-Code: sunyutech"
+
+# 案件サマリー取得
+curl -X GET "http://localhost:3001/api/v1/projects/summary" \
+  -H "X-API-Key: development_api_key_change_in_production" \
+  -H "X-Tenant-Code: sunyutech"
+
+# 日報一覧取得
+curl -X GET "http://localhost:3001/api/v1/daily_reports" \
+  -H "X-API-Key: development_api_key_change_in_production" \
+  -H "X-Tenant-Code: sunyutech"
+
+# 未確認日報取得
+curl -X GET "http://localhost:3001/api/v1/daily_reports/unconfirmed" \
+  -H "X-API-Key: development_api_key_change_in_production" \
+  -H "X-Tenant-Code: sunyutech"
+```
+
+#### 期待結果
+- 各エンドポイントがJSONレスポンスを返す
+- X-API-Keyが不正な場合は401エラー
+- X-Tenant-Codeが不正な場合は404エラー
+
+#### 実際の結果
+- [ ] OK
+- [ ] NG（詳細: ）
+
+### Webhookテスト
+
+#### 手順
+
+```bash
+# 案件作成通知
+curl -X POST "http://localhost:3001/api/v1/webhooks/project_created" \
+  -H "X-API-Key: development_api_key_change_in_production" \
+  -H "X-Tenant-Code: sunyutech" \
+  -H "Content-Type: application/json" \
+  -d '{"project_id": 1}'
+```
+
+#### 期待結果
+- notification オブジェクトを含むJSONレスポンスが返る
+
+#### 実際の結果
+- [ ] OK
+- [ ] NG（詳細: ）
+
+---
+
+## 経営ダッシュボード
+
+**テスト日**:
+**テスター**:
+
+### ダッシュボード表示
+
+#### 前提条件
+- 経営権限（management）でログイン済み
+- 案件データが1件以上登録済み
+
+#### 手順
+1. http://localhost:3001/ にアクセス
+
+#### 期待結果
+- 案件数サマリーカードが表示される
+- ステータス別内訳が表示される
+- 最近の案件リストが表示される
+
+#### 実際の結果
+- [ ] OK
+- [ ] NG（詳細: ）
+
+---
+
+## 仮社員相殺
+
+**テスト日**:
+**テスター**:
+
+### 相殺データ登録
+
+#### 前提条件
+- 経営・経理権限でログイン済み
+- 協力会社（仮社員あり）が登録済み
+
+#### 手順
+1. 相殺メニューをクリック
+2. 新規登録をクリック
+3. 協力会社・対象月・給与総額・社会保険・売上を入力
+4. 保存をクリック
+
+#### 期待結果
+- 相殺データが登録される
+- 相殺額・残高が自動計算される
+
+#### 実際の結果
+- [ ] OK
+- [ ] NG（詳細: ）
+
+### 相殺確定
+
+#### 手順
+1. 相殺詳細画面で「確定」をクリック
+
+#### 期待結果
+- ステータスが「confirmed」になる
+- 確定後は編集不可
+
+#### 実際の結果
+- [ ] OK
+- [ ] NG（詳細: ）
+
+---
+
+**Last Updated**: 2026-01-15

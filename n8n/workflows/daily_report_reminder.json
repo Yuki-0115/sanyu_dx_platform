@@ -1,0 +1,141 @@
+{
+  "name": "日報リマインダー",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "毎時チェック",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://platform:3000/api/v1/daily_reports/unconfirmed",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $env.N8N_API_KEY }}"
+            },
+            {
+              "name": "X-Tenant-Code",
+              "value": "sunyutech"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-unconfirmed",
+      "name": "未確認日報取得",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.total }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-count",
+      "name": "未確認あり？",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.LINE_WORKS_WEBHOOK_URL }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "={{ $json.message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "send-notification",
+      "name": "LINE WORKS通知",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 200]
+    }
+  ],
+  "connections": {
+    "毎時チェック": {
+      "main": [
+        [
+          {
+            "node": "未確認日報取得",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "未確認日報取得": {
+      "main": [
+        [
+          {
+            "node": "未確認あり？",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "未確認あり？": {
+      "main": [
+        [
+          {
+            "node": "LINE WORKS通知",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "sunyutech"
+    }
+  ]
+}

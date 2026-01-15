@@ -33,9 +33,27 @@ Rails.application.routes.draw do
     end
   end
 
-  # API routes (for future use)
-  # namespace :api do
-  #   namespace :v1 do
-  #   end
-  # end
+  # API routes for n8n integration
+  namespace :api do
+    namespace :v1 do
+      # Data endpoints
+      resources :projects, only: %i[index show] do
+        collection do
+          get :summary
+        end
+      end
+      resources :daily_reports, only: %i[index show] do
+        collection do
+          get :unconfirmed
+        end
+      end
+
+      # Webhook endpoints (called by n8n for notifications)
+      post "webhooks/project_created", to: "webhooks#project_created"
+      post "webhooks/four_point_completed", to: "webhooks#four_point_completed"
+      post "webhooks/budget_confirmed", to: "webhooks#budget_confirmed"
+      post "webhooks/daily_report_submitted", to: "webhooks#daily_report_submitted"
+      post "webhooks/offset_confirmed", to: "webhooks#offset_confirmed"
+    end
+  end
 end
