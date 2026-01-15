@@ -10,20 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_15_070000) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_15_080000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "attendances", force: :cascade do |t|
     t.bigint "tenant_id", null: false
     t.bigint "daily_report_id", null: false
-    t.bigint "employee_id", null: false
+    t.bigint "employee_id"
     t.string "attendance_type", null: false
     t.time "start_time"
     t.time "end_time"
     t.integer "travel_distance"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "hours_worked", precision: 4, scale: 1
+    t.string "partner_worker_name"
     t.index ["daily_report_id"], name: "index_attendances_on_daily_report_id"
     t.index ["employee_id"], name: "index_attendances_on_employee_id"
     t.index ["tenant_id", "daily_report_id", "employee_id"], name: "idx_attendances_unique", unique: true
