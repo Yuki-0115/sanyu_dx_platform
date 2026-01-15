@@ -11,6 +11,9 @@ Rails.application.routes.draw do
   # Dashboard (root)
   root "dashboard#index"
 
+  # 経営ダッシュボード
+  get "management", to: "management_dashboard#index", as: :management_dashboard
+
   # Projects
   resources :projects do
     member do
