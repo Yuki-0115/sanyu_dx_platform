@@ -16,6 +16,9 @@ Rails.application.routes.draw do
     member do
       post :complete_four_point
     end
+    resource :budget, only: %i[show new create edit update] do
+      post :confirm
+    end
   end
 
   # API routes (for future use)

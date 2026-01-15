@@ -1,0 +1,129 @@
+<div class="min-h-screen bg-gray-100">
+  <%= render "shared/navbar" %>
+
+  <main class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">実行予算</h2>
+          <p class="text-gray-600">
+            <%= link_to @project.name, project_path(@project), class: "text-blue-600 hover:underline" %>
+          </p>
+        </div>
+        <div class="flex space-x-2">
+          <% if @budget.persisted? && @budget.status == "draft" %>
+            <%= link_to "編集", edit_project_budget_path(@project),
+                class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+          <% end %>
+          <%= link_to "案件に戻る", project_path(@project),
+              class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+        </div>
+      </div>
+
+      <% if @budget.persisted? %>
+        <div class="bg-white shadow rounded-lg p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-medium text-gray-900">予算内訳</h3>
+            <span class="px-3 py-1 text-sm font-medium rounded-full <%= @budget.status == 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
+              <%= @budget.status == 'confirmed' ? '確定済' : '下書き' %>
+            </span>
+          </div>
+
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="bg-gray-50 rounded-lg p-4">
+              <dt class="text-sm font-medium text-gray-500">材料費</dt>
+              <dd class="mt-1 text-xl font-semibold text-gray-900">
+                <%= number_to_currency(@budget.material_cost, unit: "¥", precision: 0) %>
+              </dd>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <dt class="text-sm font-medium text-gray-500">外注費</dt>
+              <dd class="mt-1 text-xl font-semibold text-gray-900">
+                <%= number_to_currency(@budget.outsourcing_cost, unit: "¥", precision: 0) %>
+              </dd>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <dt class="text-sm font-medium text-gray-500">労務費</dt>
+              <dd class="mt-1 text-xl font-semibold text-gray-900">
+                <%= number_to_currency(@budget.labor_cost, unit: "¥", precision: 0) %>
+              </dd>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <dt class="text-sm font-medium text-gray-500">経費</dt>
+              <dd class="mt-1 text-xl font-semibold text-gray-900">
+                <%= number_to_currency(@budget.expense_cost, unit: "¥", precision: 0) %>
+              </dd>
+            </div>
+          </dl>
+
+          <div class="mt-6 border-t border-gray-200 pt-6">
+            <div class="bg-blue-50 rounded-lg p-4">
+              <div class="flex justify-between items-center">
+                <dt class="text-lg font-medium text-gray-900">合計原価</dt>
+                <dd class="text-2xl font-bold text-blue-600">
+                  <%= number_to_currency(@budget.total_cost, unit: "¥", precision: 0) %>
+                </dd>
+              </div>
+            </div>
+          </div>
+
+          <% if @project.order_amount && @project.order_amount > 0 %>
+            <div class="mt-6 border-t border-gray-200 pt-6">
+              <h4 class="text-md font-medium text-gray-900 mb-4">利益分析</h4>
+              <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                  <dt class="text-sm font-medium text-gray-500">受注金額</dt>
+                  <dd class="mt-1 text-lg font-semibold text-gray-900">
+                    <%= number_to_currency(@project.order_amount, unit: "¥", precision: 0) %>
+                  </dd>
+                </div>
+                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                  <dt class="text-sm font-medium text-gray-500">予算原価</dt>
+                  <dd class="mt-1 text-lg font-semibold text-gray-900">
+                    <%= number_to_currency(@budget.total_cost, unit: "¥", precision: 0) %>
+                  </dd>
+                </div>
+                <% profit = @project.order_amount - @budget.total_cost %>
+                <% profit_rate = (@project.order_amount > 0) ? (profit / @project.order_amount * 100).round(1) : 0 %>
+                <div class="text-center p-4 <%= profit >= 0 ? 'bg-green-50' : 'bg-red-50' %> rounded-lg">
+                  <dt class="text-sm font-medium text-gray-500">予算粗利</dt>
+                  <dd class="mt-1 text-lg font-semibold <%= profit >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <%= number_to_currency(profit, unit: "¥", precision: 0) %>
+                    <span class="text-sm">(<%= profit_rate %>%)</span>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          <% end %>
+
+          <% if @budget.notes.present? %>
+            <div class="mt-6 border-t border-gray-200 pt-6">
+              <h4 class="text-md font-medium text-gray-900 mb-2">備考</h4>
+              <p class="text-gray-600"><%= simple_format(@budget.notes) %></p>
+            </div>
+          <% end %>
+
+          <% if @budget.status == "draft" %>
+            <div class="mt-6 border-t border-gray-200 pt-6">
+              <%= button_to "予算を確定する", confirm_project_budget_path(@project),
+                  method: :post,
+                  data: { turbo_confirm: "この予算を確定しますか？確定後は編集できなくなります。" },
+                  class: "w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700" %>
+            </div>
+          <% else %>
+            <div class="mt-6 border-t border-gray-200 pt-6 text-sm text-gray-500">
+              確定者: <%= @budget.confirmed_by&.name || "不明" %><br>
+              確定日時: <%= @budget.confirmed_at ? l(@budget.confirmed_at, format: :short) : "不明" %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="bg-white shadow rounded-lg p-6 text-center">
+          <p class="text-gray-500 mb-4">この案件にはまだ実行予算が設定されていません</p>
+          <%= link_to "実行予算を作成", new_project_budget_path(@project),
+              class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+        </div>
+      <% end %>
+    </div>
+  </main>
+</div>

@@ -148,6 +148,37 @@
               </div>
             <% end %>
           </div>
+
+          <% if current_employee.can_access?(:budgets) %>
+            <!-- 実行予算 -->
+            <div class="bg-white shadow rounded-lg p-6 mt-6">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">実行予算</h3>
+                <%= link_to "詳細", project_budget_path(@project),
+                    class: "text-sm text-blue-600 hover:underline" %>
+              </div>
+              <% if @project.budget %>
+                <dl class="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <dt class="text-gray-500">予算原価</dt>
+                    <dd class="font-medium"><%= number_to_currency(@project.budget.total_cost, unit: "¥", precision: 0) %></dd>
+                  </div>
+                  <div>
+                    <dt class="text-gray-500">ステータス</dt>
+                    <dd>
+                      <span class="px-2 py-1 text-xs font-medium rounded-full <%= @project.budget.status == 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
+                        <%= @project.budget.status == 'confirmed' ? '確定' : '下書き' %>
+                      </span>
+                    </dd>
+                  </div>
+                </dl>
+              <% else %>
+                <p class="text-sm text-gray-500">未作成</p>
+                <%= link_to "予算を作成", new_project_budget_path(@project),
+                    class: "mt-2 inline-block text-sm text-blue-600 hover:underline" %>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       </div>
     </div>
