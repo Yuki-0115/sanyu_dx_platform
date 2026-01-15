@@ -24,6 +24,15 @@ class DashboardController < ApplicationController
     @recent_projects = Project.includes(:client)
                               .order(updated_at: :desc)
                               .limit(5)
+
+    # 直近の請求書
+    @recent_invoices = Invoice.includes(project: :client)
+                              .order(created_at: :desc)
+                              .limit(5)
+
+    # 請求書サマリー
+    @unpaid_invoices_count = Invoice.where(status: %w[issued waiting]).count
+    @unpaid_invoices_amount = Invoice.where(status: %w[issued waiting]).sum(:total_amount) || 0
   end
 
   private
