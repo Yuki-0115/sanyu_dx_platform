@@ -74,4 +74,9 @@ class DailyReport < ApplicationRecord
       self.revised_by = user
     end
   end
+
+  # 日報の原価合計
+  def total_cost
+    (labor_cost || 0) + (material_cost || 0) + (outsourcing_cost || 0) + (transportation_cost || 0)
+  end
 end

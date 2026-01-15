@@ -45,11 +45,32 @@ class Project < ApplicationRecord
     update!(four_point_completed_at: Time.current, status: "ordered")
   end
 
+  # 実績原価（日報から動的計算）
+  def calculated_actual_cost
+    daily_reports.where(status: %w[confirmed revised]).sum do |report|
+      report.total_cost
+    end
+  end
+
+  # actual_cost は DB の値があればそれを使い、なければ計算
+  def actual_cost
+    read_attribute(:actual_cost) || calculated_actual_cost
+  end
+
   # Profit margin calculation
   def profit_margin
     return nil unless order_amount && order_amount.positive?
-    return nil unless actual_cost
 
-    ((order_amount - actual_cost) / order_amount * 100).round(2)
+    cost = actual_cost
+    return nil unless cost && cost.positive?
+
+    ((order_amount - cost) / order_amount * 100).round(2)
+  end
+
+  # 粗利額
+  def gross_profit
+    return nil unless order_amount
+
+    order_amount - (actual_cost || 0)
   end
 end

@@ -52,34 +52,53 @@
   <div class="bg-white shadow rounded-lg p-6">
     <h3 class="text-lg font-medium text-gray-900 mb-4">原価情報</h3>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <!-- 金額入力 -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 p-4 bg-blue-50 rounded-lg">
       <div>
-        <%= f.label :materials_used, "使用材料", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.text_area :materials_used, rows: 3, placeholder: "例: 鉄筋 D13 500kg、コンクリート 5m³",
+        <%= f.label :labor_cost, "労務費 (円)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :labor_cost, step: 1, placeholder: "0",
             class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
       </div>
-
       <div>
-        <%= f.label :machines_used, "使用機械", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.text_area :machines_used, rows: 3, placeholder: "例: クレーン 1台、バックホー 2台",
+        <%= f.label :material_cost, "材料費 (円)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :material_cost, step: 1, placeholder: "0",
             class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
       </div>
-
       <div>
-        <%= f.label :labor_details, "労務", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.text_area :labor_details, rows: 3, placeholder: "例: 型枠工 3人、鉄筋工 2人",
+        <%= f.label :outsourcing_cost, "外注費 (円)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :outsourcing_cost, step: 1, placeholder: "0",
             class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
       </div>
-
-      <div>
-        <%= f.label :outsourcing_details, "外注", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.text_area :outsourcing_details, rows: 3, placeholder: "例: 電気工事 ○○電気、配管工事 △△設備",
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      </div>
-
       <div>
         <%= f.label :transportation_cost, "輸送費 (円)", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.number_field :transportation_cost, step: 1, placeholder: "例: 50000",
+        <%= f.number_field :transportation_cost, step: 1, placeholder: "0",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+    </div>
+
+    <!-- 詳細メモ -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div>
+        <%= f.label :materials_used, "使用材料（メモ）", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :materials_used, rows: 2, placeholder: "例: 鉄筋 D13 500kg、コンクリート 5m³",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= f.label :machines_used, "使用機械（メモ）", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :machines_used, rows: 2, placeholder: "例: クレーン 1台、バックホー 2台",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= f.label :labor_details, "労務（メモ）", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :labor_details, rows: 2, placeholder: "例: 型枠工 3人、鉄筋工 2人",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= f.label :outsourcing_details, "外注（メモ）", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :outsourcing_details, rows: 2, placeholder: "例: 電気工事 ○○電気、配管工事 △△設備",
             class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
       </div>
     </div>
