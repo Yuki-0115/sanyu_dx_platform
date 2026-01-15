@@ -56,4 +56,33 @@ GitHub remote設定後に `gh issue create` で登録してください。
 
 ---
 
+## Issue #3: 常用現場対応（案件に「その他」選択肢追加）
+
+### 概要
+常用（日雇い・応援）で他社現場に行く場合、自社案件として登録されていない現場で作業することがある。
+日報入力時に「その他」を選択し、現場名を自由入力できるようにしたい。
+
+### 原因 / 背景
+- 現状は自社案件（Project）に紐づく日報しか作成できない
+- 常用で他社現場に行く場合の出面管理ができない
+- 売上は発生するが案件管理対象外のケース
+
+### 解決策 / 対応内容
+1. DailyReportに `is_external` フラグ追加
+2. DailyReportに `external_site_name` フィールド追加
+3. 日報作成時に案件選択で「その他（常用）」を選択可能に
+4. 「その他」選択時は現場名を自由入力
+5. project_id を nullable に変更
+
+### 影響範囲
+- `app/models/daily_report.rb`
+- `app/controllers/daily_reports_controller.rb`
+- `app/views/daily_reports/_form.html.erb`
+- `db/migrate/` （external関連カラム追加）
+
+### セキュリティ影響
+なし
+
+---
+
 **Last Updated**: 2026-01-15
