@@ -1,0 +1,83 @@
+<div class="max-w-6xl mx-auto">
+  <div class="sm:flex sm:items-center sm:justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">請求書一覧</h1>
+      <p class="mt-1 text-sm text-gray-500"><%= @project.name %></p>
+    </div>
+    <div class="mt-4 sm:mt-0 flex space-x-3">
+      <%= link_to new_project_invoice_path(@project), class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700" do %>
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        新規請求書
+      <% end %>
+      <%= link_to "案件へ戻る", project_path(@project),
+          class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    </div>
+  </div>
+
+  <% if @invoices.any? %>
+    <div class="bg-white shadow overflow-hidden rounded-lg">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">請求番号</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">請求日</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">支払期限</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">請求額</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">入金額</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ステータス</th>
+            <th class="px-6 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @invoices.each do |invoice| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <%= invoice.invoice_number || "-" %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <%= invoice.invoice_date&.strftime("%Y/%m/%d") || "-" %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <%= invoice.due_date&.strftime("%Y/%m/%d") || "-" %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                <%= number_to_currency(invoice.total_amount, unit: "¥", precision: 0) %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                <%= number_to_currency(invoice.paid_amount, unit: "¥", precision: 0) %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% badge_class = case invoice.status
+                   when "paid" then "bg-green-100 text-green-800"
+                   when "issued", "waiting" then "bg-blue-100 text-blue-800"
+                   when "overdue" then "bg-red-100 text-red-800"
+                   else "bg-yellow-100 text-yellow-800"
+                   end %>
+                <span class="px-2 py-1 text-xs font-medium rounded-full <%= badge_class %>">
+                  <%= { "draft" => "下書き", "issued" => "発行済", "waiting" => "入金待ち", "paid" => "入金済", "overdue" => "期限超過" }[invoice.status] %>
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <%= link_to "詳細", project_invoice_path(@project, invoice), class: "text-blue-600 hover:text-blue-900" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="text-center py-12 bg-white rounded-lg shadow">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">請求書がありません</h3>
+      <div class="mt-6">
+        <%= link_to new_project_invoice_path(@project), class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700" do %>
+          新規請求書を作成
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

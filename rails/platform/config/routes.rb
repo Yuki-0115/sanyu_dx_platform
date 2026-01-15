@@ -28,6 +28,12 @@ Rails.application.routes.draw do
         post :confirm
       end
     end
+    resources :invoices do
+      member do
+        post :issue
+      end
+      resources :payments, only: %i[new create destroy]
+    end
   end
 
   # 常用日報（外部現場）

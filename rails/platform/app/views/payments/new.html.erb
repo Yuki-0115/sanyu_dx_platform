@@ -1,0 +1,74 @@
+<div class="max-w-2xl mx-auto">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">入金登録</h1>
+    <p class="mt-1 text-sm text-gray-500">
+      <%= @project.name %> - 請求書 <%= @invoice.invoice_number || "##{@invoice.id}" %>
+    </p>
+  </div>
+
+  <!-- 請求情報サマリー -->
+  <div class="bg-blue-50 rounded-lg p-4 mb-6">
+    <dl class="grid grid-cols-3 gap-4 text-sm">
+      <div>
+        <dt class="text-gray-500">請求総額</dt>
+        <dd class="font-semibold text-gray-900"><%= number_to_currency(@invoice.total_amount, unit: "¥", precision: 0) %></dd>
+      </div>
+      <div>
+        <dt class="text-gray-500">入金済</dt>
+        <dd class="font-semibold text-green-600"><%= number_to_currency(@invoice.paid_amount, unit: "¥", precision: 0) %></dd>
+      </div>
+      <div>
+        <dt class="text-gray-500">残高</dt>
+        <dd class="font-semibold text-red-600"><%= number_to_currency(@invoice.remaining_amount, unit: "¥", precision: 0) %></dd>
+      </div>
+    </dl>
+  </div>
+
+  <%= form_with model: [@project, @invoice, @payment], class: "space-y-6" do |f| %>
+    <% if @payment.errors.any? %>
+      <div class="rounded-md bg-red-50 p-4">
+        <ul class="list-disc list-inside text-sm text-red-700">
+          <% @payment.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="bg-white shadow rounded-lg p-6 space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <%= f.label :payment_date, "入金日", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.date_field :payment_date, required: true,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
+
+        <div>
+          <%= f.label :amount, "入金額 (円)", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.number_field :amount, step: 1, required: true, placeholder: @invoice.remaining_amount.to_i,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
+
+        <div>
+          <%= f.label :payment_method, "入金方法", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.select :payment_method, [["振込", "transfer"], ["現金", "cash"], ["小切手", "check"], ["その他", "other"]],
+              { include_blank: "選択してください" },
+              { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :notes, "備考", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :notes, rows: 2, placeholder: "振込元、摘要など",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+    </div>
+
+    <div class="flex justify-end space-x-3">
+      <%= link_to "キャンセル", project_invoice_path(@project, @invoice),
+          class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+      <%= f.submit "入金登録",
+          class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 cursor-pointer" %>
+    </div>
+  <% end %>
+</div>
