@@ -110,7 +110,7 @@
       <div class="bg-white shadow rounded-lg p-6 mb-6">
         <h3 class="text-lg font-medium text-gray-900 mb-4">出面一覧</h3>
 
-        <% present_attendances = @daily_report.attendances.select(&:present?) %>
+        <% present_attendances = @daily_report.attendances.reject { |a| a.attendance_type == 'absent' } %>
         <% if present_attendances.any? %>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -118,25 +118,23 @@
                 <tr>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">氏名</th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">出勤区分</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">時間</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">労働時間</th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">走行距離</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 <% present_attendances.each do |attendance| %>
                   <tr>
-                    <td class="px-4 py-3 text-sm text-gray-900"><%= attendance.employee.name %></td>
+                    <td class="px-4 py-3 text-sm text-gray-900">
+                      <%= attendance.employee&.name || attendance.partner_worker_name || "不明" %>
+                    </td>
                     <td class="px-4 py-3 text-sm">
                       <span class="px-2 py-1 text-xs font-medium rounded-full <%= attendance.attendance_type == 'full' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' %>">
                         <%= attendance.attendance_type == 'full' ? '全日' : '半日' %>
                       </span>
                     </td>
                     <td class="px-4 py-3 text-sm text-gray-500">
-                      <% if attendance.start_time && attendance.end_time %>
-                        <%= attendance.start_time.strftime("%H:%M") %> 〜 <%= attendance.end_time.strftime("%H:%M") %>
-                      <% else %>
-                        -
-                      <% end %>
+                      <%= attendance.hours_worked ? "#{attendance.hours_worked}h" : "-" %>
                     </td>
                     <td class="px-4 py-3 text-sm text-gray-500">
                       <%= attendance.travel_distance ? "#{attendance.travel_distance}km" : "-" %>
@@ -147,7 +145,7 @@
             </table>
           </div>
           <p class="mt-4 text-sm text-gray-500">
-            出勤者: <%= present_attendances.count(&:present?) %>名
+            出勤者: <%= present_attendances.count %>名
             （全日: <%= present_attendances.count { |a| a.attendance_type == 'full' } %>名,
             半日: <%= present_attendances.count { |a| a.attendance_type == 'half' } %>名）
           </p>
