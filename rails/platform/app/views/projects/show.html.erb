@@ -1,0 +1,155 @@
+<div class="min-h-screen bg-gray-100">
+  <%= render "shared/navbar" %>
+
+  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900"><%= @project.name %></h2>
+          <p class="text-gray-600"><%= @project.code %></p>
+        </div>
+        <div class="flex space-x-2">
+          <%= link_to "編集", edit_project_path(@project),
+              class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+          <%= link_to "一覧", projects_path,
+              class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- 基本情報 -->
+        <div class="lg:col-span-2">
+          <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">基本情報</h3>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <dt class="text-sm font-medium text-gray-500">ステータス</dt>
+                <dd class="mt-1">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= status_badge_class(@project.status) %>">
+                    <%= status_label(@project.status) %>
+                  </span>
+                </dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">顧客</dt>
+                <dd class="mt-1 text-sm text-gray-900"><%= @project.client&.name || "未設定" %></dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">見積金額</dt>
+                <dd class="mt-1 text-sm text-gray-900">
+                  <%= @project.estimated_amount ? number_to_currency(@project.estimated_amount, unit: "¥", precision: 0) : "未設定" %>
+                </dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">受注金額</dt>
+                <dd class="mt-1 text-sm text-gray-900">
+                  <%= @project.order_amount ? number_to_currency(@project.order_amount, unit: "¥", precision: 0) : "未設定" %>
+                </dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">予算金額</dt>
+                <dd class="mt-1 text-sm text-gray-900">
+                  <%= @project.budget_amount ? number_to_currency(@project.budget_amount, unit: "¥", precision: 0) : "未設定" %>
+                </dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">実績原価</dt>
+                <dd class="mt-1 text-sm text-gray-900">
+                  <%= @project.actual_cost ? number_to_currency(@project.actual_cost, unit: "¥", precision: 0) : "未計上" %>
+                </dd>
+              </div>
+              <% if @project.site_address.present? %>
+                <div class="sm:col-span-2">
+                  <dt class="text-sm font-medium text-gray-500">現場住所</dt>
+                  <dd class="mt-1 text-sm text-gray-900"><%= @project.site_address %></dd>
+                </div>
+              <% end %>
+            </dl>
+          </div>
+
+          <!-- 担当者 -->
+          <div class="bg-white shadow rounded-lg p-6 mt-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">担当者</h3>
+            <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <dt class="text-sm font-medium text-gray-500">営業担当</dt>
+                <dd class="mt-1 text-sm text-gray-900"><%= @project.sales_user&.name || "未設定" %></dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">技術担当</dt>
+                <dd class="mt-1 text-sm text-gray-900"><%= @project.engineering_user&.name || "未設定" %></dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">施工担当</dt>
+                <dd class="mt-1 text-sm text-gray-900"><%= @project.construction_user&.name || "未設定" %></dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+
+        <!-- 4点チェック -->
+        <div class="lg:col-span-1">
+          <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">4点チェック</h3>
+            <% if @project.four_point_completed? %>
+              <div class="mb-4 p-3 bg-green-50 rounded-lg">
+                <p class="text-sm text-green-800 font-medium">✓ 4点チェック完了</p>
+                <% if @project.four_point_completed_at %>
+                  <p class="text-xs text-green-600 mt-1">完了日: <%= l(@project.four_point_completed_at, format: :short) %></p>
+                <% end %>
+              </div>
+            <% else %>
+              <div class="mb-4 p-3 bg-yellow-50 rounded-lg">
+                <p class="text-sm text-yellow-800 font-medium">⚠ 4点チェック未完了</p>
+              </div>
+            <% end %>
+
+            <ul class="space-y-3">
+              <li class="flex items-center">
+                <% if @project.has_contract %>
+                  <span class="flex-shrink-0 h-5 w-5 text-green-500">✓</span>
+                <% else %>
+                  <span class="flex-shrink-0 h-5 w-5 text-gray-400">○</span>
+                <% end %>
+                <span class="ml-2 text-sm text-gray-700">契約書確認</span>
+              </li>
+              <li class="flex items-center">
+                <% if @project.has_order %>
+                  <span class="flex-shrink-0 h-5 w-5 text-green-500">✓</span>
+                <% else %>
+                  <span class="flex-shrink-0 h-5 w-5 text-gray-400">○</span>
+                <% end %>
+                <span class="ml-2 text-sm text-gray-700">注文書確認</span>
+              </li>
+              <li class="flex items-center">
+                <% if @project.has_payment_terms %>
+                  <span class="flex-shrink-0 h-5 w-5 text-green-500">✓</span>
+                <% else %>
+                  <span class="flex-shrink-0 h-5 w-5 text-gray-400">○</span>
+                <% end %>
+                <span class="ml-2 text-sm text-gray-700">支払条件確認</span>
+              </li>
+              <li class="flex items-center">
+                <% if @project.has_customer_approval %>
+                  <span class="flex-shrink-0 h-5 w-5 text-green-500">✓</span>
+                <% else %>
+                  <span class="flex-shrink-0 h-5 w-5 text-gray-400">○</span>
+                <% end %>
+                <span class="ml-2 text-sm text-gray-700">顧客承認確認</span>
+              </li>
+            </ul>
+
+            <% unless @project.four_point_completed? || @project.status == "ordered" %>
+              <div class="mt-6">
+                <%= button_to "4点チェック完了", complete_four_point_project_path(@project),
+                    method: :post,
+                    disabled: !@project.four_point_completed?,
+                    class: "w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white #{@project.four_point_completed? ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

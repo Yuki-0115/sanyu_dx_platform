@@ -1,0 +1,50 @@
+ja:
+  date:
+    formats:
+      default: "%Y/%m/%d"
+      short: "%m/%d"
+      long: "%Y年%m月%d日"
+  time:
+    formats:
+      default: "%Y/%m/%d %H:%M"
+      short: "%m/%d %H:%M"
+      long: "%Y年%m月%d日 %H:%M"
+  activerecord:
+    models:
+      project: 案件
+      client: 顧客
+      employee: 社員
+      partner: 協力会社
+      budget: 実行予算
+      daily_report: 日報
+      attendance: 出面
+      expense: 経費
+      invoice: 請求書
+      payment: 入金
+      offset: 相殺
+    attributes:
+      project:
+        code: 案件コード
+        name: 案件名
+        client: 顧客
+        status: ステータス
+        contract_amount: 契約金額
+        estimated_cost: 見積原価
+        scheduled_start_date: 予定着工日
+        scheduled_end_date: 予定完工日
+        actual_start_date: 実着工日
+        actual_end_date: 実完工日
+        has_contract: 契約書確認
+        has_order: 注文書確認
+        has_payment_terms: 支払条件確認
+        has_customer_approval: 顧客承認確認
+        description: 説明
+      employee:
+        code: 社員コード
+        name: 氏名
+        email: メールアドレス
+        role: ロール
+        employment_type: 雇用形態
+      client:
+        code: 顧客コード
+        name: 顧客名

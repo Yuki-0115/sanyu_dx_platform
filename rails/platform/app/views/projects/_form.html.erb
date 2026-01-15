@@ -1,0 +1,127 @@
+<%= form_with model: project, class: "space-y-6" do |f| %>
+  <% if project.errors.any? %>
+    <div class="rounded-md bg-red-50 p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">入力エラーがあります</h3>
+          <ul class="mt-2 list-disc list-inside text-sm text-red-700">
+            <% project.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div>
+      <%= f.label :code, "案件コード", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :code, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", required: true %>
+    </div>
+
+    <div>
+      <%= f.label :name, "案件名", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", required: true %>
+    </div>
+
+    <div>
+      <%= f.label :client_id, "顧客", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.collection_select :client_id, Client.all, :id, :name,
+          { include_blank: "選択してください" },
+          { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+    </div>
+
+    <div>
+      <%= f.label :status, "ステータス", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.select :status, Project::STATUSES.map { |s| [status_label(s), s] },
+          {},
+          { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+    </div>
+
+    <div>
+      <%= f.label :estimated_amount, "見積金額", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.number_field :estimated_amount, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :order_amount, "受注金額", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.number_field :order_amount, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :budget_amount, "予算金額", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.number_field :budget_amount, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :site_address, "現場住所", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :site_address, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+  </div>
+
+  <div class="border-t border-gray-200 pt-6">
+    <h4 class="text-md font-medium text-gray-900 mb-4">担当者</h4>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div>
+        <%= f.label :sales_user_id, "営業担当", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.collection_select :sales_user_id, Employee.where(role: %w[admin management sales]), :id, :name,
+            { include_blank: "選択してください" },
+            { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+      </div>
+
+      <div>
+        <%= f.label :engineering_user_id, "技術担当", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.collection_select :engineering_user_id, Employee.where(role: %w[admin management engineering]), :id, :name,
+            { include_blank: "選択してください" },
+            { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+      </div>
+
+      <div>
+        <%= f.label :construction_user_id, "施工担当", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.collection_select :construction_user_id, Employee.where(role: %w[admin management construction]), :id, :name,
+            { include_blank: "選択してください" },
+            { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t border-gray-200 pt-6">
+    <h4 class="text-md font-medium text-gray-900 mb-4">4点チェック</h4>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="flex items-center">
+        <%= f.check_box :has_contract, class: "h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+        <%= f.label :has_contract, "契約書確認済", class: "ml-2 block text-sm text-gray-700" %>
+      </div>
+      <div class="flex items-center">
+        <%= f.check_box :has_order, class: "h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+        <%= f.label :has_order, "注文書確認済", class: "ml-2 block text-sm text-gray-700" %>
+      </div>
+      <div class="flex items-center">
+        <%= f.check_box :has_payment_terms, class: "h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+        <%= f.label :has_payment_terms, "支払条件確認済", class: "ml-2 block text-sm text-gray-700" %>
+      </div>
+      <div class="flex items-center">
+        <%= f.check_box :has_customer_approval, class: "h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+        <%= f.label :has_customer_approval, "顧客承認確認済", class: "ml-2 block text-sm text-gray-700" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t border-gray-200 pt-6">
+    <%= f.label :description, "説明", class: "block text-sm font-medium text-gray-700" %>
+    <%= f.text_area :description, rows: 4, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+  </div>
+
+  <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+    <%= link_to "キャンセル", project.persisted? ? project_path(project) : projects_path,
+        class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    <%= f.submit project.persisted? ? "更新" : "作成",
+        class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer" %>
+  </div>
+<% end %>

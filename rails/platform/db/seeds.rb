@@ -49,5 +49,32 @@ end
 
 puts "Created foreman: #{foreman.email} (password: password123)"
 
+# Create sample clients
+client1 = Client.find_or_create_by!(code: "CLI001") do |c|
+  c.tenant = tenant
+  c.name = "株式会社テスト建設"
+end
+
+client2 = Client.find_or_create_by!(code: "CLI002") do |c|
+  c.tenant = tenant
+  c.name = "サンプル工業株式会社"
+end
+
+puts "Created clients: #{client1.name}, #{client2.name}"
+
+# Create sample project
+project = Project.find_or_create_by!(code: "PJ001") do |p|
+  p.tenant = tenant
+  p.name = "サンプル新築工事"
+  p.client = client1
+  p.sales_user = manager
+  p.status = "estimating"
+  p.estimated_amount = 50_000_000
+  p.order_amount = 48_000_000
+  p.budget_amount = 40_000_000
+end
+
+puts "Created project: #{project.name}"
+
 puts "\n=== Seed completed ==="
 puts "Login with: admin@sanyu.example.com / password123"

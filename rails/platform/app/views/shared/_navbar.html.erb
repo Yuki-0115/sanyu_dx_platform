@@ -1,0 +1,34 @@
+<nav class="bg-white shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16">
+      <div class="flex items-center">
+        <%= link_to "SanyuTech DX", root_path, class: "text-xl font-semibold text-gray-900" %>
+        <div class="hidden sm:ml-6 sm:flex sm:space-x-4">
+          <% if current_employee.can_access?(:dashboard) %>
+            <%= link_to "ダッシュボード", root_path,
+                class: "px-3 py-2 text-sm font-medium #{current_page?(root_path) ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}" %>
+          <% end %>
+          <% if current_employee.can_access?(:projects) %>
+            <%= link_to "案件", projects_path,
+                class: "px-3 py-2 text-sm font-medium #{controller_name == 'projects' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}" %>
+          <% end %>
+          <% if current_employee.can_access?(:daily_reports) %>
+            <%= link_to "日報", "#",
+                class: "px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700" %>
+          <% end %>
+          <% if current_employee.can_access?(:invoices) %>
+            <%= link_to "請求", "#",
+                class: "px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700" %>
+          <% end %>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span class="text-sm text-gray-600">
+          <%= current_employee.name %> (<%= current_employee.role %>)
+        </span>
+        <%= button_to "ログアウト", destroy_employee_session_path, method: :delete,
+            class: "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" %>
+      </div>
+    </div>
+  </div>
+</nav>

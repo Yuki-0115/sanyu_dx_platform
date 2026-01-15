@@ -11,6 +11,13 @@ Rails.application.routes.draw do
   # Dashboard (root)
   root "dashboard#index"
 
+  # Projects
+  resources :projects do
+    member do
+      post :complete_four_point
+    end
+  end
+
   # API routes (for future use)
   # namespace :api do
   #   namespace :v1 do

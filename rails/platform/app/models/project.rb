@@ -44,4 +44,12 @@ class Project < ApplicationRecord
 
     update!(four_point_completed_at: Time.current, status: "ordered")
   end
+
+  # Profit margin calculation
+  def profit_margin
+    return nil unless order_amount && order_amount.positive?
+    return nil unless actual_cost
+
+    ((order_amount - actual_cost) / order_amount * 100).round(2)
+  end
 end
