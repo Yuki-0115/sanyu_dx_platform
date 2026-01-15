@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
 # Create default tenant
-tenant = Tenant.find_or_create_by!(code: "sunyutech") do |t|
-  t.name = "sunyutech"
-end
+tenant = Tenant.find_by(code: "sunyutech") || Tenant.find_by(code: "sanyu") || Tenant.create!(code: "sunyutech", name: "sunyutech")
+tenant.update!(code: "sunyutech", name: "sunyutech") if tenant.code != "sunyutech"
 
 puts "Created tenant: #{tenant.name}"
 
@@ -11,40 +10,40 @@ puts "Created tenant: #{tenant.name}"
 Current.tenant_id = tenant.id
 
 # Create admin employee
-admin = Employee.find_or_create_by!(email: "admin@sanyu.example.com") do |e|
-  e.tenant = tenant
-  e.code = "EMP001"
-  e.name = "管理者"
-  e.employment_type = "regular"
-  e.role = "admin"
-  e.password = "password123"
-  e.password_confirmation = "password123"
+admin = Employee.unscoped.find_by(email: "admin@sanyu.example.com")
+unless admin
+  admin = Employee.new(
+    tenant: tenant, code: "EMP001", name: "管理者",
+    email: "admin@sanyu.example.com", employment_type: "regular",
+    role: "admin", password: "password123", password_confirmation: "password123"
+  )
+  admin.save!
 end
 
 puts "Created admin: #{admin.email} (password: password123)"
 
 # Create management employee
-manager = Employee.find_or_create_by!(email: "manager@sanyu.example.com") do |e|
-  e.tenant = tenant
-  e.code = "EMP002"
-  e.name = "経営担当"
-  e.employment_type = "regular"
-  e.role = "management"
-  e.password = "password123"
-  e.password_confirmation = "password123"
+manager = Employee.unscoped.find_by(email: "manager@sanyu.example.com")
+unless manager
+  manager = Employee.new(
+    tenant: tenant, code: "EMP002", name: "経営担当",
+    email: "manager@sanyu.example.com", employment_type: "regular",
+    role: "management", password: "password123", password_confirmation: "password123"
+  )
+  manager.save!
 end
 
 puts "Created manager: #{manager.email} (password: password123)"
 
 # Create construction employee
-foreman = Employee.find_or_create_by!(email: "foreman@sanyu.example.com") do |e|
-  e.tenant = tenant
-  e.code = "EMP003"
-  e.name = "職長太郎"
-  e.employment_type = "regular"
-  e.role = "construction"
-  e.password = "password123"
-  e.password_confirmation = "password123"
+foreman = Employee.unscoped.find_by(email: "foreman@sanyu.example.com")
+unless foreman
+  foreman = Employee.new(
+    tenant: tenant, code: "EMP003", name: "職長太郎",
+    email: "foreman@sanyu.example.com", employment_type: "regular",
+    role: "construction", password: "password123", password_confirmation: "password123"
+  )
+  foreman.save!
 end
 
 puts "Created foreman: #{foreman.email} (password: password123)"
@@ -75,6 +74,21 @@ project = Project.find_or_create_by!(code: "PJ001") do |p|
 end
 
 puts "Created project: #{project.name}"
+
+# Create sample partners (協力会社)
+partner1 = Partner.find_or_create_by!(code: "PTN001") do |p|
+  p.tenant = tenant
+  p.name = "協力建設株式会社"
+  p.has_temporary_employees = true
+end
+
+partner2 = Partner.find_or_create_by!(code: "PTN002") do |p|
+  p.tenant = tenant
+  p.name = "テスト工業"
+  p.has_temporary_employees = true
+end
+
+puts "Created partners: #{partner1.name}, #{partner2.name}"
 
 puts "\n=== Seed completed ==="
 puts "Login with: admin@sanyu.example.com / password123"

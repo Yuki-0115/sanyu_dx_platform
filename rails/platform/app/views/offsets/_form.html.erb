@@ -1,0 +1,65 @@
+<%= form_with model: offset, class: "space-y-6" do |f| %>
+  <% if offset.errors.any? %>
+    <div class="rounded-md bg-red-50 p-4">
+      <div class="flex">
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">入力エラーがあります</h3>
+          <ul class="mt-2 list-disc list-inside text-sm text-red-700">
+            <% offset.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="bg-white shadow rounded-lg p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">相殺情報</h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div>
+        <%= f.label :partner_id, "協力会社", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.collection_select :partner_id, @partners, :id, :name,
+            { include_blank: "選択してください" },
+            { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", required: true } %>
+      </div>
+
+      <div>
+        <%= f.label :year_month, "対象月", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.month_field :year_month, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", required: true %>
+      </div>
+
+      <div>
+        <%= f.label :total_salary, "給与支払額", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :total_salary, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= f.label :social_insurance, "社会保険料", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :social_insurance, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div class="sm:col-span-2">
+        <%= f.label :revenue_amount, "売上金額", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :revenue_amount, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        <p class="mt-1 text-sm text-gray-500">協力会社からの請求売上金額を入力してください</p>
+      </div>
+    </div>
+
+    <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+      <p class="text-sm text-gray-600">
+        <strong>計算式:</strong><br>
+        相殺額 = 給与支払額 + 社会保険料<br>
+        差引残高 = 売上金額 - 相殺額
+      </p>
+    </div>
+  </div>
+
+  <div class="flex justify-end space-x-3">
+    <%= link_to "キャンセル", offset.persisted? ? offset_path(offset) : offsets_path,
+        class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    <%= f.submit offset.persisted? ? "更新" : "作成",
+        class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer" %>
+  </div>
+<% end %>

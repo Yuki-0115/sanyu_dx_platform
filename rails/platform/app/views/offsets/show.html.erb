@@ -1,0 +1,98 @@
+<div class="min-h-screen bg-gray-100">
+  <%= render "shared/navbar" %>
+
+  <main class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">相殺詳細</h2>
+          <p class="text-gray-600"><%= @offset.partner.name %> - <%= @offset.year_month %></p>
+        </div>
+        <div class="flex space-x-2">
+          <% if @offset.status == "draft" %>
+            <%= link_to "編集", edit_offset_path(@offset),
+                class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+          <% end %>
+          <%= link_to "一覧", offsets_path(year_month: @offset.year_month),
+              class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+        </div>
+      </div>
+
+      <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-lg font-medium text-gray-900">相殺内容</h3>
+          <span class="px-3 py-1 text-sm font-medium rounded-full <%= @offset.status == 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
+            <%= @offset.status == 'confirmed' ? '確定済' : '下書き' %>
+          </span>
+        </div>
+
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div class="bg-gray-50 rounded-lg p-4">
+            <dt class="text-sm font-medium text-gray-500">協力会社</dt>
+            <dd class="mt-1 text-lg font-semibold text-gray-900"><%= @offset.partner.name %></dd>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-4">
+            <dt class="text-sm font-medium text-gray-500">対象月</dt>
+            <dd class="mt-1 text-lg font-semibold text-gray-900"><%= @offset.year_month %></dd>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-4">
+            <dt class="text-sm font-medium text-gray-500">給与支払額</dt>
+            <dd class="mt-1 text-lg font-semibold text-gray-900">
+              <%= number_to_currency(@offset.total_salary, unit: "¥", precision: 0) %>
+            </dd>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-4">
+            <dt class="text-sm font-medium text-gray-500">社会保険料</dt>
+            <dd class="mt-1 text-lg font-semibold text-gray-900">
+              <%= number_to_currency(@offset.social_insurance, unit: "¥", precision: 0) %>
+            </dd>
+          </div>
+        </dl>
+
+        <div class="mt-6 border-t border-gray-200 pt-6">
+          <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="text-center p-4 bg-red-50 rounded-lg">
+              <dt class="text-sm font-medium text-gray-500">相殺額</dt>
+              <dd class="mt-1 text-xl font-bold text-red-600">
+                <%= number_to_currency(@offset.offset_amount, unit: "¥", precision: 0) %>
+              </dd>
+              <p class="text-xs text-gray-500 mt-1">給与 + 社保</p>
+            </div>
+
+            <div class="text-center p-4 bg-blue-50 rounded-lg">
+              <dt class="text-sm font-medium text-gray-500">売上金額</dt>
+              <dd class="mt-1 text-xl font-bold text-blue-600">
+                <%= number_to_currency(@offset.revenue_amount, unit: "¥", precision: 0) %>
+              </dd>
+            </div>
+
+            <div class="text-center p-4 <%= @offset.balance >= 0 ? 'bg-green-50' : 'bg-red-50' %> rounded-lg">
+              <dt class="text-sm font-medium text-gray-500">差引残高</dt>
+              <dd class="mt-1 text-xl font-bold <%= @offset.balance >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                <%= number_to_currency(@offset.balance, unit: "¥", precision: 0) %>
+              </dd>
+              <p class="text-xs text-gray-500 mt-1">売上 - 相殺</p>
+            </div>
+          </dl>
+        </div>
+
+        <% if @offset.status == "draft" %>
+          <div class="mt-6 border-t border-gray-200 pt-6">
+            <%= button_to "相殺を確定する", confirm_offset_path(@offset),
+                method: :post,
+                data: { turbo_confirm: "この相殺データを確定しますか？確定後は編集できなくなります。" },
+                class: "w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700" %>
+          </div>
+        <% else %>
+          <div class="mt-6 border-t border-gray-200 pt-6 text-sm text-gray-500">
+            確定者: <%= @offset.confirmed_by&.name || "不明" %><br>
+            確定日時: <%= @offset.confirmed_at ? l(@offset.confirmed_at, format: :short) : "不明" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </main>
+</div>

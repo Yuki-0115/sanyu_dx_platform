@@ -26,6 +26,13 @@ Rails.application.routes.draw do
     end
   end
 
+  # Offsets (仮社員相殺)
+  resources :offsets do
+    member do
+      post :confirm
+    end
+  end
+
   # API routes (for future use)
   # namespace :api do
   #   namespace :v1 do
