@@ -16,8 +16,12 @@ Rails.application.routes.draw do
     member do
       post :complete_four_point
     end
+    resource :estimate, only: %i[show new create edit update] do
+      post :approve
+    end
     resource :budget, only: %i[show new create edit update] do
       post :confirm
+      post :import_from_estimate
     end
     resources :daily_reports do
       member do

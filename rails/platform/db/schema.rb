@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_15_100000) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_15_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -146,6 +146,31 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_100000) do
     t.index ["tenant_id", "code"], name: "index_employees_on_tenant_id_and_code", unique: true
     t.index ["tenant_id", "email"], name: "index_employees_on_tenant_id_and_email", unique: true
     t.index ["tenant_id"], name: "index_employees_on_tenant_id"
+  end
+
+  create_table "estimates", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "project_id", null: false
+    t.bigint "created_by_id"
+    t.string "status", default: "draft", null: false
+    t.string "estimate_number"
+    t.date "estimate_date"
+    t.date "valid_until"
+    t.decimal "material_cost", precision: 15, scale: 2, default: "0.0"
+    t.decimal "outsourcing_cost", precision: 15, scale: 2, default: "0.0"
+    t.decimal "labor_cost", precision: 15, scale: 2, default: "0.0"
+    t.decimal "expense_cost", precision: 15, scale: 2, default: "0.0"
+    t.decimal "total_cost", precision: 15, scale: 2, default: "0.0"
+    t.decimal "selling_price", precision: 15, scale: 2, default: "0.0"
+    t.decimal "profit_margin", precision: 5, scale: 2
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_estimates_on_created_by_id"
+    t.index ["project_id"], name: "index_estimates_on_project_id"
+    t.index ["tenant_id", "estimate_number"], name: "index_estimates_on_tenant_id_and_estimate_number", unique: true
+    t.index ["tenant_id", "project_id"], name: "index_estimates_on_tenant_id_and_project_id", unique: true
+    t.index ["tenant_id"], name: "index_estimates_on_tenant_id"
   end
 
   create_table "expenses", force: :cascade do |t|
@@ -291,6 +316,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_100000) do
   add_foreign_key "daily_reports", "tenants"
   add_foreign_key "employees", "partners"
   add_foreign_key "employees", "tenants"
+  add_foreign_key "estimates", "employees", column: "created_by_id"
+  add_foreign_key "estimates", "projects"
+  add_foreign_key "estimates", "tenants"
   add_foreign_key "expenses", "daily_reports"
   add_foreign_key "expenses", "employees", column: "payer_id"
   add_foreign_key "expenses", "projects"

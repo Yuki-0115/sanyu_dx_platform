@@ -1,0 +1,102 @@
+<%= form_with model: [@project, estimate], class: "space-y-6" do |f| %>
+  <% if estimate.errors.any? %>
+    <div class="rounded-md bg-red-50 p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">入力エラーがあります</h3>
+          <ul class="mt-2 list-disc list-inside text-sm text-red-700">
+            <% estimate.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 基本情報 -->
+  <div class="bg-white shadow rounded-lg p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">基本情報</h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div>
+        <%= f.label :estimate_number, "見積番号", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :estimate_number, placeholder: "例: EST-2026-001",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= f.label :estimate_date, "見積日", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.date_field :estimate_date,
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= f.label :valid_until, "有効期限", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.date_field :valid_until,
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 原価内訳 -->
+  <div class="bg-white shadow rounded-lg p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">原価内訳</h3>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+      <div>
+        <%= f.label :material_cost, "材料費 (円)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :material_cost, step: 1, placeholder: "0",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+      <div>
+        <%= f.label :outsourcing_cost, "外注費 (円)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :outsourcing_cost, step: 1, placeholder: "0",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+      <div>
+        <%= f.label :labor_cost, "労務費 (円)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :labor_cost, step: 1, placeholder: "0",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+      <div>
+        <%= f.label :expense_cost, "経費 (円)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :expense_cost, step: 1, placeholder: "0",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 売価 -->
+  <div class="bg-white shadow rounded-lg p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">売価</h3>
+
+    <div class="max-w-xs">
+      <%= f.label :selling_price, "売価（税抜）(円)", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.number_field :selling_price, step: 1, placeholder: "0",
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      <p class="mt-1 text-xs text-gray-500">利益率は原価合計と売価から自動計算されます</p>
+    </div>
+  </div>
+
+  <!-- 備考 -->
+  <div class="bg-white shadow rounded-lg p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">備考</h3>
+
+    <%= f.label :notes, "備考", class: "sr-only" %>
+    <%= f.text_area :notes, rows: 4, placeholder: "見積に関する補足事項",
+        class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+  </div>
+
+  <div class="flex justify-end space-x-3">
+    <%= link_to "キャンセル", estimate.persisted? ? project_estimate_path(@project) : project_path(@project),
+        class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    <%= f.submit estimate.persisted? ? "更新" : "作成",
+        class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer" %>
+  </div>
+<% end %>

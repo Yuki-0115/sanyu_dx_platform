@@ -35,6 +35,35 @@
     </dl>
   </div>
 
+  <% if @project.estimate&.can_import_to_budget? %>
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h4 class="text-sm font-medium text-blue-800">見積書から取り込み</h4>
+          <p class="text-xs text-blue-600 mt-1">
+            見積書の原価（材料費・外注費・労務費・経費）を実行予算にコピーします。
+            取り込み後も編集可能です。
+          </p>
+        </div>
+        <%= button_to "見積から取り込み", import_from_estimate_project_budget_path(@project),
+            method: :post,
+            class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700",
+            data: { confirm: "見積書の原価を取り込みます。現在の入力値は上書きされます。よろしいですか？" } %>
+      </div>
+    </div>
+  <% elsif @project.estimate.nil? && current_employee.can_access?(:estimates) %>
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h4 class="text-sm font-medium text-gray-700">見積書がありません</h4>
+          <p class="text-xs text-gray-500 mt-1">見積書を作成すると、原価を取り込むことができます。</p>
+        </div>
+        <%= link_to "見積書を作成", new_project_estimate_path(@project),
+            class: "inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+      </div>
+    </div>
+  <% end %>
+
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
     <div>
       <%= f.label :material_cost, "材料費", class: "block text-sm font-medium text-gray-700" %>

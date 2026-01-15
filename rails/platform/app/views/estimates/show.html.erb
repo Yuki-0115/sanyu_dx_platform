@@ -1,0 +1,116 @@
+<div class="max-w-4xl mx-auto">
+  <div class="mb-6 flex justify-between items-start">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">見積書</h1>
+      <p class="mt-1 text-sm text-gray-500"><%= @project.name %></p>
+    </div>
+    <div class="flex space-x-3">
+      <% if @estimate.status == "draft" %>
+        <%= button_to "提出", project_estimate_path(@project), method: :patch,
+            params: { estimate: { status: "submitted" } },
+            class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+      <% elsif @estimate.status == "submitted" && current_employee.role.in?(%w[admin management]) %>
+        <%= button_to "承認", approve_project_estimate_path(@project), method: :post,
+            class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700" %>
+      <% end %>
+      <%= link_to "編集", edit_project_estimate_path(@project),
+          class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+      <%= link_to "案件へ戻る", project_path(@project),
+          class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    </div>
+  </div>
+
+  <!-- ステータス表示 -->
+  <div class="mb-6">
+    <% case @estimate.status %>
+    <% when "draft" %>
+      <span class="px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800">下書き</span>
+    <% when "submitted" %>
+      <span class="px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800">提出済み</span>
+    <% when "approved" %>
+      <span class="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800">承認済み</span>
+    <% when "rejected" %>
+      <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800">却下</span>
+    <% end %>
+  </div>
+
+  <!-- 基本情報 -->
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">基本情報</h3>
+    <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div>
+        <dt class="text-sm font-medium text-gray-500">見積番号</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @estimate.estimate_number || "-" %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">見積日</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @estimate.estimate_date&.strftime("%Y/%m/%d") || "-" %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">有効期限</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @estimate.valid_until&.strftime("%Y/%m/%d") || "-" %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">作成者</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @estimate.created_by&.name || "-" %></dd>
+      </div>
+    </dl>
+  </div>
+
+  <!-- 原価内訳 -->
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">原価内訳</h3>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+      <div class="text-center">
+        <dt class="text-xs text-gray-500">材料費</dt>
+        <dd class="text-lg font-semibold text-gray-900"><%= number_to_currency(@estimate.material_cost, unit: "¥", precision: 0) %></dd>
+      </div>
+      <div class="text-center">
+        <dt class="text-xs text-gray-500">外注費</dt>
+        <dd class="text-lg font-semibold text-gray-900"><%= number_to_currency(@estimate.outsourcing_cost, unit: "¥", precision: 0) %></dd>
+      </div>
+      <div class="text-center">
+        <dt class="text-xs text-gray-500">労務費</dt>
+        <dd class="text-lg font-semibold text-gray-900"><%= number_to_currency(@estimate.labor_cost, unit: "¥", precision: 0) %></dd>
+      </div>
+      <div class="text-center">
+        <dt class="text-xs text-gray-500">経費</dt>
+        <dd class="text-lg font-semibold text-gray-900"><%= number_to_currency(@estimate.expense_cost, unit: "¥", precision: 0) %></dd>
+      </div>
+    </div>
+    <div class="mt-4 text-right border-t pt-4">
+      <span class="text-sm text-gray-500">原価合計：</span>
+      <span class="text-xl font-bold text-gray-900"><%= number_to_currency(@estimate.total_cost, unit: "¥", precision: 0) %></span>
+    </div>
+  </div>
+
+  <!-- 売価・利益 -->
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">売価・利益</h3>
+    <div class="grid grid-cols-3 gap-4 p-4 bg-blue-50 rounded-lg">
+      <div class="text-center">
+        <dt class="text-xs text-gray-500">売価</dt>
+        <dd class="text-xl font-bold text-blue-900"><%= number_to_currency(@estimate.selling_price, unit: "¥", precision: 0) %></dd>
+      </div>
+      <div class="text-center">
+        <dt class="text-xs text-gray-500">粗利</dt>
+        <dd class="text-xl font-bold <%= (@estimate.selling_price - @estimate.total_cost) >= 0 ? 'text-green-600' : 'text-red-600' %>">
+          <%= number_to_currency(@estimate.selling_price - @estimate.total_cost, unit: "¥", precision: 0) %>
+        </dd>
+      </div>
+      <div class="text-center">
+        <dt class="text-xs text-gray-500">利益率</dt>
+        <dd class="text-xl font-bold <%= @estimate.profit_margin && @estimate.profit_margin >= 0 ? 'text-green-600' : 'text-red-600' %>">
+          <%= @estimate.profit_margin ? "#{@estimate.profit_margin}%" : "-" %>
+        </dd>
+      </div>
+    </div>
+  </div>
+
+  <% if @estimate.notes.present? %>
+    <div class="bg-white shadow rounded-lg p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">備考</h3>
+      <p class="text-sm text-gray-700 whitespace-pre-wrap"><%= @estimate.notes %></p>
+    </div>
+  <% end %>
+</div>
