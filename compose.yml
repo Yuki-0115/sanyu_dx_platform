@@ -1,0 +1,107 @@
+# ===========================================
+# sunyutech DX Platform - Docker Compose
+# ===========================================
+
+services:
+  # -----------------------------------------
+  # PostgreSQL Database
+  # -----------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: sanyu_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sanyu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sanyu_password}
+      POSTGRES_DB: ${POSTGRES_DB:-sanyu_development}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sanyu}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # -----------------------------------------
+  # Platform（基幹アプリ）
+  # -----------------------------------------
+  platform:
+    build:
+      context: ./rails
+      dockerfile: Dockerfile
+    container_name: sanyu_platform
+    restart: unless-stopped
+    environment:
+      RAILS_ENV: ${RAILS_ENV:-development}
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-sanyu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sanyu_password}
+      POSTGRES_DB: ${POSTGRES_DB:-sanyu_development}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-development_secret_key_base}
+      N8N_API_KEY: ${N8N_API_KEY:-development_api_key_change_in_production}
+    ports:
+      - "${PLATFORM_PORT:-3001}:3000"
+    volumes:
+      - ./rails/platform:/platform
+      - platform_bundle:/platform/vendor/bundle
+    working_dir: /platform
+    command: bash -c "rm -f tmp/pids/server.pid && bin/rails server -b 0.0.0.0"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # -----------------------------------------
+  # Worker Web（作業員向けWeb）
+  # -----------------------------------------
+  worker-web:
+    build:
+      context: ./rails
+      dockerfile: Dockerfile
+    container_name: sanyu_worker_web
+    restart: unless-stopped
+    environment:
+      RAILS_ENV: ${RAILS_ENV:-development}
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-sanyu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sanyu_password}
+      POSTGRES_DB: ${POSTGRES_DB:-sanyu_development}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-development_secret_key_base}
+    ports:
+      - "${WORKER_WEB_PORT:-3002}:3000"
+    volumes:
+      - ./rails/worker_web:/worker_web
+      - worker_bundle:/worker_web/vendor/bundle
+    working_dir: /worker_web
+    command: bash -c "rm -f tmp/pids/server.pid && bin/rails server -b 0.0.0.0"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # -----------------------------------------
+  # n8n（ワークフロー自動化）
+  # -----------------------------------------
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: sanyu_n8n
+    restart: unless-stopped
+    environment:
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: ${N8N_BASIC_AUTH_USER:-admin}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD:-admin}
+      GENERIC_TIMEZONE: Asia/Tokyo
+      N8N_API_KEY: ${N8N_API_KEY:-development_api_key_change_in_production}
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/home/node/workflows
+    depends_on:
+      - platform
+
+volumes:
+  postgres_data:
+  platform_bundle:
+  worker_bundle:
+  n8n_data:

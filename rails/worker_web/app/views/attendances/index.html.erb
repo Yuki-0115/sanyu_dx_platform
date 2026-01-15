@@ -1,0 +1,55 @@
+<div class="space-y-4">
+  <div class="bg-white rounded-lg shadow p-4">
+    <h2 class="text-lg font-semibold text-gray-900 mb-3">出勤履歴</h2>
+
+    <%= form_with url: attendances_path, method: :get, class: "mb-4" do |f| %>
+      <div class="flex space-x-2">
+        <%= f.month_field :year_month, value: @year_month,
+            class: "flex-1 px-3 py-2 border border-gray-300 rounded-lg" %>
+        <%= f.submit "表示", class: "bg-blue-600 text-white px-4 py-2 rounded-lg" %>
+      </div>
+    <% end %>
+
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="text-center p-3 bg-blue-50 rounded-lg">
+        <div class="text-xl font-bold text-blue-600"><%= @total_days %></div>
+        <div class="text-sm text-gray-600">出勤日数</div>
+      </div>
+      <div class="text-center p-3 bg-green-50 rounded-lg">
+        <div class="text-xl font-bold text-green-600"><%= @total_hours&.to_f&.round(1) || 0 %></div>
+        <div class="text-sm text-gray-600">合計時間</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow">
+    <% if @attendances.any? %>
+      <div class="divide-y divide-gray-100">
+        <% @attendances.each do |attendance| %>
+          <div class="flex justify-between items-center p-4">
+            <div>
+              <div class="text-sm font-medium text-gray-900">
+                <%= attendance.daily_report.report_date.strftime("%m/%d (%a)") %>
+              </div>
+              <div class="text-xs text-gray-500">
+                <%= attendance.daily_report.project&.name&.truncate(25) %>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-semibold text-gray-900">
+                <%= attendance.hours_worked %> h
+              </div>
+              <span class="inline-block px-2 py-0.5 text-xs rounded <%= attendance_type_class(attendance.attendance_type) %>">
+                <%= attendance_type_label(attendance.attendance_type) %>
+              </span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-sm text-gray-500 text-center py-8">
+        この月の出勤記録はありません
+      </p>
+    <% end %>
+  </div>
+</div>

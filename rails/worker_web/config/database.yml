@@ -1,0 +1,21 @@
+# frozen_string_literal: true
+
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host: <%= ENV.fetch("POSTGRES_HOST", "localhost") %>
+  username: <%= ENV.fetch("POSTGRES_USER", "sanyu") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "sanyu_password") %>
+
+development:
+  <<: *default
+  database: sanyu_development
+
+test:
+  <<: *default
+  database: sanyu_test
+
+production:
+  <<: *default
+  database: sanyu_production
