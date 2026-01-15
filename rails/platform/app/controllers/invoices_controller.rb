@@ -13,7 +13,7 @@ class InvoicesController < ApplicationController
 
   def new
     @invoice = @project.invoices.build(
-      invoice_date: Date.current,
+      issued_date: Date.current,
       due_date: Date.current + 30.days
     )
   end
@@ -73,7 +73,7 @@ class InvoicesController < ApplicationController
 
   def invoice_params
     params.require(:invoice).permit(
-      :invoice_number, :invoice_date, :due_date, :amount, :tax_amount, :description
+      :invoice_number, :issued_date, :due_date, :amount, :tax_amount, :description
     )
   end
 end

@@ -10,6 +10,10 @@ class AllInvoicesController < ApplicationController
 
     @unpaid_count = Invoice.where(status: %w[issued waiting]).count
     @unpaid_amount = Invoice.where(status: %w[issued waiting]).sum(:total_amount) || 0
+
+    # 新規請求書作成用の案件リスト
+    @projects = Project.where(status: %w[ordered preparing in_progress completed])
+                       .order(:name)
   end
 
   private
