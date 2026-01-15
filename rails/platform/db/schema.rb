@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_15_110000) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_15_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -285,9 +285,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_110000) do
     t.text "drive_folder_url"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "project_type", default: "regular", null: false
     t.index ["client_id"], name: "index_projects_on_client_id"
     t.index ["construction_user_id"], name: "index_projects_on_construction_user_id"
     t.index ["engineering_user_id"], name: "index_projects_on_engineering_user_id"
+    t.index ["project_type"], name: "index_projects_on_project_type"
     t.index ["sales_user_id"], name: "index_projects_on_sales_user_id"
     t.index ["status"], name: "index_projects_on_status"
     t.index ["tenant_id", "code"], name: "index_projects_on_tenant_id_and_code", unique: true

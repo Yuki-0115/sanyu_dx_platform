@@ -6,6 +6,11 @@ class Project < ApplicationRecord
 
   # Constants
   STATUSES = %w[draft estimating ordered preparing in_progress completed invoiced paid closed].freeze
+  PROJECT_TYPES = %w[regular misc].freeze
+  PROJECT_TYPE_LABELS = {
+    "regular" => "通常案件",
+    "misc" => "その他（小工事・常用）"
+  }.freeze
 
   # Associations
   belongs_to :client
@@ -23,9 +28,11 @@ class Project < ApplicationRecord
   validates :code, presence: true, uniqueness: { scope: :tenant_id }
   validates :name, presence: true
   validates :status, inclusion: { in: STATUSES }
+  validates :project_type, inclusion: { in: PROJECT_TYPES }
 
   # Defaults
   attribute :status, :string, default: "draft"
+  attribute :project_type, :string, default: "regular"
   attribute :has_contract, :boolean, default: false
   attribute :has_order, :boolean, default: false
   attribute :has_payment_terms, :boolean, default: false
@@ -34,8 +41,18 @@ class Project < ApplicationRecord
   # Scopes
   scope :active, -> { where.not(status: %w[closed paid]) }
   scope :in_progress, -> { where(status: "in_progress") }
+  scope :regular, -> { where(project_type: "regular") }
+  scope :misc, -> { where(project_type: "misc") }
 
   # Instance methods
+  def misc?
+    project_type == "misc"
+  end
+
+  def regular?
+    project_type == "regular"
+  end
+
   def four_point_completed?
     has_contract && has_order && has_payment_terms && has_customer_approval
   end

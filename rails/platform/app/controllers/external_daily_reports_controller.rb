@@ -86,7 +86,7 @@ class ExternalDailyReportsController < ApplicationController
   def daily_report_params
     params.require(:daily_report).permit(
       :report_date, :weather, :work_content, :notes,
-      :external_site_name,
+      :external_site_name, :project_id,
       :materials_used, :machines_used, :labor_details,
       :outsourcing_details, :transportation_cost,
       :labor_cost, :material_cost, :outsourcing_cost,

@@ -36,6 +36,14 @@
       </div>
 
       <div>
+        <%= f.label :project_id, "紐付け案件（任意）", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.collection_select :project_id, Project.misc.active, :id, :name,
+            { include_blank: "なし（案件に紐付けない）" },
+            { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+        <p class="mt-1 text-xs text-gray-500">「その他」案件に紐付けると原価が集計されます</p>
+      </div>
+
+      <div>
         <%= f.label :weather, "天気", class: "block text-sm font-medium text-gray-700" %>
         <%= f.select :weather, DailyReport::WEATHER_LABELS.map { |k, v| [v, k] },
             { include_blank: "選択してください" },

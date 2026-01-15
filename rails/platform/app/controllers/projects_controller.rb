@@ -64,7 +64,7 @@ class ProjectsController < ApplicationController
   def project_params
     params.require(:project).permit(
       :code, :name, :client_id, :sales_user_id, :engineering_user_id,
-      :construction_user_id, :status, :estimated_amount, :order_amount,
+      :construction_user_id, :status, :project_type, :estimated_amount, :order_amount,
       :budget_amount, :site_address, :has_contract, :has_order,
       :has_payment_terms, :has_customer_approval, :drive_folder_url
     )

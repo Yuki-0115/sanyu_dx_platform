@@ -31,6 +31,14 @@
                 </dd>
               </div>
               <div>
+                <dt class="text-sm font-medium text-gray-500">案件種別</dt>
+                <dd class="mt-1">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= @project.misc? ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800' %>">
+                    <%= Project::PROJECT_TYPE_LABELS[@project.project_type] %>
+                  </span>
+                </dd>
+              </div>
+              <div>
                 <dt class="text-sm font-medium text-gray-500">顧客</dt>
                 <dd class="mt-1 text-sm text-gray-900"><%= @project.client&.name || "未設定" %></dd>
               </div>

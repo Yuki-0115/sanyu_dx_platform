@@ -45,6 +45,14 @@
     </div>
 
     <div>
+      <%= f.label :project_type, "案件種別", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.select :project_type, Project::PROJECT_TYPE_LABELS.map { |k, v| [v, k] },
+          {},
+          { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+      <p class="mt-1 text-xs text-gray-500">「その他」は小工事・常用工事など簡易な案件に使用</p>
+    </div>
+
+    <div>
       <%= f.label :estimated_amount, "見積金額", class: "block text-sm font-medium text-gray-700" %>
       <%= f.number_field :estimated_amount, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
     </div>

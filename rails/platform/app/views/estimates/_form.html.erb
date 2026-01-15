@@ -1,4 +1,4 @@
-<%= form_with model: [@project, estimate], class: "space-y-6" do |f| %>
+<%= form_with model: estimate, url: project_estimate_path(@project), method: (estimate.persisted? ? :patch : :post), class: "space-y-6" do |f| %>
   <% if estimate.errors.any? %>
     <div class="rounded-md bg-red-50 p-4">
       <div class="flex">
