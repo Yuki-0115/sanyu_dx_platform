@@ -81,7 +81,7 @@ class DailyReportsController < ApplicationController
       :report_date, :weather, :work_content, :notes,
       :materials_used, :machines_used, :labor_details,
       :outsourcing_details, :transportation_cost,
-      attendances_attributes: %i[id employee_id attendance_type start_time end_time travel_distance _destroy]
+      attendances_attributes: %i[id employee_id partner_worker_name attendance_type hours_worked start_time end_time travel_distance _destroy]
     )
   end
 end

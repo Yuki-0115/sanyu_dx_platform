@@ -86,9 +86,57 @@
   </div>
 
   <!-- 出面一括入力 -->
-  <div class="bg-white shadow rounded-lg p-6">
-    <h3 class="text-lg font-medium text-gray-900 mb-4">出面一括入力</h3>
-    <p class="text-sm text-gray-500 mb-4">各作業員の出勤状況を入力してください。欠勤の場合は「欠勤」を選択してください。</p>
+  <div class="bg-white shadow rounded-lg p-6" data-controller="nested-form">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h3 class="text-lg font-medium text-gray-900">出面一括入力</h3>
+        <p class="text-sm text-gray-500">各作業員の出勤状況を入力してください。</p>
+      </div>
+      <button type="button" data-action="nested-form#add"
+          class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        追加
+      </button>
+    </div>
+
+    <!-- テンプレート（非表示、JSで使用） -->
+    <template data-nested-form-target="template">
+      <tr data-nested-form-target="item">
+        <td class="px-4 py-3">
+          <input type="text" name="daily_report[attendances_attributes][NEW_RECORD][partner_worker_name]"
+              placeholder="氏名を入力"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+        </td>
+        <td class="px-4 py-3">
+          <select name="daily_report[attendances_attributes][NEW_RECORD][attendance_type]"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            <option value="full">全日</option>
+            <option value="half">半日</option>
+            <option value="absent">欠勤</option>
+          </select>
+        </td>
+        <td class="px-4 py-3">
+          <input type="number" name="daily_report[attendances_attributes][NEW_RECORD][hours_worked]"
+              value="8" step="0.5" min="0" max="24"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+        </td>
+        <td class="px-4 py-3">
+          <input type="number" name="daily_report[attendances_attributes][NEW_RECORD][travel_distance]"
+              min="0" step="0.1"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+        </td>
+        <td class="px-4 py-3">
+          <button type="button" data-action="nested-form#remove"
+              class="text-red-600 hover:text-red-800">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </td>
+      </tr>
+    </template>
 
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
@@ -96,20 +144,26 @@
           <tr>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">氏名</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">出勤区分</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">開始時間</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">終了時間</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">労働時間</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">走行距離(km)</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-16"></th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
+        <tbody class="bg-white divide-y divide-gray-200" data-nested-form-target="container">
           <%= f.fields_for :attendances do |af| %>
-            <tr>
+            <tr data-nested-form-target="item">
               <td class="px-4 py-3">
                 <%= af.hidden_field :id %>
-                <%= af.hidden_field :employee_id %>
-                <span class="text-sm font-medium text-gray-900">
-                  <%= af.object.employee&.name || "不明" %>
-                </span>
+                <%= af.hidden_field :_destroy %>
+                <% if af.object.employee_id.present? %>
+                  <%= af.hidden_field :employee_id %>
+                  <span class="text-sm font-medium text-gray-900">
+                    <%= af.object.employee&.name || "不明" %>
+                  </span>
+                <% else %>
+                  <%= af.text_field :partner_worker_name, placeholder: "氏名を入力",
+                      class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+                <% end %>
               </td>
               <td class="px-4 py-3">
                 <%= af.select :attendance_type,
@@ -118,13 +172,20 @@
                     { class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
               </td>
               <td class="px-4 py-3">
-                <%= af.time_field :start_time, class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+                <%= af.number_field :hours_worked, step: 0.5, min: 0, max: 24,
+                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
               </td>
               <td class="px-4 py-3">
-                <%= af.time_field :end_time, class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+                <%= af.number_field :travel_distance, min: 0, step: 0.1,
+                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
               </td>
               <td class="px-4 py-3">
-                <%= af.number_field :travel_distance, class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", min: 0 %>
+                <button type="button" data-action="nested-form#remove"
+                    class="text-red-600 hover:text-red-800">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
               </td>
             </tr>
           <% end %>
@@ -132,11 +193,9 @@
       </table>
     </div>
 
-    <% if daily_report.attendances.empty? %>
-      <p class="mt-4 text-sm text-gray-500">
-        作業員がまだ登録されていません。先に作業員を登録してください。
-      </p>
-    <% end %>
+    <p class="mt-4 text-sm text-gray-500">
+      「追加」ボタンで作業員を追加できます。協力会社作業員は氏名を直接入力してください。
+    </p>
   </div>
 
   <div class="flex justify-end space-x-3">
