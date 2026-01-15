@@ -1,0 +1,104 @@
+<div class="min-h-screen bg-gray-100">
+  <%= render "shared/navbar" %>
+
+  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">請求書一覧</h2>
+          <% if @unpaid_count > 0 %>
+            <p class="text-sm text-yellow-600 mt-1">
+              未入金: <%= @unpaid_count %>件 (<%= number_to_currency(@unpaid_amount, unit: "¥", precision: 0) %>)
+            </p>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">請求番号</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">案件</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">顧客</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">金額</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">請求日</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">支払期限</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステータス</th>
+              <th scope="col" class="relative px-6 py-3"><span class="sr-only">操作</span></th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% @invoices.each do |invoice| %>
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900">
+                    <%= invoice.invoice_number || "##{invoice.id}" %>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">
+                    <%= link_to invoice.project.name, project_path(invoice.project), class: "text-blue-600 hover:underline" %>
+                  </div>
+                  <div class="text-xs text-gray-500"><%= invoice.project.code %></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <%= invoice.project.client&.name || "-" %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900">
+                    <%= number_to_currency(invoice.total_amount, unit: "¥", precision: 0) %>
+                  </div>
+                  <% if invoice.remaining_amount > 0 && invoice.paid_amount > 0 %>
+                    <div class="text-xs text-gray-500">
+                      残: <%= number_to_currency(invoice.remaining_amount, unit: "¥", precision: 0) %>
+                    </div>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <%= invoice.invoice_date ? l(invoice.invoice_date) : "-" %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <% if invoice.due_date %>
+                    <span class="<%= invoice.due_date < Date.current && invoice.status != 'paid' ? 'text-red-600 font-medium' : '' %>">
+                      <%= l(invoice.due_date) %>
+                    </span>
+                  <% else %>
+                    -
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <% badge_class = case invoice.status
+                     when "paid" then "bg-green-100 text-green-800"
+                     when "issued", "waiting" then "bg-yellow-100 text-yellow-800"
+                     when "overdue" then "bg-red-100 text-red-800"
+                     else "bg-gray-100 text-gray-800"
+                     end %>
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= badge_class %>">
+                    <%= { "draft" => "下書き", "issued" => "発行済", "waiting" => "入金待ち", "paid" => "入金済", "overdue" => "期限超過" }[invoice.status] %>
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <%= link_to "詳細", project_invoice_path(invoice.project, invoice), class: "text-blue-600 hover:underline" %>
+                </td>
+              </tr>
+            <% end %>
+            <% if @invoices.empty? %>
+              <tr>
+                <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">
+                  請求書がありません
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if @invoices.respond_to?(:total_pages) && @invoices.total_pages > 1 %>
+        <div class="mt-4 flex justify-center">
+          <%= paginate @invoices %>
+        </div>
+      <% end %>
+    </div>
+  </main>
+</div>

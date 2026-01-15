@@ -43,6 +43,9 @@ Rails.application.routes.draw do
     end
   end
 
+  # 全請求書一覧
+  resources :all_invoices, only: [:index]
+
   # Offsets (仮社員相殺)
   resources :offsets do
     member do
