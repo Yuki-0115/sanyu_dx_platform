@@ -13,18 +13,16 @@
           <% end %>
         </div>
         <div class="flex items-center space-x-2">
-          <%= form_with url: nil, method: :get, class: "flex items-center space-x-2", data: { controller: "invoice-create" } do %>
-            <%= select_tag :project_id,
-                options_from_collection_for_select(@projects, :id, :name),
-                include_blank: "案件を選択",
-                class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-                data: { "invoice-create-target": "projectSelect" } %>
-            <button type="button"
-                data-action="click->invoice-create#goToNew"
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-              新規請求書
-            </button>
-          <% end %>
+          <%= select_tag :project_id,
+              options_from_collection_for_select(@projects, :id, :name),
+              include_blank: "案件を選択",
+              id: "invoice_project_select",
+              class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+          <button type="button"
+              onclick="var pid = document.getElementById('invoice_project_select').value; if(pid) { window.location.href = '/projects/' + pid + '/invoices/new'; } else { alert('案件を選択してください'); }"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+            新規請求書
+          </button>
         </div>
       </div>
 
