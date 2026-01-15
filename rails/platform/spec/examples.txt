@@ -1,0 +1,10 @@
+example_id                              | status | run_time        |
+--------------------------------------- | ------ | --------------- |
+./spec/models/employee_spec.rb[1:1:1]   | passed | 0.18274 seconds |
+./spec/models/employee_spec.rb[1:1:2]   | passed | 0.29067 seconds |
+./spec/models/employee_spec.rb[1:2:1:1] | passed | 0.18913 seconds |
+./spec/models/employee_spec.rb[1:2:2:1] | passed | 0.18236 seconds |
+./spec/models/employee_spec.rb[1:2:2:2] | passed | 0.18544 seconds |
+./spec/models/employee_spec.rb[1:2:3:1] | passed | 0.18785 seconds |
+./spec/models/employee_spec.rb[1:2:3:2] | passed | 0.18375 seconds |
+./spec/models/employee_spec.rb[1:3:1]   | passed | 0.18027 seconds |
