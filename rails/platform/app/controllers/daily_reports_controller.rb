@@ -36,8 +36,20 @@ class DailyReportsController < ApplicationController
   end
 
   def update
+    was_finalized = @daily_report.finalized?
+
     if @daily_report.update(daily_report_params)
-      redirect_to project_daily_report_path(@project, @daily_report), notice: "日報を更新しました"
+      # 確定済みだった場合は修正済みに変更
+      if was_finalized
+        @daily_report.update!(
+          status: "revised",
+          revised_at: Time.current,
+          revised_by: current_employee
+        )
+        redirect_to project_daily_report_path(@project, @daily_report), notice: "日報を修正しました（修正履歴が記録されます）"
+      else
+        redirect_to project_daily_report_path(@project, @daily_report), notice: "日報を更新しました"
+      end
     else
       build_attendances
       render :edit, status: :unprocessable_entity

@@ -30,8 +30,8 @@
                         <p class="text-sm font-medium text-blue-600">
                           <%= l(report.report_date) %>
                         </p>
-                        <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= report.confirmed? ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
-                          <%= report.confirmed? ? '確定' : '下書き' %>
+                        <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= daily_report_status_class(report.status) %>">
+                          <%= daily_report_status_label(report.status) %>
                         </span>
                         <% if report.weather.present? %>
                           <span class="ml-2 text-sm text-gray-500">

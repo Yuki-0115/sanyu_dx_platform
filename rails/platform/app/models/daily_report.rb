@@ -17,6 +17,7 @@ class DailyReport < ApplicationRecord
   # Associations
   belongs_to :project
   belongs_to :foreman, class_name: "Employee"
+  belongs_to :revised_by, class_name: "Employee", optional: true
 
   has_many :attendances, dependent: :destroy
   has_many :expenses, dependent: :destroy
@@ -45,5 +46,32 @@ class DailyReport < ApplicationRecord
 
   def confirmed?
     status == "confirmed"
+  end
+
+  def revised?
+    status == "revised"
+  end
+
+  def finalized?
+    confirmed? || revised?
+  end
+
+  def revise!(user)
+    return unless finalized?
+
+    update!(
+      status: "revised",
+      revised_at: Time.current,
+      revised_by: user
+    )
+  end
+
+  # 確定済み/修正済みの場合に編集したら自動的にrevisedにする
+  def mark_as_revised_if_needed(user)
+    if confirmed? && changed?
+      self.status = "revised"
+      self.revised_at = Time.current
+      self.revised_by = user
+    end
   end
 end

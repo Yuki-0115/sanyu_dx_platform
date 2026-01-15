@@ -12,10 +12,8 @@
           </p>
         </div>
         <div class="flex space-x-2">
-          <% unless @daily_report.confirmed? %>
-            <%= link_to "編集", edit_project_daily_report_path(@project, @daily_report),
-                class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-          <% end %>
+          <%= link_to "編集", edit_project_daily_report_path(@project, @daily_report),
+              class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
           <%= link_to "一覧", project_daily_reports_path(@project),
               class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
         </div>
@@ -25,8 +23,8 @@
       <div class="bg-white shadow rounded-lg p-6 mb-6">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-medium text-gray-900">基本情報</h3>
-          <span class="px-3 py-1 text-sm font-medium rounded-full <%= @daily_report.confirmed? ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
-            <%= @daily_report.confirmed? ? '確定済' : '下書き' %>
+          <span class="px-3 py-1 text-sm font-medium rounded-full <%= daily_report_status_class(@daily_report.status) %>">
+            <%= daily_report_status_label(@daily_report.status) %>
           </span>
         </div>
 
@@ -158,16 +156,33 @@
         <% end %>
       </div>
 
-      <% unless @daily_report.confirmed? %>
+      <% if @daily_report.status == "draft" %>
         <div class="flex justify-end">
           <%= button_to "日報を確定する", confirm_project_daily_report_path(@project, @daily_report),
               method: :post,
-              data: { turbo_confirm: "この日報を確定しますか？確定後は編集できなくなります。" },
+              data: { turbo_confirm: "この日報を確定しますか？" },
               class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700" %>
         </div>
       <% else %>
-        <div class="text-sm text-gray-500 text-right">
-          確定日時: <%= @daily_report.confirmed_at ? l(@daily_report.confirmed_at, format: :short) : "不明" %>
+        <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
+          <div class="flex justify-between">
+            <div>
+              <% if @daily_report.confirmed_at %>
+                <p>確定日時: <%= l(@daily_report.confirmed_at, format: :short) %></p>
+              <% end %>
+              <% if @daily_report.revised? && @daily_report.revised_at %>
+                <p class="mt-1 text-blue-600">
+                  修正日時: <%= l(@daily_report.revised_at, format: :short) %>
+                  <% if @daily_report.revised_by %>
+                    （修正者: <%= @daily_report.revised_by.name %>）
+                  <% end %>
+                </p>
+              <% end %>
+            </div>
+            <% if @daily_report.finalized? %>
+              <span class="text-xs text-gray-400">編集すると「修正済」として記録されます</span>
+            <% end %>
+          </div>
         </div>
       <% end %>
     </div>
