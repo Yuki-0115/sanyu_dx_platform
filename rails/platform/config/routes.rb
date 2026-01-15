@@ -43,6 +43,9 @@ Rails.application.routes.draw do
     end
   end
 
+  # 全日報一覧
+  resources :all_daily_reports, only: [:index]
+
   # 全請求書一覧
   resources :all_invoices, only: [:index]
 

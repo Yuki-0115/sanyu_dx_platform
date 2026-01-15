@@ -6,8 +6,7 @@ class AllInvoicesController < ApplicationController
   def index
     @invoices = Invoice.includes(project: :client)
                        .order(created_at: :desc)
-                       .page(params[:page])
-                       .per(20)
+                       .limit(100)
 
     @unpaid_count = Invoice.where(status: %w[issued waiting]).count
     @unpaid_amount = Invoice.where(status: %w[issued waiting]).sum(:total_amount) || 0

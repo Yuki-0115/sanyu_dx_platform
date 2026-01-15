@@ -94,11 +94,6 @@
         </table>
       </div>
 
-      <% if @invoices.respond_to?(:total_pages) && @invoices.total_pages > 1 %>
-        <div class="mt-4 flex justify-center">
-          <%= paginate @invoices %>
-        </div>
-      <% end %>
     </div>
   </main>
 </div>
