@@ -7,6 +7,12 @@ class DailyReport < ApplicationRecord
   # Constants
   STATUSES = %w[draft confirmed revised].freeze
   WEATHERS = %w[sunny cloudy rainy snowy].freeze
+  WEATHER_LABELS = {
+    "sunny" => "晴れ",
+    "cloudy" => "曇り",
+    "rainy" => "雨",
+    "snowy" => "雪"
+  }.freeze
 
   # Associations
   belongs_to :project
@@ -14,6 +20,9 @@ class DailyReport < ApplicationRecord
 
   has_many :attendances, dependent: :destroy
   has_many :expenses, dependent: :destroy
+
+  accepts_nested_attributes_for :attendances, allow_destroy: true,
+                                reject_if: ->(attrs) { attrs["attendance_type"].blank? }
 
   # Validations
   validates :report_date, presence: true

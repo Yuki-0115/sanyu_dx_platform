@@ -1,0 +1,67 @@
+<div class="min-h-screen bg-gray-100">
+  <%= render "shared/navbar" %>
+
+  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">日報一覧</h2>
+          <p class="text-gray-600">
+            <%= link_to @project.name, project_path(@project), class: "text-blue-600 hover:underline" %>
+          </p>
+        </div>
+        <div class="flex space-x-2">
+          <%= link_to "新規日報", new_project_daily_report_path(@project),
+              class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+          <%= link_to "案件に戻る", project_path(@project),
+              class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+        </div>
+      </div>
+
+      <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <% if @daily_reports.any? %>
+          <ul class="divide-y divide-gray-200">
+            <% @daily_reports.each do |report| %>
+              <li>
+                <%= link_to project_daily_report_path(@project, report), class: "block hover:bg-gray-50" do %>
+                  <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center">
+                        <p class="text-sm font-medium text-blue-600">
+                          <%= l(report.report_date) %>
+                        </p>
+                        <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= report.confirmed? ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
+                          <%= report.confirmed? ? '確定' : '下書き' %>
+                        </span>
+                        <% if report.weather.present? %>
+                          <span class="ml-2 text-sm text-gray-500">
+                            <%= DailyReport::WEATHER_LABELS[report.weather] %>
+                          </span>
+                        <% end %>
+                      </div>
+                      <div class="text-sm text-gray-500">
+                        職長: <%= report.foreman.name %>
+                      </div>
+                    </div>
+                    <div class="mt-2">
+                      <p class="text-sm text-gray-600 truncate">
+                        出面: <%= report.attendances.present.count %>名
+                        <% if report.work_content.present? %>
+                          | <%= truncate(report.work_content, length: 50) %>
+                        <% end %>
+                      </p>
+                    </div>
+                  </div>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <div class="px-4 py-8 text-center text-gray-500">
+            日報がありません
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,139 @@
+<div class="min-h-screen bg-gray-100">
+  <%= render "shared/navbar" %>
+
+  <main class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">日報詳細</h2>
+          <p class="text-gray-600">
+            <%= link_to @project.name, project_path(@project), class: "text-blue-600 hover:underline" %>
+            / <%= l(@daily_report.report_date) %>
+          </p>
+        </div>
+        <div class="flex space-x-2">
+          <% unless @daily_report.confirmed? %>
+            <%= link_to "編集", edit_project_daily_report_path(@project, @daily_report),
+                class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+          <% end %>
+          <%= link_to "一覧", project_daily_reports_path(@project),
+              class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+        </div>
+      </div>
+
+      <!-- 基本情報 -->
+      <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-gray-900">基本情報</h3>
+          <span class="px-3 py-1 text-sm font-medium rounded-full <%= @daily_report.confirmed? ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
+            <%= @daily_report.confirmed? ? '確定済' : '下書き' %>
+          </span>
+        </div>
+
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <dt class="text-sm font-medium text-gray-500">報告日</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= l(@daily_report.report_date) %></dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">職長</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= @daily_report.foreman.name %></dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">天気</dt>
+            <dd class="mt-1 text-sm text-gray-900">
+              <%= @daily_report.weather.present? ? DailyReport::WEATHER_LABELS[@daily_report.weather] : "未入力" %>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">気温</dt>
+            <dd class="mt-1 text-sm text-gray-900">
+              <% if @daily_report.temperature_high || @daily_report.temperature_low %>
+                <%= @daily_report.temperature_low %>℃ 〜 <%= @daily_report.temperature_high %>℃
+              <% else %>
+                未入力
+              <% end %>
+            </dd>
+          </div>
+        </dl>
+
+        <% if @daily_report.work_content.present? %>
+          <div class="mt-4">
+            <dt class="text-sm font-medium text-gray-500">作業内容</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= simple_format(@daily_report.work_content) %></dd>
+          </div>
+        <% end %>
+
+        <% if @daily_report.notes.present? %>
+          <div class="mt-4">
+            <dt class="text-sm font-medium text-gray-500">備考</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= simple_format(@daily_report.notes) %></dd>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- 出面 -->
+      <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">出面一覧</h3>
+
+        <% present_attendances = @daily_report.attendances.select(&:present?) %>
+        <% if present_attendances.any? %>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">氏名</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">出勤区分</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">時間</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">走行距離</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <% present_attendances.each do |attendance| %>
+                  <tr>
+                    <td class="px-4 py-3 text-sm text-gray-900"><%= attendance.employee.name %></td>
+                    <td class="px-4 py-3 text-sm">
+                      <span class="px-2 py-1 text-xs font-medium rounded-full <%= attendance.attendance_type == 'full' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' %>">
+                        <%= attendance.attendance_type == 'full' ? '全日' : '半日' %>
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-500">
+                      <% if attendance.start_time && attendance.end_time %>
+                        <%= attendance.start_time.strftime("%H:%M") %> 〜 <%= attendance.end_time.strftime("%H:%M") %>
+                      <% else %>
+                        -
+                      <% end %>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-500">
+                      <%= attendance.travel_distance ? "#{attendance.travel_distance}km" : "-" %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-4 text-sm text-gray-500">
+            出勤者: <%= present_attendances.count(&:present?) %>名
+            （全日: <%= present_attendances.count { |a| a.attendance_type == 'full' } %>名,
+            半日: <%= present_attendances.count { |a| a.attendance_type == 'half' } %>名）
+          </p>
+        <% else %>
+          <p class="text-gray-500">出面記録がありません</p>
+        <% end %>
+      </div>
+
+      <% unless @daily_report.confirmed? %>
+        <div class="flex justify-end">
+          <%= button_to "日報を確定する", confirm_project_daily_report_path(@project, @daily_report),
+              method: :post,
+              data: { turbo_confirm: "この日報を確定しますか？確定後は編集できなくなります。" },
+              class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700" %>
+        </div>
+      <% else %>
+        <div class="text-sm text-gray-500 text-right">
+          確定日時: <%= @daily_report.confirmed_at ? l(@daily_report.confirmed_at, format: :short) : "不明" %>
+        </div>
+      <% end %>
+    </div>
+  </main>
+</div>

@@ -19,6 +19,11 @@ Rails.application.routes.draw do
     resource :budget, only: %i[show new create edit update] do
       post :confirm
     end
+    resources :daily_reports do
+      member do
+        post :confirm
+      end
+    end
   end
 
   # API routes (for future use)
