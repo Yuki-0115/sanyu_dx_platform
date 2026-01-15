@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 # Create default tenant
-tenant = Tenant.find_or_create_by!(code: "sanyu") do |t|
-  t.name = "三友テック株式会社"
+tenant = Tenant.find_or_create_by!(code: "sunyutech") do |t|
+  t.name = "sunyutech"
 end
 
 puts "Created tenant: #{tenant.name}"

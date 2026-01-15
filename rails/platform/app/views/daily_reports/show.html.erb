@@ -45,16 +45,6 @@
               <%= @daily_report.weather.present? ? DailyReport::WEATHER_LABELS[@daily_report.weather] : "未入力" %>
             </dd>
           </div>
-          <div>
-            <dt class="text-sm font-medium text-gray-500">気温</dt>
-            <dd class="mt-1 text-sm text-gray-900">
-              <% if @daily_report.temperature_high || @daily_report.temperature_low %>
-                <%= @daily_report.temperature_low %>℃ 〜 <%= @daily_report.temperature_high %>℃
-              <% else %>
-                未入力
-              <% end %>
-            </dd>
-          </div>
         </dl>
 
         <% if @daily_report.work_content.present? %>
@@ -69,6 +59,52 @@
             <dt class="text-sm font-medium text-gray-500">備考</dt>
             <dd class="mt-1 text-sm text-gray-900"><%= simple_format(@daily_report.notes) %></dd>
           </div>
+        <% end %>
+      </div>
+
+      <!-- 原価情報 -->
+      <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">原価情報</h3>
+
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <% if @daily_report.materials_used.present? %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">使用材料</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= simple_format(@daily_report.materials_used) %></dd>
+            </div>
+          <% end %>
+
+          <% if @daily_report.machines_used.present? %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">使用機械</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= simple_format(@daily_report.machines_used) %></dd>
+            </div>
+          <% end %>
+
+          <% if @daily_report.labor_details.present? %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">労務</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= simple_format(@daily_report.labor_details) %></dd>
+            </div>
+          <% end %>
+
+          <% if @daily_report.outsourcing_details.present? %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">外注</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= simple_format(@daily_report.outsourcing_details) %></dd>
+            </div>
+          <% end %>
+
+          <% if @daily_report.transportation_cost.present? && @daily_report.transportation_cost > 0 %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">輸送費</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= number_to_currency(@daily_report.transportation_cost, unit: "¥", precision: 0) %></dd>
+            </div>
+          <% end %>
+        </dl>
+
+        <% unless @daily_report.materials_used.present? || @daily_report.machines_used.present? || @daily_report.labor_details.present? || @daily_report.outsourcing_details.present? || (@daily_report.transportation_cost.present? && @daily_report.transportation_cost > 0) %>
+          <p class="text-sm text-gray-500">原価情報は入力されていません</p>
         <% end %>
       </div>
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_15_044453) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_15_060000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -90,14 +90,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_044453) do
     t.bigint "foreman_id", null: false
     t.date "report_date", null: false
     t.string "weather"
-    t.integer "temperature_high"
-    t.integer "temperature_low"
     t.text "work_content"
     t.text "notes"
     t.string "status", default: "draft"
     t.datetime "confirmed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "materials_used"
+    t.text "machines_used"
+    t.text "labor_details"
+    t.text "outsourcing_details"
+    t.decimal "transportation_cost", precision: 15, scale: 2
     t.index ["foreman_id"], name: "index_daily_reports_on_foreman_id"
     t.index ["project_id"], name: "index_daily_reports_on_project_id"
     t.index ["tenant_id", "project_id", "report_date"], name: "idx_on_tenant_id_project_id_report_date_7d91023d27", unique: true

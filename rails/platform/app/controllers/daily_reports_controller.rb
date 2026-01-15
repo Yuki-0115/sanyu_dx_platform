@@ -78,8 +78,9 @@ class DailyReportsController < ApplicationController
 
   def daily_report_params
     params.require(:daily_report).permit(
-      :report_date, :weather, :temperature_high, :temperature_low,
-      :work_content, :notes,
+      :report_date, :weather, :work_content, :notes,
+      :materials_used, :machines_used, :labor_details,
+      :outsourcing_details, :transportation_cost,
       attendances_attributes: %i[id employee_id attendance_type start_time end_time travel_distance _destroy]
     )
   end
