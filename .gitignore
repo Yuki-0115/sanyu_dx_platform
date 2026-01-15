@@ -1,0 +1,35 @@
+# Environment
+.env.local
+.env.*.local
+
+# Rails
+rails/*/log/*
+rails/*/tmp/*
+rails/*/storage/*
+rails/*/.bundle
+rails/*/vendor/bundle
+rails/*/node_modules
+rails/*/public/assets
+rails/*/public/packs
+
+# Docker
+.docker
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backups
+backups/*.sql.gz
+
+# Credentials (DO NOT COMMIT)
+*.pem
+*.key
+service_account*.json

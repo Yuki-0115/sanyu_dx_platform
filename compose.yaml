@@ -1,0 +1,118 @@
+name: sanyu_dx_platform
+
+services:
+  postgres:
+    image: postgres:${POSTGRES_VERSION:-16-alpine}
+    env_file:
+      - .env
+      - .env.local
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sanyu}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  n8n:
+    image: n8nio/n8n:${N8N_VERSION:-2.1.1}
+    env_file:
+      - .env
+      - .env.local
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-sanyu_development}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-sanyu}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-sanyu_dev_password}
+      - DB_POSTGRESDB_SCHEMA=n8n
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  platform:
+    build:
+      context: ./rails
+      target: development
+      args:
+        - RUBY_VERSION=${RUBY_VERSION:-3.3.0}
+        - NODE_VERSION=${NODE_VERSION:-20}
+        - RAILS_VERSION=${RAILS_VERSION:-8.0.1}
+    env_file:
+      - .env
+      - .env.local
+    environment:
+      - RAILS_ENV=development
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-sanyu}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-sanyu_dev_password}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-sanyu}:${POSTGRES_PASSWORD:-sanyu_dev_password}@postgres:5432/sanyu_platform_development
+    ports:
+      - "${PLATFORM_PORT:-3001}:3000"
+    volumes:
+      - ./rails/platform:/platform
+      - bundle_cache:/usr/local/bundle
+    working_dir: /platform
+    command: >
+      bash -c "
+        bundle install &&
+        bin/rails db:prepare &&
+        bin/dev
+      "
+    stdin_open: true
+    tty: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker-web:
+    build:
+      context: ./rails
+      target: development
+      args:
+        - RUBY_VERSION=${RUBY_VERSION:-3.3.0}
+        - NODE_VERSION=${NODE_VERSION:-20}
+        - RAILS_VERSION=${RAILS_VERSION:-8.0.1}
+    env_file:
+      - .env
+      - .env.local
+    environment:
+      - RAILS_ENV=development
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-sanyu}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-sanyu_dev_password}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-sanyu}:${POSTGRES_PASSWORD:-sanyu_dev_password}@postgres:5432/sanyu_platform_development
+    ports:
+      - "${WORKER_WEB_PORT:-3002}:3000"
+    volumes:
+      - ./rails/worker_web:/worker_web
+      - bundle_cache:/usr/local/bundle
+    working_dir: /worker_web
+    command: >
+      bash -c "
+        bundle install &&
+        bin/rails db:prepare &&
+        bin/dev
+      "
+    stdin_open: true
+    tty: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
+  n8n_data:
+    driver: local
+  bundle_cache:
+    driver: local
