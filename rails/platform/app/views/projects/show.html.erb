@@ -93,6 +93,81 @@
               </div>
             </dl>
           </div>
+
+          <!-- 人員配置 -->
+          <div id="assignments" class="bg-white shadow rounded-lg p-6 mt-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">人員配置（段取り表用）</h3>
+
+            <% if @project.project_assignments.any? %>
+              <div class="mb-4">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">名前</th>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">種別</th>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">役割</th>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">期間</th>
+                      <th class="px-3 py-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    <% @project.project_assignments.includes(:employee).each do |assignment| %>
+                      <tr>
+                        <td class="px-3 py-2 text-sm text-gray-900"><%= assignment.employee.name %></td>
+                        <td class="px-3 py-2 text-sm">
+                          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <%= employment_type_badge_class(assignment.employee.employment_type) %>">
+                            <%= employment_type_label(assignment.employee.employment_type) %>
+                          </span>
+                        </td>
+                        <td class="px-3 py-2 text-sm text-gray-500">
+                          <%= { "foreman" => "職長", "worker" => "作業員", "support" => "応援" }[assignment.role] || "-" %>
+                        </td>
+                        <td class="px-3 py-2 text-sm text-gray-500">
+                          <%= assignment.start_date&.strftime("%m/%d") %> 〜 <%= assignment.end_date&.strftime("%m/%d") || "終了まで" %>
+                        </td>
+                        <td class="px-3 py-2 text-right">
+                          <%= button_to "解除", project_assignment_path(@project, assignment), method: :delete,
+                              data: { turbo_confirm: "配置を解除しますか？" },
+                              class: "text-xs text-red-600 hover:text-red-900" %>
+                        </td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            <% else %>
+              <p class="text-sm text-gray-500 mb-4">配置されている人員はいません</p>
+            <% end %>
+
+            <!-- 人員追加フォーム -->
+            <%= form_with url: project_assignments_path(@project), method: :post, scope: :project_assignment, class: "border-t border-gray-200 pt-4 mt-4" do |f| %>
+              <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+                <div>
+                  <label class="block text-xs font-medium text-gray-700">社員</label>
+                  <%= f.collection_select :employee_id,
+                      Employee.order(:employment_type, :name),
+                      :id,
+                      ->(e) { "#{e.name}（#{employment_type_label(e.employment_type)}）" },
+                      { include_blank: "選択..." },
+                      { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" } %>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-700">役割</label>
+                  <%= f.select :role, [["職長", "foreman"], ["作業員", "worker"], ["応援", "support"]],
+                      { include_blank: "選択..." },
+                      { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" } %>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-700">開始日</label>
+                  <%= f.date_field :start_date, value: @project.scheduled_start_date,
+                      class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" %>
+                </div>
+                <div>
+                  <%= f.submit "追加", class: "w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
         </div>
 
         <!-- 4点チェック -->
@@ -147,12 +222,90 @@
               </li>
             </ul>
 
-            <% unless @project.four_point_completed? || @project.status == "ordered" %>
+            <% unless @project.four_point_completed? || @project.status != "draft" && @project.status != "estimating" %>
               <div class="mt-6">
                 <%= button_to "4点チェック完了", complete_four_point_project_path(@project),
                     method: :post,
                     disabled: !@project.four_point_completed?,
                     class: "w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white #{@project.four_point_completed? ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}" %>
+              </div>
+            <% end %>
+          </div>
+
+          <!-- 着工前ゲート（常に表示、4点チェック完了後に操作可能） -->
+          <div class="bg-white shadow rounded-lg p-6 mt-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">着工前ゲート</h3>
+
+            <% if !@project.four_point_completed? %>
+              <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                <p class="text-sm text-gray-600">4点チェック完了後に着工前ゲートの操作が可能になります</p>
+              </div>
+            <% elsif @project.pre_construction_gate_completed_at.present? %>
+              <div class="mb-4 p-3 bg-green-50 rounded-lg">
+                <p class="text-sm text-green-800 font-medium">✓ 着工前ゲート完了</p>
+                <p class="text-xs text-green-600 mt-1">完了日: <%= l(@project.pre_construction_gate_completed_at, format: :short) %></p>
+              </div>
+            <% elsif @project.status == "ordered" || @project.status == "preparing" %>
+              <div class="mb-4 p-3 bg-yellow-50 rounded-lg">
+                <p class="text-sm text-yellow-800 font-medium">⚠ 着工前ゲート未完了</p>
+              </div>
+            <% end %>
+
+            <ul class="space-y-3">
+              <li class="flex items-center">
+                <% if @project.site_conditions_checked %>
+                  <span class="flex-shrink-0 h-5 w-5 text-green-500">✓</span>
+                <% else %>
+                  <span class="flex-shrink-0 h-5 w-5 text-gray-400">○</span>
+                <% end %>
+                <span class="ml-2 text-sm text-gray-700">現場条件確認</span>
+              </li>
+              <li class="flex items-center">
+                <% if @project.night_work_checked %>
+                  <span class="flex-shrink-0 h-5 w-5 text-green-500">✓</span>
+                <% else %>
+                  <span class="flex-shrink-0 h-5 w-5 text-gray-400">○</span>
+                <% end %>
+                <span class="ml-2 text-sm text-gray-700">夜間作業確認</span>
+              </li>
+              <li class="flex items-center">
+                <% if @project.regulations_checked %>
+                  <span class="flex-shrink-0 h-5 w-5 text-green-500">✓</span>
+                <% else %>
+                  <span class="flex-shrink-0 h-5 w-5 text-gray-400">○</span>
+                <% end %>
+                <span class="ml-2 text-sm text-gray-700">規制確認</span>
+              </li>
+              <li class="flex items-center">
+                <% if @project.safety_docs_checked %>
+                  <span class="flex-shrink-0 h-5 w-5 text-green-500">✓</span>
+                <% else %>
+                  <span class="flex-shrink-0 h-5 w-5 text-gray-400">○</span>
+                <% end %>
+                <span class="ml-2 text-sm text-gray-700">安全書類完備</span>
+              </li>
+              <li class="flex items-center">
+                <% if @project.delivery_checked %>
+                  <span class="flex-shrink-0 h-5 w-5 text-green-500">✓</span>
+                <% else %>
+                  <span class="flex-shrink-0 h-5 w-5 text-gray-400">○</span>
+                <% end %>
+                <span class="ml-2 text-sm text-gray-700">搬入制限確認</span>
+              </li>
+            </ul>
+
+            <% if @project.status == "ordered" %>
+              <div class="mt-6">
+                <%= button_to "着工前ゲート完了", complete_pre_construction_gate_project_path(@project),
+                    method: :post,
+                    disabled: !@project.pre_construction_gate_completed?,
+                    class: "w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white #{@project.pre_construction_gate_completed? ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}" %>
+              </div>
+            <% elsif @project.status == "preparing" %>
+              <div class="mt-6">
+                <%= button_to "着工開始", start_construction_project_path(@project),
+                    method: :post,
+                    class: "w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700" %>
               </div>
             <% end %>
           </div>

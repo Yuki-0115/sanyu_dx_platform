@@ -1,0 +1,53 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">協力会社マスタ</h1>
+    <%= link_to "新規登録", new_master_partner_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+  </div>
+
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">コード</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">会社名</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">仮社員</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">締め日</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">相殺ルール</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @partners.each do |partner| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%= partner.code %></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <%= link_to partner.name, master_partner_path(partner), class: "text-blue-600 hover:text-blue-900" %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <% if partner.has_temporary_employees %>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">あり</span>
+              <% else %>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">なし</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <%= partner.closing_day.present? ? "#{partner.closing_day}日" : "-" %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= partner.offset_rule || "-" %></td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <%= link_to "編集", edit_master_partner_path(partner), class: "text-blue-600 hover:text-blue-900 mr-3" %>
+              <%= button_to "削除", master_partner_path(partner), method: :delete,
+                  data: { turbo_confirm: "本当に削除しますか？" },
+                  class: "text-red-600 hover:text-red-900" %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @partners.empty? %>
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-gray-500">協力会社が登録されていません</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

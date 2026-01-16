@@ -6,18 +6,24 @@ class Invoice < ApplicationRecord
 
   # Constants
   STATUSES = %w[draft issued waiting paid overdue].freeze
+  TAX_RATE = 0.10  # 消費税率10%
 
   # Associations
   belongs_to :project
   has_many :payments, dependent: :restrict_with_error
+  has_many :invoice_items, dependent: :destroy
+
+  accepts_nested_attributes_for :invoice_items, allow_destroy: true,
+                                reject_if: ->(attrs) { attrs["name"].blank? }
 
   # Validations
   validates :invoice_number, uniqueness: { scope: :tenant_id }, allow_blank: true
-  validates :amount, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :amount, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :status, inclusion: { in: STATUSES }
 
   # Defaults
   attribute :status, :string, default: "draft"
+  attribute :amount, :decimal, default: 0
   attribute :tax_amount, :decimal, default: 0
   attribute :total_amount, :decimal, default: 0
 
@@ -43,6 +49,22 @@ class Invoice < ApplicationRecord
 
   def remaining_amount
     total_amount.to_d - paid_amount
+  end
+
+  # 明細から金額を再計算
+  def recalculate_amount!
+    new_amount = invoice_items.sum(:subtotal)
+    new_tax = (new_amount * TAX_RATE).round
+    update_columns(
+      amount: new_amount,
+      tax_amount: new_tax,
+      total_amount: new_amount + new_tax
+    )
+  end
+
+  # 消費税を自動計算
+  def calculate_tax_from_amount
+    self.tax_amount = (amount.to_d * TAX_RATE).round
   end
 
   private

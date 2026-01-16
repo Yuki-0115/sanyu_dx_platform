@@ -15,6 +15,8 @@
           <% if current_employee.can_access?(:projects) %>
             <%= link_to "案件", projects_path,
                 class: "px-3 py-2 text-sm font-medium #{controller_name == 'projects' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}" %>
+            <%= link_to "段取り表", schedule_path,
+                class: "px-3 py-2 text-sm font-medium #{controller_name == 'schedule' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}" %>
           <% end %>
           <% if current_employee.can_access?(:daily_reports) %>
             <%= link_to "日報", all_daily_reports_path,
@@ -27,6 +29,27 @@
           <% if current_employee.can_access?(:offsets) %>
             <%= link_to "相殺", offsets_path,
                 class: "px-3 py-2 text-sm font-medium #{controller_name == 'offsets' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}" %>
+          <% end %>
+          <% if current_employee.can_access?(:safety_documents) %>
+            <%= link_to "安全書類", safety_documents_path,
+                class: "px-3 py-2 text-sm font-medium #{controller_name == 'safety_documents' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}" %>
+          <% end %>
+          <% if current_employee.can_access?(:master) %>
+            <div class="relative" data-controller="dropdown">
+              <button type="button" data-action="click->dropdown#toggle" class="px-3 py-2 text-sm font-medium <%= controller_path.start_with?('master/') ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700' %> inline-flex items-center">
+                マスター
+                <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div data-dropdown-target="menu" class="hidden absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                <div class="py-1">
+                  <%= link_to "顧客", master_clients_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+                  <%= link_to "協力会社", master_partners_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+                  <%= link_to "社員", master_employees_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+                </div>
+              </div>
+            </div>
           <% end %>
         </div>
       </div>

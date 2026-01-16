@@ -60,7 +60,7 @@ module Api
           estimated_amount: project.estimated_amount,
           order_amount: project.order_amount,
           budget_amount: project.budget_amount,
-          four_point_approved_at: project.four_point_approved_at,
+          four_point_completed_at: project.four_point_completed_at,
           created_at: project.created_at,
           updated_at: project.updated_at
         }

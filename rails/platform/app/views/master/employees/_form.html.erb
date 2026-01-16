@@ -1,0 +1,89 @@
+<%= form_with model: [:master, employee], class: "space-y-6" do |f| %>
+  <% if employee.errors.any? %>
+    <div class="rounded-md bg-red-50 p-4">
+      <ul class="list-disc list-inside text-sm text-red-700">
+        <% employee.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div>
+      <%= f.label :code, "社員コード", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :code, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", required: true %>
+    </div>
+
+    <div>
+      <%= f.label :name, "名前", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", required: true %>
+    </div>
+
+    <div>
+      <%= f.label :name_kana, "フリガナ", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :name_kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :employment_type, "雇用種別", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.select :employment_type, [["正社員", "regular"], ["仮社員", "temporary"], ["外注", "external"]],
+          {},
+          { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+    </div>
+
+    <div>
+      <%= f.label :role, "役割", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.select :role, [
+            ["管理者", "admin"],
+            ["経営層", "management"],
+            ["経理", "accounting"],
+            ["営業", "sales"],
+            ["技術", "engineering"],
+            ["施工管理", "construction"],
+            ["作業員", "worker"]
+          ],
+          {},
+          { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+    </div>
+
+    <div>
+      <%= f.label :partner_id, "所属会社（協力会社）", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.collection_select :partner_id, Partner.all.order(:name), :id, :name,
+          { include_blank: "なし（自社）" },
+          { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+      <p class="mt-1 text-xs text-gray-500">仮社員・外注の場合は所属会社を選択</p>
+    </div>
+
+    <div>
+      <%= f.label :hire_date, "入社日", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.date_field :hire_date, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :phone, "電話番号", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :phone, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :email, "メールアドレス", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.email_field :email, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      <p class="mt-1 text-xs text-gray-500">ログインに使用します（任意）</p>
+    </div>
+
+    <div>
+      <%= f.label :password, "パスワード", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.password_field :password, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", autocomplete: "new-password" %>
+      <% if employee.persisted? %>
+        <p class="mt-1 text-xs text-gray-500">変更する場合のみ入力</p>
+      <% else %>
+        <p class="mt-1 text-xs text-gray-500">空欄の場合は自動生成</p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+    <%= link_to "キャンセル", master_employees_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    <%= f.submit employee.persisted? ? "更新" : "登録", class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer" %>
+  </div>
+<% end %>

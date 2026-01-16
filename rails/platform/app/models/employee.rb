@@ -8,7 +8,7 @@ class Employee < ApplicationRecord
   devise :database_authenticatable, :recoverable, :rememberable, :trackable, :validatable
 
   # Constants
-  EMPLOYMENT_TYPES = %w[regular temporary].freeze
+  EMPLOYMENT_TYPES = %w[regular temporary external].freeze
   ROLES = %w[admin management accounting sales engineering construction worker].freeze
 
   # Associations
@@ -57,11 +57,11 @@ class Employee < ApplicationRecord
   def can_access?(feature)
     permissions = {
       admin: :all,
-      management: %i[dashboard projects estimates budgets daily_reports invoices offsets],
-      accounting: %i[dashboard invoices payments offsets expenses],
-      sales: %i[dashboard projects estimates clients],
-      engineering: %i[dashboard projects budgets daily_reports],
-      construction: %i[dashboard projects daily_reports attendances expenses],
+      management: %i[dashboard projects estimates budgets daily_reports invoices offsets safety_documents master],
+      accounting: %i[dashboard invoices payments offsets expenses master],
+      sales: %i[dashboard projects estimates clients master],
+      engineering: %i[dashboard projects budgets daily_reports safety_documents],
+      construction: %i[dashboard projects daily_reports attendances expenses safety_documents],
       worker: %i[daily_reports attendances]
     }
 

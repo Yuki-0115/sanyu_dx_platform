@@ -1,0 +1,132 @@
+<div class="min-h-screen bg-gray-100">
+  <%= render "shared/navbar" %>
+
+  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+      <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center space-x-3">
+          <svg class="w-8 h-8 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path>
+          </svg>
+          <div>
+            <h2 class="text-2xl font-bold text-gray-900"><%= @folder.name %></h2>
+            <% if @folder.project.present? %>
+              <p class="text-gray-600">
+                <%= link_to @folder.project.name, project_path(@folder.project), class: "text-blue-600 hover:underline" %>
+              </p>
+            <% end %>
+          </div>
+        </div>
+        <div class="flex space-x-2">
+          <%= link_to new_safety_folder_file_path(@folder), class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700" do %>
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+            </svg>
+            ファイルアップロード
+          <% end %>
+          <%= link_to edit_folder_safety_document_path(@folder), class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
+            編集
+          <% end %>
+          <%= link_to safety_documents_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
+            一覧に戻る
+          <% end %>
+        </div>
+      </div>
+
+      <% if @folder.description.present? %>
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+          <p class="text-sm text-gray-600"><%= @folder.description %></p>
+        </div>
+      <% end %>
+
+      <!-- ファイル一覧 -->
+      <div class="bg-white rounded-lg shadow">
+        <% if @files.any? %>
+          <ul class="divide-y divide-gray-200">
+            <% @files.each do |file| %>
+              <li class="p-4 hover:bg-gray-50">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <% if file.attachments.attached? %>
+                      <% attachment = file.attachments.first %>
+                      <% if attachment.content_type&.start_with?("image/") %>
+                        <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                      <% elsif attachment.content_type == "application/pdf" %>
+                        <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                      <% elsif attachment.content_type&.include?("spreadsheet") || attachment.content_type&.include?("excel") || attachment.filename.to_s.match?(/\.xlsx?$/i) %>
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                      <% else %>
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                      <% end %>
+                    <% else %>
+                      <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                    <% end %>
+                    <div>
+                      <p class="text-sm font-medium text-gray-900"><%= file.name %></p>
+                      <% if file.description.present? %>
+                        <p class="text-xs text-gray-500"><%= file.description %></p>
+                      <% end %>
+                      <p class="text-xs text-gray-400">
+                        <%= file.uploaded_by&.name || "不明" %> - <%= l(file.created_at, format: :short) %>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <% if file.attachments.attached? %>
+                      <% file.attachments.each do |attachment| %>
+                        <%= link_to rails_blob_path(attachment, disposition: "inline"),
+                            target: "_blank",
+                            class: "inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
+                          <%= truncate(attachment.filename.to_s, length: 20) %>
+                          <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                          </svg>
+                        <% end %>
+                      <% end %>
+                    <% end %>
+                    <%= link_to edit_safety_file_path(file), class: "text-blue-600 hover:text-blue-800 text-sm" do %>
+                      編集
+                    <% end %>
+                    <%= button_to safety_file_path(file), method: :delete, data: { turbo_confirm: "このファイルを削除しますか？" }, class: "text-red-600 hover:text-red-800 text-sm" do %>
+                      削除
+                    <% end %>
+                  </div>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">ファイルがありません</h3>
+            <p class="mt-1 text-sm text-gray-500">ファイルをアップロードしてください</p>
+            <%= link_to new_safety_folder_file_path(@folder), class: "mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700" do %>
+              ファイルアップロード
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="mt-6 flex justify-between">
+        <%= button_to destroy_folder_safety_document_path(@folder),
+            method: :delete,
+            data: { turbo_confirm: "このフォルダと全てのファイルを削除しますか？" },
+            class: "inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50" do %>
+          フォルダを削除
+        <% end %>
+      </div>
+    </div>
+  </main>
+</div>

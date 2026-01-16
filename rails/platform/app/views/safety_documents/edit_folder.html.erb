@@ -1,0 +1,47 @@
+<div class="min-h-screen bg-gray-100">
+  <%= render "shared/navbar" %>
+
+  <main class="max-w-2xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">フォルダ編集</h2>
+
+      <%= form_with model: @folder, url: update_folder_safety_document_path(@folder), method: :patch, class: "space-y-6" do |f| %>
+        <% if @folder.errors.any? %>
+          <div class="rounded-md bg-red-50 p-4">
+            <ul class="list-disc list-inside text-sm text-red-700">
+              <% @folder.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="bg-white shadow rounded-lg p-6">
+          <div class="space-y-4">
+            <div>
+              <%= f.label :name, "フォルダ名", class: "block text-sm font-medium text-gray-700" %>
+              <%= f.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", required: true %>
+            </div>
+
+            <div>
+              <%= f.label :project_id, "関連案件（任意）", class: "block text-sm font-medium text-gray-700" %>
+              <%= f.collection_select :project_id, Project.order(:name), :id, :name,
+                  { include_blank: "案件に紐づけない（共通フォルダ）" },
+                  { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+            </div>
+
+            <div>
+              <%= f.label :description, "説明（任意）", class: "block text-sm font-medium text-gray-700" %>
+              <%= f.text_area :description, rows: 3, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3">
+          <%= link_to "キャンセル", safety_document_path(@folder), class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+          <%= f.submit "更新", class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer" %>
+        </div>
+      <% end %>
+    </div>
+  </main>
+</div>

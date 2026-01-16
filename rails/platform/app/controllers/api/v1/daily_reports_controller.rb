@@ -7,7 +7,7 @@ module Api
 
       # GET /api/v1/daily_reports
       def index
-        @reports = DailyReport.includes(:project, :reporter, :attendances)
+        @reports = DailyReport.includes(:project, :foreman, :attendances)
                               .order(report_date: :desc)
                               .limit(params[:limit] || 100)
 
@@ -35,7 +35,7 @@ module Api
       # GET /api/v1/daily_reports/unconfirmed
       # 未確認の日報一覧（n8nでの自動リマインダー用）
       def unconfirmed
-        @reports = DailyReport.includes(:project, :reporter)
+        @reports = DailyReport.includes(:project, :foreman)
                               .where(status: "draft")
                               .where("report_date < ?", Date.current)
                               .order(report_date: :asc)
@@ -57,7 +57,7 @@ module Api
           report_date: report.report_date,
           weather: report.weather,
           status: report.status,
-          reporter_name: report.reporter&.name,
+          foreman_name: report.foreman&.name,
           attendance_count: report.attendances.count,
           confirmed_at: report.confirmed_at,
           created_at: report.created_at
@@ -65,16 +65,20 @@ module Api
 
         if detailed
           data[:work_content] = report.work_content
-          data[:safety_notes] = report.safety_notes
+          data[:notes] = report.notes
           data[:materials_used] = report.materials_used
           data[:machines_used] = report.machines_used
           data[:labor_details] = report.labor_details
           data[:outsourcing_details] = report.outsourcing_details
+          data[:labor_cost] = report.labor_cost
+          data[:material_cost] = report.material_cost
+          data[:outsourcing_cost] = report.outsourcing_cost
           data[:transportation_cost] = report.transportation_cost
+          data[:total_cost] = report.total_cost
           data[:attendances] = report.attendances.map do |a|
             {
               id: a.id,
-              worker_name: a.worker&.name || a.partner_worker_name,
+              employee_name: a.employee&.name || a.partner_worker_name,
               attendance_type: a.attendance_type,
               hours_worked: a.hours_worked
             }

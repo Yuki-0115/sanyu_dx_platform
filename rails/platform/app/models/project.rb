@@ -23,6 +23,8 @@ class Project < ApplicationRecord
   has_many :daily_reports, dependent: :restrict_with_error
   has_many :expenses, dependent: :restrict_with_error
   has_many :invoices, dependent: :restrict_with_error
+  has_many :project_assignments, dependent: :destroy
+  has_many :assigned_employees, through: :project_assignments, source: :employee
 
   # Validations
   validates :code, presence: true, uniqueness: { scope: :tenant_id }
@@ -61,6 +63,25 @@ class Project < ApplicationRecord
     return false unless four_point_completed?
 
     update!(four_point_completed_at: Time.current, status: "ordered")
+  end
+
+  # 着工前ゲート（5点チェック）
+  def pre_construction_gate_completed?
+    site_conditions_checked && night_work_checked && regulations_checked &&
+      safety_docs_checked && delivery_checked
+  end
+
+  def complete_pre_construction_gate!
+    return false unless pre_construction_gate_completed?
+
+    update!(pre_construction_gate_completed_at: Time.current, status: "preparing")
+  end
+
+  # 着工開始
+  def start_construction!
+    return false unless status == "preparing"
+
+    update!(status: "in_progress")
   end
 
   # 実績原価（日報から動的計算）

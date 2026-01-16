@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class ExternalDailyReportsController < ApplicationController
-  before_action :authorize_daily_reports_access
+  include DailyReportActions
+
   before_action :set_daily_report, only: %i[show edit update confirm]
 
   def index
@@ -37,31 +38,18 @@ class ExternalDailyReportsController < ApplicationController
   end
 
   def update
-    was_finalized = @daily_report.finalized?
-
-    if @daily_report.update(daily_report_params)
-      if was_finalized
-        @daily_report.update!(
-          status: "revised",
-          revised_at: Time.current,
-          revised_by: current_employee
-        )
-        redirect_to external_daily_report_path(@daily_report), notice: "常用日報を修正しました（修正履歴が記録されます）"
-      else
-        redirect_to external_daily_report_path(@daily_report), notice: "常用日報を更新しました"
-      end
-    else
-      build_attendances
-      render :edit, status: :unprocessable_entity
+    handle_update do |message|
+      redirect_to external_daily_report_path(@daily_report), notice: "常用日報を#{message}"
     end
   end
 
   def confirm
-    if @daily_report.status == "draft"
-      @daily_report.confirm!
-      redirect_to external_daily_report_path(@daily_report), notice: "常用日報を確定しました"
-    else
-      redirect_to external_daily_report_path(@daily_report), alert: "この日報は既に確定済みです"
+    handle_confirm do |success_message, error_message|
+      if success_message
+        redirect_to external_daily_report_path(@daily_report), notice: "常用日報を#{success_message}"
+      else
+        redirect_to external_daily_report_path(@daily_report), alert: error_message
+      end
     end
   end
 
@@ -71,26 +59,12 @@ class ExternalDailyReportsController < ApplicationController
     @daily_report = DailyReport.external.find(params[:id])
   end
 
-  def authorize_daily_reports_access
-    authorize_feature!(:daily_reports)
-  end
-
-  def build_attendances
-    existing_employee_ids = @daily_report.attendances.map(&:employee_id)
-    employees = Employee.where(role: %w[construction worker]).where.not(id: existing_employee_ids)
-    employees.each do |employee|
-      @daily_report.attendances.build(employee: employee, attendance_type: "absent")
-    end
-  end
-
   def daily_report_params
     params.require(:daily_report).permit(
-      :report_date, :weather, :work_content, :notes,
-      :external_site_name, :project_id,
-      :materials_used, :machines_used, :labor_details,
-      :outsourcing_details, :transportation_cost,
-      :labor_cost, :material_cost, :outsourcing_cost,
-      attendances_attributes: %i[id employee_id partner_worker_name attendance_type hours_worked start_time end_time travel_distance _destroy]
+      *base_daily_report_params,
+      :external_site_name,
+      **attendance_params,
+      **expense_params
     )
   end
 end

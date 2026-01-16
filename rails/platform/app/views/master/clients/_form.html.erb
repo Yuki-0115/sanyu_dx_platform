@@ -1,0 +1,68 @@
+<%= form_with model: [:master, client], class: "space-y-6" do |f| %>
+  <% if client.errors.any? %>
+    <div class="rounded-md bg-red-50 p-4">
+      <ul class="list-disc list-inside text-sm text-red-700">
+        <% client.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div>
+      <%= f.label :code, "顧客コード", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :code, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", required: true %>
+    </div>
+
+    <div>
+      <%= f.label :name, "顧客名", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", required: true %>
+    </div>
+
+    <div>
+      <%= f.label :name_kana, "フリガナ", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :name_kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :postal_code, "郵便番号", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :postal_code, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", placeholder: "123-4567" %>
+    </div>
+
+    <div class="sm:col-span-2">
+      <%= f.label :address, "住所", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :address, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :phone, "電話番号", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :phone, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :contact_name, "担当者名", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :contact_name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :contact_email, "担当者メール", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.email_field :contact_email, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :payment_terms, "支払条件", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :payment_terms, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", placeholder: "月末締め翌月末払い" %>
+    </div>
+
+    <div class="sm:col-span-2">
+      <%= f.label :notes, "備考", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_area :notes, rows: 3, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+  </div>
+
+  <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+    <%= link_to "キャンセル", master_clients_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    <%= f.submit client.persisted? ? "更新" : "登録", class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer" %>
+  </div>
+<% end %>

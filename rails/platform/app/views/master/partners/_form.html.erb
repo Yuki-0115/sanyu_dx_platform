@@ -1,0 +1,50 @@
+<%= form_with model: [:master, partner], class: "space-y-6" do |f| %>
+  <% if partner.errors.any? %>
+    <div class="rounded-md bg-red-50 p-4">
+      <ul class="list-disc list-inside text-sm text-red-700">
+        <% partner.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div>
+      <%= f.label :code, "会社コード", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :code, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", required: true %>
+    </div>
+
+    <div>
+      <%= f.label :name, "会社名", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", required: true %>
+    </div>
+
+    <div>
+      <%= f.label :closing_day, "締め日", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.number_field :closing_day, min: 1, max: 31, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", placeholder: "25" %>
+      <p class="mt-1 text-xs text-gray-500">月末の場合は31を入力</p>
+    </div>
+
+    <div>
+      <%= f.label :offset_rule, "相殺ルール", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :offset_rule, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", placeholder: "売上の50%を相殺" %>
+    </div>
+
+    <div>
+      <%= f.label :carryover_balance, "繰越残高", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.number_field :carryover_balance, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    </div>
+
+    <div class="flex items-center pt-6">
+      <%= f.check_box :has_temporary_employees, class: "h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+      <%= f.label :has_temporary_employees, "仮社員あり", class: "ml-2 block text-sm text-gray-700" %>
+      <p class="ml-6 text-xs text-gray-500">チェックすると相殺対象になります</p>
+    </div>
+  </div>
+
+  <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+    <%= link_to "キャンセル", master_partners_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    <%= f.submit partner.persisted? ? "更新" : "登録", class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer" %>
+  </div>
+<% end %>

@@ -10,9 +10,37 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_15_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_15_234032) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "attendances", force: :cascade do |t|
     t.bigint "tenant_id", null: false
@@ -195,6 +223,24 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_120000) do
     t.index ["tenant_id"], name: "index_expenses_on_tenant_id"
   end
 
+  create_table "invoice_items", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "invoice_id", null: false
+    t.string "name", null: false
+    t.date "work_date"
+    t.decimal "quantity", precision: 10, scale: 2, default: "1.0"
+    t.string "unit", default: "式"
+    t.decimal "unit_price", precision: 12, default: "0"
+    t.decimal "subtotal", precision: 12, default: "0"
+    t.text "description"
+    t.integer "position", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["invoice_id", "position"], name: "index_invoice_items_on_invoice_id_and_position"
+    t.index ["invoice_id"], name: "index_invoice_items_on_invoice_id"
+    t.index ["tenant_id"], name: "index_invoice_items_on_tenant_id"
+  end
+
   create_table "invoices", force: :cascade do |t|
     t.bigint "tenant_id", null: false
     t.bigint "project_id", null: false
@@ -259,6 +305,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_120000) do
     t.index ["tenant_id"], name: "index_payments_on_tenant_id"
   end
 
+  create_table "project_assignments", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "project_id", null: false
+    t.bigint "employee_id", null: false
+    t.date "start_date"
+    t.date "end_date"
+    t.string "role"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id"], name: "index_project_assignments_on_employee_id"
+    t.index ["project_id"], name: "index_project_assignments_on_project_id"
+    t.index ["tenant_id", "project_id", "employee_id"], name: "idx_project_assignments_unique", unique: true
+    t.index ["tenant_id"], name: "index_project_assignments_on_tenant_id"
+  end
+
   create_table "projects", force: :cascade do |t|
     t.bigint "tenant_id", null: false
     t.bigint "client_id", null: false
@@ -286,14 +348,52 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "project_type", default: "regular", null: false
+    t.boolean "site_conditions_checked", default: false
+    t.boolean "night_work_checked", default: false
+    t.boolean "regulations_checked", default: false
+    t.boolean "safety_docs_checked", default: false
+    t.boolean "delivery_checked", default: false
+    t.datetime "pre_construction_gate_completed_at"
+    t.date "scheduled_start_date"
+    t.date "scheduled_end_date"
+    t.date "actual_start_date"
+    t.date "actual_end_date"
     t.index ["client_id"], name: "index_projects_on_client_id"
     t.index ["construction_user_id"], name: "index_projects_on_construction_user_id"
     t.index ["engineering_user_id"], name: "index_projects_on_engineering_user_id"
     t.index ["project_type"], name: "index_projects_on_project_type"
     t.index ["sales_user_id"], name: "index_projects_on_sales_user_id"
+    t.index ["scheduled_end_date"], name: "index_projects_on_scheduled_end_date"
+    t.index ["scheduled_start_date"], name: "index_projects_on_scheduled_start_date"
     t.index ["status"], name: "index_projects_on_status"
     t.index ["tenant_id", "code"], name: "index_projects_on_tenant_id_and_code", unique: true
     t.index ["tenant_id"], name: "index_projects_on_tenant_id"
+  end
+
+  create_table "safety_files", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "safety_folder_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.bigint "uploaded_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["safety_folder_id"], name: "index_safety_files_on_safety_folder_id"
+    t.index ["tenant_id"], name: "index_safety_files_on_tenant_id"
+  end
+
+  create_table "safety_folders", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "project_id"
+    t.string "name", null: false
+    t.text "description"
+    t.integer "files_count", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id"], name: "index_safety_folders_on_project_id"
+    t.index ["tenant_id", "name"], name: "index_safety_folders_on_tenant_id_and_name"
+    t.index ["tenant_id", "project_id"], name: "index_safety_folders_on_tenant_id_and_project_id"
+    t.index ["tenant_id"], name: "index_safety_folders_on_tenant_id"
   end
 
   create_table "tenants", force: :cascade do |t|
@@ -304,6 +404,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_120000) do
     t.index ["code"], name: "index_tenants_on_code", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "attendances", "daily_reports"
   add_foreign_key "attendances", "employees"
   add_foreign_key "attendances", "tenants"
@@ -325,6 +427,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_120000) do
   add_foreign_key "expenses", "employees", column: "payer_id"
   add_foreign_key "expenses", "projects"
   add_foreign_key "expenses", "tenants"
+  add_foreign_key "invoice_items", "invoices"
+  add_foreign_key "invoice_items", "tenants"
   add_foreign_key "invoices", "projects"
   add_foreign_key "invoices", "tenants"
   add_foreign_key "offsets", "partners"
@@ -332,6 +436,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_120000) do
   add_foreign_key "partners", "tenants"
   add_foreign_key "payments", "invoices"
   add_foreign_key "payments", "tenants"
+  add_foreign_key "project_assignments", "employees"
+  add_foreign_key "project_assignments", "projects"
+  add_foreign_key "project_assignments", "tenants"
   add_foreign_key "projects", "clients"
   add_foreign_key "projects", "tenants"
+  add_foreign_key "safety_files", "employees", column: "uploaded_by_id"
+  add_foreign_key "safety_files", "safety_folders"
+  add_foreign_key "safety_files", "tenants"
+  add_foreign_key "safety_folders", "projects"
+  add_foreign_key "safety_folders", "tenants"
 end

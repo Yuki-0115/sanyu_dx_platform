@@ -1,0 +1,200 @@
+<div class="min-h-screen bg-gray-100">
+  <%= render "shared/navbar" %>
+
+  <main class="max-w-full mx-auto py-6 px-4">
+    <div class="mb-6">
+      <div class="flex justify-between items-center">
+        <h2 class="text-2xl font-bold text-gray-900">現場カレンダー / 段取り表</h2>
+        <div class="flex items-center space-x-4">
+          <%= link_to "< 前月", schedule_path(start_date: @start_date - 1.month),
+              class: "px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50" %>
+          <span class="text-lg font-medium">
+            <%= l(@start_date, format: "%Y年%m月") %> 〜 <%= l(@end_date, format: "%Y年%m月") %>
+          </span>
+          <%= link_to "次月 >", schedule_path(start_date: @start_date + 1.month),
+              class: "px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50" %>
+          <%= link_to "今月", schedule_path,
+              class: "px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 凡例 -->
+    <div class="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+      <span class="font-medium text-gray-700">期間:</span>
+      <div class="flex items-center">
+        <div class="w-4 h-4 bg-blue-400 rounded mr-2"></div>
+        <span>予定</span>
+      </div>
+      <div class="flex items-center">
+        <div class="w-4 h-4 bg-green-500 rounded mr-2"></div>
+        <span>実績</span>
+      </div>
+      <div class="flex items-center">
+        <div class="w-4 h-4 bg-yellow-400 rounded mr-2"></div>
+        <span>本日</span>
+      </div>
+      <span class="font-medium text-gray-700 ml-4">人員:</span>
+      <div class="flex items-center">
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 mr-1">正社員</span>
+      </div>
+      <div class="flex items-center">
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 mr-1">仮社員</span>
+      </div>
+      <div class="flex items-center">
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 mr-1">外注</span>
+      </div>
+    </div>
+
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <!-- ヘッダー: 月 -->
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="sticky left-0 z-10 bg-gray-100 px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border-b border-r min-w-64">
+                案件名
+              </th>
+              <% current_month = nil %>
+              <% @dates.each do |date| %>
+                <% if date.month != current_month %>
+                  <% days_in_view = @dates.count { |d| d.month == date.month } %>
+                  <th colspan="<%= days_in_view %>" class="px-2 py-1 text-center text-xs font-medium text-gray-700 border-b border-l bg-gray-50">
+                    <%= l(date, format: "%Y年%m月") %>
+                  </th>
+                  <% current_month = date.month %>
+                <% end %>
+              <% end %>
+            </tr>
+            <!-- ヘッダー: 日 -->
+            <tr class="bg-gray-50">
+              <th class="sticky left-0 z-10 bg-gray-50 px-4 py-1 text-left text-xs font-medium text-gray-500 border-b border-r min-w-64">
+                担当者
+              </th>
+              <% @dates.each do |date| %>
+                <%
+                  is_today = date == Date.current
+                  is_weekend = date.saturday? || date.sunday?
+                  is_month_start = date.day == 1
+                  cell_class = "px-0 py-1 text-center text-xs border-b w-8 min-w-8"
+                  cell_class += " bg-yellow-100" if is_today
+                  cell_class += " bg-red-50 text-red-600" if is_weekend && !is_today
+                  cell_class += " border-l-2 border-gray-400" if is_month_start
+                  cell_class += " border-l border-gray-200" unless is_month_start
+                %>
+                <th class="<%= cell_class %>">
+                  <div><%= date.day %></div>
+                  <div class="text-xs text-gray-400"><%= %w[日 月 火 水 木 金 土][date.wday] %></div>
+                </th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% if @projects.any? %>
+              <% @projects.each do |project| %>
+                <tr class="hover:bg-gray-50">
+                  <td class="sticky left-0 z-10 bg-white px-4 py-3 border-r min-w-64">
+                    <div class="flex items-start justify-between">
+                      <div class="flex-1 min-w-0">
+                        <%= link_to project_path(project), class: "text-sm font-medium text-blue-600 hover:underline" do %>
+                          <%= project.code %>
+                        <% end %>
+                        <div class="text-sm text-gray-900 truncate max-w-40" title="<%= project.name %>">
+                          <%= project.name %>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                          施工: <%= project.construction_user&.name || "未定" %>
+                        </div>
+                        <!-- 配置人員 -->
+                        <% if project.project_assignments.any? %>
+                          <div class="mt-1 flex flex-wrap gap-1">
+                            <% project.project_assignments.includes(:employee).each do |assignment| %>
+                              <% emp = assignment.employee %>
+                              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium
+                                <%= case emp.employment_type
+                                    when 'regular' then 'bg-blue-100 text-blue-700'
+                                    when 'temporary' then 'bg-yellow-100 text-yellow-700'
+                                    when 'external' then 'bg-purple-100 text-purple-700'
+                                    else 'bg-gray-100 text-gray-700'
+                                    end %>">
+                                <%= emp.name %>
+                              </span>
+                            <% end %>
+                          </div>
+                        <% else %>
+                          <div class="mt-1 text-xs text-gray-400">人員未配置</div>
+                        <% end %>
+                      </div>
+                      <%= link_to edit_project_path(project, anchor: "assignments"), class: "ml-2 text-gray-400 hover:text-gray-600" do %>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                      <% end %>
+                    </div>
+                  </td>
+                  <% @dates.each do |date| %>
+                    <%
+                      is_today = date == Date.current
+                      is_weekend = date.saturday? || date.sunday?
+                      is_month_start = date.day == 1
+
+                      # 予定期間内か
+                      in_scheduled = project.scheduled_start_date && project.scheduled_end_date &&
+                                     date >= project.scheduled_start_date && date <= project.scheduled_end_date
+                      # 実績期間内か
+                      in_actual = project.actual_start_date &&
+                                  date >= project.actual_start_date &&
+                                  (project.actual_end_date.nil? || date <= project.actual_end_date)
+
+                      cell_class = "px-0 py-3 text-center w-8 min-w-8 relative"
+                      cell_class += " bg-yellow-50" if is_today
+                      cell_class += " bg-red-50" if is_weekend && !is_today && !in_scheduled && !in_actual
+                      cell_class += " border-l-2 border-gray-400" if is_month_start
+                      cell_class += " border-l border-gray-100" unless is_month_start
+                    %>
+                    <td class="<%= cell_class %>">
+                      <% if in_actual %>
+                        <div class="absolute inset-y-1 inset-x-0 bg-green-500 opacity-80"></div>
+                      <% elsif in_scheduled %>
+                        <div class="absolute inset-y-2 inset-x-0 bg-blue-400 opacity-60"></div>
+                      <% end %>
+                      <% if is_today %>
+                        <div class="absolute inset-y-0 left-1/2 w-0.5 bg-yellow-500 -translate-x-1/2"></div>
+                      <% end %>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr>
+                <td colspan="<%= @dates.size + 1 %>" class="px-4 py-8 text-center text-gray-500">
+                  表示する案件がありません。<br>
+                  案件の予定開始日・終了日を設定すると表示されます。
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 日程未設定の案件 -->
+    <% unscheduled = @projects.select { |p| p.scheduled_start_date.nil? || p.scheduled_end_date.nil? } %>
+    <% if unscheduled.any? %>
+      <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <h3 class="text-sm font-medium text-yellow-800 mb-2">日程未設定の案件 (<%= unscheduled.size %>件)</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          <% unscheduled.each do |project| %>
+            <div class="flex items-center justify-between bg-white rounded px-3 py-2">
+              <div>
+                <span class="text-sm font-medium text-gray-900"><%= project.code %></span>
+                <span class="text-sm text-gray-600 ml-2"><%= truncate(project.name, length: 20) %></span>
+              </div>
+              <%= link_to "設定", edit_project_path(project), class: "text-xs text-blue-600 hover:underline" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </main>
+</div>

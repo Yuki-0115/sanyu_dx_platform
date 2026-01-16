@@ -22,12 +22,17 @@ class DailyReport < ApplicationRecord
   has_many :attendances, dependent: :destroy
   has_many :expenses, dependent: :destroy
 
+  # 写真添付（複数）
+  has_many_attached :photos
+
   accepts_nested_attributes_for :attendances, allow_destroy: true,
                                 reject_if: ->(attrs) { attrs["attendance_type"].blank? }
+  accepts_nested_attributes_for :expenses, allow_destroy: true,
+                                reject_if: ->(attrs) { attrs["amount"].blank? || attrs["amount"].to_i <= 0 }
 
   # Validations
   validates :report_date, presence: true
-  validates :report_date, uniqueness: { scope: %i[tenant_id project_id] }, unless: :is_external?
+  validates :report_date, uniqueness: { scope: %i[tenant_id project_id], message: "この案件の同日の日報は既に存在します。編集画面から更新してください。" }, unless: :is_external?
   validates :status, inclusion: { in: STATUSES }
   validates :weather, inclusion: { in: WEATHERS }, allow_blank: true
   validates :external_site_name, presence: true, if: :is_external?

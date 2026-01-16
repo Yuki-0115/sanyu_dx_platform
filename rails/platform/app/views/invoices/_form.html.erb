@@ -1,4 +1,4 @@
-<%= form_with model: [@project, invoice], class: "space-y-6" do |f| %>
+<%= form_with model: [@project, invoice], class: "space-y-6", data: { controller: "invoice-form" } do |f| %>
   <% if invoice.errors.any? %>
     <div class="rounded-md bg-red-50 p-4">
       <div class="flex">
@@ -26,56 +26,248 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
       <div>
         <%= f.label :invoice_number, "請求番号", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.text_field :invoice_number, placeholder: "例: INV-2026-001",
+        <%= f.text_field :invoice_number, placeholder: "自動採番",
             class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
       </div>
 
       <div>
         <%= f.label :issued_date, "請求日", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.date_field :issued_date,
+        <%= f.date_field :issued_date, value: invoice.issued_date || Date.current,
             class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
       </div>
 
       <div>
         <%= f.label :due_date, "支払期限", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.date_field :due_date,
+        <%= f.date_field :due_date, value: invoice.due_date || Date.current.end_of_month.next_month,
             class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
       </div>
+    </div>
+
+    <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+      <dl class="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <dt class="text-gray-500">顧客名</dt>
+          <dd class="font-medium"><%= @project.client&.name || "未設定" %></dd>
+        </div>
+        <div>
+          <dt class="text-gray-500">案件名</dt>
+          <dd class="font-medium"><%= @project.name %></dd>
+        </div>
+      </dl>
     </div>
   </div>
 
-  <!-- 金額 -->
+  <!-- 明細 -->
+  <div class="bg-white shadow rounded-lg p-6" data-controller="nested-form">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h3 class="text-lg font-medium text-gray-900">請求明細</h3>
+        <p class="text-sm text-gray-500">項目ごとに日付、数量、単位、単価を入力してください</p>
+      </div>
+      <button type="button" data-action="nested-form#add"
+          class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        明細追加
+      </button>
+    </div>
+
+    <!-- テンプレート（非表示、JSで使用） -->
+    <template data-nested-form-target="template">
+      <tr data-nested-form-target="item" class="item-row">
+        <td class="px-2 py-3">
+          <input type="date" name="invoice[invoice_items_attributes][NEW_RECORD][work_date]"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+        </td>
+        <td class="px-2 py-3">
+          <input type="text" name="invoice[invoice_items_attributes][NEW_RECORD][name]"
+              placeholder="項目名" required
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+        </td>
+        <td class="px-2 py-3">
+          <input type="number" name="invoice[invoice_items_attributes][NEW_RECORD][quantity]"
+              value="1" step="0.01" min="0.01"
+              data-action="input->invoice-form#calculateSubtotal"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm text-right quantity-input">
+        </td>
+        <td class="px-2 py-3">
+          <select name="invoice[invoice_items_attributes][NEW_RECORD][unit]"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+            <% InvoiceItem::UNITS.each do |unit| %>
+              <option value="<%= unit %>"><%= unit %></option>
+            <% end %>
+          </select>
+        </td>
+        <td class="px-2 py-3">
+          <input type="number" name="invoice[invoice_items_attributes][NEW_RECORD][unit_price]"
+              value="0" step="1" min="0"
+              data-action="input->invoice-form#calculateSubtotal"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm text-right unit-price-input">
+        </td>
+        <td class="px-2 py-3">
+          <span class="subtotal-display text-sm font-medium text-gray-900">¥0</span>
+          <input type="hidden" name="invoice[invoice_items_attributes][NEW_RECORD][subtotal]" value="0" class="subtotal-input">
+        </td>
+        <td class="px-2 py-3">
+          <button type="button" data-action="nested-form#remove"
+              class="text-red-600 hover:text-red-800">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </td>
+      </tr>
+    </template>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase w-28">日付</th>
+            <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase">項目名</th>
+            <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase w-20">数量</th>
+            <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase w-20">単位</th>
+            <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase w-28">単価</th>
+            <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase w-28">小計</th>
+            <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase w-12"></th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200" data-nested-form-target="container">
+          <% if invoice.invoice_items.any? %>
+            <%= f.fields_for :invoice_items do |item_f| %>
+              <tr data-nested-form-target="item" class="item-row">
+                <td class="px-2 py-3">
+                  <%= item_f.hidden_field :id %>
+                  <%= item_f.hidden_field :_destroy %>
+                  <%= item_f.date_field :work_date,
+                      class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" %>
+                </td>
+                <td class="px-2 py-3">
+                  <%= item_f.text_field :name, placeholder: "項目名", required: true,
+                      class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" %>
+                </td>
+                <td class="px-2 py-3">
+                  <%= item_f.number_field :quantity, step: 0.01, min: 0.01,
+                      data: { action: "input->invoice-form#calculateSubtotal" },
+                      class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm text-right quantity-input" %>
+                </td>
+                <td class="px-2 py-3">
+                  <%= item_f.select :unit, InvoiceItem::UNITS,
+                      {},
+                      { class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" } %>
+                </td>
+                <td class="px-2 py-3">
+                  <%= item_f.number_field :unit_price, step: 1, min: 0,
+                      data: { action: "input->invoice-form#calculateSubtotal" },
+                      class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm text-right unit-price-input" %>
+                </td>
+                <td class="px-2 py-3">
+                  <span class="subtotal-display text-sm font-medium text-gray-900">
+                    <%= number_to_currency(item_f.object.subtotal || 0, unit: "¥", precision: 0) %>
+                  </span>
+                  <%= item_f.hidden_field :subtotal, class: "subtotal-input" %>
+                </td>
+                <td class="px-2 py-3">
+                  <button type="button" data-action="nested-form#remove"
+                      class="text-red-600 hover:text-red-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <!-- 初期行 -->
+            <tr data-nested-form-target="item" class="item-row">
+              <td class="px-2 py-3">
+                <input type="date" name="invoice[invoice_items_attributes][0][work_date]"
+                    value="<%= Date.current %>"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+              </td>
+              <td class="px-2 py-3">
+                <input type="text" name="invoice[invoice_items_attributes][0][name]"
+                    placeholder="項目名" required value="<%= @project.name %>"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+              </td>
+              <td class="px-2 py-3">
+                <input type="number" name="invoice[invoice_items_attributes][0][quantity]"
+                    value="1" step="0.01" min="0.01"
+                    data-action="input->invoice-form#calculateSubtotal"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm text-right quantity-input">
+              </td>
+              <td class="px-2 py-3">
+                <select name="invoice[invoice_items_attributes][0][unit]"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                  <% InvoiceItem::UNITS.each do |unit| %>
+                    <option value="<%= unit %>" <%= "selected" if unit == "式" %>><%= unit %></option>
+                  <% end %>
+                </select>
+              </td>
+              <td class="px-2 py-3">
+                <input type="number" name="invoice[invoice_items_attributes][0][unit_price]"
+                    value="<%= @project.order_amount || 0 %>" step="1" min="0"
+                    data-action="input->invoice-form#calculateSubtotal"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm text-right unit-price-input">
+              </td>
+              <td class="px-2 py-3">
+                <span class="subtotal-display text-sm font-medium text-gray-900">
+                  <%= number_to_currency(@project.order_amount || 0, unit: "¥", precision: 0) %>
+                </span>
+                <input type="hidden" name="invoice[invoice_items_attributes][0][subtotal]" value="<%= @project.order_amount || 0 %>" class="subtotal-input">
+              </td>
+              <td class="px-2 py-3">
+                <button type="button" data-action="nested-form#remove"
+                    class="text-red-600 hover:text-red-800">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 金額合計 -->
   <div class="bg-white shadow rounded-lg p-6">
     <h3 class="text-lg font-medium text-gray-900 mb-4">金額</h3>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-      <div>
-        <%= f.label :amount, "税抜金額 (円)", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.number_field :amount, step: 1, placeholder: "0", required: true,
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      </div>
-
-      <div>
-        <%= f.label :tax_amount, "消費税 (円)", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.number_field :tax_amount, step: 1, placeholder: "0",
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-        <p class="mt-1 text-xs text-gray-500">総額は税抜金額 + 消費税で自動計算</p>
-      </div>
+    <div class="flex justify-end">
+      <dl class="w-72 space-y-2">
+        <div class="flex justify-between text-sm">
+          <dt class="text-gray-500">小計</dt>
+          <dd class="font-medium text-gray-900" data-invoice-form-target="subtotalSum">
+            <%= number_to_currency(invoice.amount || @project.order_amount || 0, unit: "¥", precision: 0) %>
+          </dd>
+        </div>
+        <div class="flex justify-between text-sm">
+          <dt class="text-gray-500">消費税 (10%)</dt>
+          <dd class="font-medium text-gray-900" data-invoice-form-target="taxAmount">
+            <%= number_to_currency(invoice.tax_amount || ((@project.order_amount || 0) * 0.1).round, unit: "¥", precision: 0) %>
+          </dd>
+        </div>
+        <div class="flex justify-between text-base border-t pt-2">
+          <dt class="font-medium text-gray-900">税込合計</dt>
+          <dd class="font-bold text-blue-600" data-invoice-form-target="totalAmount">
+            <%= number_to_currency(invoice.total_amount || ((@project.order_amount || 0) * 1.1).round, unit: "¥", precision: 0) %>
+          </dd>
+        </div>
+      </dl>
     </div>
 
-    <% if @project.order_amount %>
-      <div class="mt-4 p-3 bg-gray-50 rounded-lg">
-        <p class="text-sm text-gray-600">
-          受注金額: <%= number_to_currency(@project.order_amount, unit: "¥", precision: 0) %>
-        </p>
-      </div>
-    <% end %>
+    <%= f.hidden_field :amount, data: { "invoice-form-target": "amountInput" } %>
+    <%= f.hidden_field :tax_amount, data: { "invoice-form-target": "taxInput" } %>
+    <%= f.hidden_field :total_amount, data: { "invoice-form-target": "totalInput" } %>
   </div>
 
   <!-- 備考 -->
   <div class="bg-white shadow rounded-lg p-6">
     <%= f.label :description, "備考", class: "block text-sm font-medium text-gray-700 mb-2" %>
-    <%= f.text_area :description, rows: 4, placeholder: "請求内容の詳細など",
+    <%= f.text_area :description, rows: 3, placeholder: "備考（任意）",
         class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
   </div>
 
