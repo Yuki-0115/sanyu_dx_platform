@@ -3,21 +3,60 @@
 
   <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="px-4 py-6 sm:px-0">
+      <!-- ヘッダー -->
       <div class="flex justify-between items-center mb-6">
         <div>
           <h2 class="text-2xl font-bold text-gray-900">日報一覧</h2>
           <p class="text-sm text-gray-500 mt-1">
-            下書き: <%= @draft_count %>件 / 確定: <%= @confirmed_count %>件
+            下書き: <%= @draft_count %>件 / 確定: <%= @confirmed_count %>件 / 表示中: <%= @total_count %>件
           </p>
         </div>
-        <div class="flex space-x-2">
-          <%= link_to "常用日報一覧", external_daily_reports_path,
-              class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-          <%= link_to "新規常用日報", new_external_daily_report_path,
-              class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
-        </div>
+        <%= link_to new_all_daily_report_path,
+            class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm" do %>
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          新規日報
+        <% end %>
       </div>
 
+      <!-- フィルター -->
+      <div class="bg-white shadow rounded-lg p-4 mb-6">
+        <%= form_tag all_daily_reports_path, method: :get, class: "flex flex-wrap items-end gap-4" do %>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">種別</label>
+            <div class="flex gap-2">
+              <%= link_to "すべて",
+                  all_daily_reports_path(date_from: @date_from, date_to: @date_to),
+                  class: "px-3 py-1 rounded-md text-sm #{@filter == 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+              <%= link_to "案件",
+                  all_daily_reports_path(filter: "project", date_from: @date_from, date_to: @date_to),
+                  class: "px-3 py-1 rounded-md text-sm #{@filter == 'project' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+              <%= link_to "常用",
+                  all_daily_reports_path(filter: "external", date_from: @date_from, date_to: @date_to),
+                  class: "px-3 py-1 rounded-md text-sm #{@filter == 'external' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">期間</label>
+            <div class="flex items-center gap-2">
+              <%= hidden_field_tag :filter, @filter %>
+              <%= date_field_tag :date_from, @date_from, class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+              <span class="text-gray-500">〜</span>
+              <%= date_field_tag :date_to, @date_to, class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+              <%= submit_tag "絞り込み", class: "px-3 py-2 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 cursor-pointer" %>
+            </div>
+          </div>
+          <div class="flex-grow"></div>
+          <div>
+            <%= link_to "今月",
+                all_daily_reports_path(filter: @filter),
+                class: "px-3 py-2 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300" %>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- 日報テーブル -->
       <div class="bg-white shadow overflow-hidden sm:rounded-lg">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -33,10 +72,13 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <% @daily_reports.each do |report| %>
-              <tr>
+              <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm font-medium text-gray-900">
                     <%= l(report.report_date) %>
+                  </div>
+                  <div class="text-xs text-gray-500">
+                    <%= %w[日 月 火 水 木 金 土][report.report_date.wday] %>曜日
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
@@ -81,17 +123,23 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <% if report.is_external? %>
-                    <%= link_to "詳細", external_daily_report_path(report), class: "text-blue-600 hover:underline" %>
+                    <%= link_to "詳細", external_daily_report_path(report), class: "text-blue-600 hover:underline mr-3" %>
+                    <%= link_to "編集", edit_external_daily_report_path(report), class: "text-gray-600 hover:underline" %>
                   <% else %>
-                    <%= link_to "詳細", project_daily_report_path(report.project, report), class: "text-blue-600 hover:underline" %>
+                    <%= link_to "詳細", project_daily_report_path(report.project, report), class: "text-blue-600 hover:underline mr-3" %>
+                    <%= link_to "編集", edit_project_daily_report_path(report.project, report), class: "text-gray-600 hover:underline" %>
                   <% end %>
                 </td>
               </tr>
             <% end %>
             <% if @daily_reports.empty? %>
               <tr>
-                <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
-                  日報がありません
+                <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">
+                  <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  <p class="mt-2">該当する日報がありません</p>
+                  <%= link_to "新規日報を作成", new_all_daily_report_path, class: "mt-2 inline-block text-blue-600 hover:underline" %>
                 </td>
               </tr>
             <% end %>

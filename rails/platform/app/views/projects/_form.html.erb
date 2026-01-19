@@ -1,4 +1,4 @@
-<%= form_with model: project, class: "space-y-6" do |f| %>
+<%= form_with model: project, class: "space-y-6", data: { controller: "order-flow" } do |f| %>
   <% if project.errors.any? %>
     <div class="rounded-md bg-red-50 p-4">
       <div class="flex">
@@ -50,6 +50,15 @@
           {},
           { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
       <p class="mt-1 text-xs text-gray-500">「その他」は小工事・常用工事など簡易な案件に使用</p>
+    </div>
+
+    <div>
+      <%= f.label :order_flow, "受注フロー", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.select :order_flow, Project::ORDER_FLOW_LABELS.map { |k, v| [v, k] },
+          {},
+          { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+            data: { order_flow_target: "select", action: "change->order-flow#toggle" } } %>
+      <p class="mt-1 text-xs text-gray-500">「口頭先行」は急ぎの案件で口頭で金額を決め、後から注文書をもらうパターン</p>
     </div>
 
     <div>
@@ -119,6 +128,57 @@
             { include_blank: "選択してください" },
             { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
       </div>
+    </div>
+  </div>
+
+  <!-- 口頭受注セクション（口頭先行フローの場合のみ表示） -->
+  <div id="oral-order-section" class="border-t border-gray-200 pt-6 <%= 'hidden' unless project.oral_first_flow? %>" data-order-flow-target="oralSection">
+    <h4 class="text-md font-medium text-gray-900 mb-4">
+      <span class="inline-flex items-center">
+        <svg class="w-5 h-5 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        口頭受注情報
+      </span>
+    </h4>
+    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+      <p class="text-sm text-orange-800">
+        口頭で金額を決めて先に着工するパターンです。後から正式な注文書を受領してください。
+      </p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div>
+        <%= f.label :oral_order_amount, "口頭合意金額", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :oral_order_amount, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+      <div>
+        <%= f.label :oral_order_received_at, "口頭合意日", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.datetime_local_field :oral_order_received_at, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+      <div class="sm:col-span-2">
+        <%= f.label :oral_order_note, "口頭合意メモ（誰と・どのような条件で等）", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :oral_order_note, rows: 2, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", placeholder: "例: 〇〇部長と電話で合意。概算350万円、詳細は後日調整" %>
+      </div>
+      <% if project.persisted? && project.oral_first_flow? %>
+        <div class="sm:col-span-2">
+          <div class="flex items-center justify-between p-3 bg-white rounded-lg border">
+            <div>
+              <p class="text-sm font-medium text-gray-700">注文書受領状況</p>
+              <% if project.order_document_received_at.present? %>
+                <p class="text-sm text-green-600">
+                  受領済み: <%= project.order_document_received_at.strftime('%Y年%m月%d日') %>
+                </p>
+              <% else %>
+                <p class="text-sm text-orange-600">未受領（注文書を受け取ったら記録してください）</p>
+              <% end %>
+            </div>
+            <% if project.order_document_received_at.blank? %>
+              <%= f.label :order_document_received_at, "受領日", class: "sr-only" %>
+              <%= f.datetime_local_field :order_document_received_at, class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
     </div>
   </div>
 

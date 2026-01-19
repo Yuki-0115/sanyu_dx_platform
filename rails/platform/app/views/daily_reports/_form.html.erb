@@ -73,6 +73,339 @@
     </div>
   </div>
 
+  <!-- 出面一括入力（勤怠管理用）-->
+  <div class="bg-white shadow rounded-lg p-6" data-controller="nested-form">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h3 class="text-lg font-medium text-gray-900">出面一括入力 <span class="text-blue-600 text-sm font-normal">（勤怠管理）</span></h3>
+        <p class="text-sm text-gray-500">正社員・仮社員の出勤状況を入力してください。</p>
+      </div>
+      <button type="button" data-action="nested-form#add"
+          class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        追加
+      </button>
+    </div>
+
+    <!-- 注意書き -->
+    <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-yellow-700">
+            <strong>段取り表から自動入力されています。</strong>現場の実際の状況に合わせて、出勤区分や人員の追加・削除を正確に行ってください。
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- テンプレート（非表示、JSで使用） -->
+    <template data-nested-form-target="template">
+      <tr data-nested-form-target="item" data-controller="attendance-time">
+        <td class="px-3 py-2">
+          <select name="daily_report[attendances_attributes][NEW_RECORD][employee_id]"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" required>
+            <option value="">選択</option>
+            <optgroup label="正社員">
+              <% Employee.where(employment_type: 'regular').order(:name).each do |emp| %>
+                <option value="<%= emp.id %>"><%= emp.name %></option>
+              <% end %>
+            </optgroup>
+            <% Partner.includes(:employees).where(has_temporary_employees: true).order(:name).each do |partner| %>
+              <optgroup label="仮社員（<%= partner.name %>）">
+                <% partner.employees.where(employment_type: 'temporary').order(:name).each do |emp| %>
+                  <option value="<%= emp.id %>"><%= emp.name %></option>
+                <% end %>
+              </optgroup>
+            <% end %>
+          </select>
+        </td>
+        <td class="px-3 py-2">
+          <select name="daily_report[attendances_attributes][NEW_RECORD][work_category]"
+              data-attendance-time-target="workCategory"
+              data-action="change->attendance-time#calculate"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+            <option value="work">出勤</option>
+            <option value="day_off">公休</option>
+            <option value="paid_leave">有給</option>
+            <option value="absence">欠勤</option>
+            <option value="substitute_holiday">振休</option>
+          </select>
+        </td>
+        <td class="px-3 py-2">
+          <select name="daily_report[attendances_attributes][NEW_RECORD][attendance_type]"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+            <option value="full">1日</option>
+            <option value="half">半日</option>
+          </select>
+        </td>
+        <td class="px-3 py-2">
+          <input type="time" name="daily_report[attendances_attributes][NEW_RECORD][start_time]"
+              value="08:00"
+              data-attendance-time-target="startTime"
+              data-action="change->attendance-time#calculate"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+        </td>
+        <td class="px-3 py-2">
+          <input type="time" name="daily_report[attendances_attributes][NEW_RECORD][end_time]"
+              value="17:00"
+              data-attendance-time-target="endTime"
+              data-action="change->attendance-time#calculate"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+        </td>
+        <td class="px-3 py-2">
+          <input type="number" name="daily_report[attendances_attributes][NEW_RECORD][break_minutes]"
+              value="60" min="0" step="15"
+              data-attendance-time-target="breakMinutes"
+              data-action="change->attendance-time#calculate"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+        </td>
+        <td class="px-3 py-2">
+          <input type="number" name="daily_report[attendances_attributes][NEW_RECORD][overtime_minutes]"
+              value="0" min="0" step="15"
+              data-attendance-time-target="overtimeMinutes"
+              class="block w-full rounded-md border-gray-300 shadow-sm bg-orange-50 text-orange-700 text-sm focus:bg-white">
+        </td>
+        <td class="px-3 py-2">
+          <input type="number" name="daily_report[attendances_attributes][NEW_RECORD][night_minutes]"
+              value="0" min="0" step="15"
+              data-attendance-time-target="nightMinutes"
+              class="block w-full rounded-md border-gray-300 shadow-sm bg-purple-50 text-purple-700 text-sm focus:bg-white">
+        </td>
+        <td class="px-3 py-2">
+          <input type="text" name="daily_report[attendances_attributes][NEW_RECORD][site_note]"
+              placeholder="現場名"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+        </td>
+        <td class="px-3 py-2">
+          <button type="button" data-action="nested-form#remove"
+              class="text-red-600 hover:text-red-800">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </td>
+      </tr>
+    </template>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">氏名</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">区分</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">出勤</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">出社</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">退社</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">休憩(分)</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">残業(分)</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">深夜(分)</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">現場メモ</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-12"></th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200" data-nested-form-target="container">
+          <%
+            # グループ化された社員選択肢を構築
+            grouped_employees = []
+            grouped_employees << ['正社員', Employee.where(employment_type: 'regular').order(:name).map { |e| [e.name, e.id] }]
+            Partner.includes(:employees).where(has_temporary_employees: true).order(:name).each do |partner|
+              grouped_employees << ["仮社員（#{partner.name}）", partner.employees.where(employment_type: 'temporary').order(:name).map { |e| [e.name, e.id] }]
+            end
+          %>
+          <%= f.fields_for :attendances do |af| %>
+            <% next if af.object.employee_id.blank? %>
+            <tr data-nested-form-target="item" data-controller="attendance-time">
+              <td class="px-3 py-2">
+                <%= af.hidden_field :id %>
+                <%= af.hidden_field :_destroy %>
+                <%= af.select :employee_id,
+                    grouped_options_for_select(grouped_employees, af.object.employee_id),
+                    { include_blank: "選択" },
+                    { class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm", required: true } %>
+              </td>
+              <td class="px-3 py-2">
+                <%= af.select :work_category,
+                    [["出勤", "work"], ["公休", "day_off"], ["有給", "paid_leave"], ["欠勤", "absence"], ["振休", "substitute_holiday"]],
+                    {},
+                    { class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm",
+                      data: { attendance_time_target: "workCategory", action: "change->attendance-time#calculate" } } %>
+              </td>
+              <td class="px-3 py-2">
+                <%= af.select :attendance_type,
+                    [["1日", "full"], ["半日", "half"]],
+                    {},
+                    { class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" } %>
+              </td>
+              <td class="px-3 py-2">
+                <%= af.time_field :start_time,
+                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm",
+                    data: { attendance_time_target: "startTime", action: "change->attendance-time#calculate" } %>
+              </td>
+              <td class="px-3 py-2">
+                <%= af.time_field :end_time,
+                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm",
+                    data: { attendance_time_target: "endTime", action: "change->attendance-time#calculate" } %>
+              </td>
+              <td class="px-3 py-2">
+                <%= af.number_field :break_minutes, min: 0, step: 15,
+                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm",
+                    data: { attendance_time_target: "breakMinutes", action: "change->attendance-time#calculate" } %>
+              </td>
+              <td class="px-3 py-2">
+                <%= af.number_field :overtime_minutes, min: 0, step: 15,
+                    class: "block w-full rounded-md border-gray-300 shadow-sm bg-orange-50 text-orange-700 text-sm focus:bg-white",
+                    data: { attendance_time_target: "overtimeMinutes" } %>
+              </td>
+              <td class="px-3 py-2">
+                <%= af.number_field :night_minutes, min: 0, step: 15,
+                    class: "block w-full rounded-md border-gray-300 shadow-sm bg-purple-50 text-purple-700 text-sm focus:bg-white",
+                    data: { attendance_time_target: "nightMinutes" } %>
+              </td>
+              <td class="px-3 py-2">
+                <%= af.text_field :site_note, placeholder: "現場名",
+                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" %>
+              </td>
+              <td class="px-3 py-2">
+                <button type="button" data-action="nested-form#remove"
+                    class="text-red-600 hover:text-red-800">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if daily_report.attendances.select { |a| a.employee_id.present? }.empty? %>
+      <p class="mt-4 text-sm text-gray-500 text-center py-4">
+        段取り表に配置された作業員がいません。「追加」ボタンで作業員を追加してください。
+      </p>
+    <% end %>
+  </div>
+
+  <!-- 外注入力（原価管理用）-->
+  <div class="bg-white shadow rounded-lg p-6" data-controller="nested-form" data-nested-form-new-record-id-value="outsourcing">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h3 class="text-lg font-medium text-gray-900">外注入力 <span class="text-purple-600 text-sm font-normal">（原価管理）</span></h3>
+        <p class="text-sm text-gray-500">協力会社の稼働人数を入力してください。</p>
+      </div>
+      <button type="button" data-action="nested-form#add"
+          class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        追加
+      </button>
+    </div>
+
+    <!-- テンプレート（非表示、JSで使用） -->
+    <template data-nested-form-target="template">
+      <tr data-nested-form-target="item" data-controller="partner-select">
+        <td class="px-4 py-3">
+          <select name="daily_report[outsourcing_entries_attributes][NEW_RECORD][partner_id]"
+              data-action="change->partner-select#toggle"
+              data-partner-select-target="select"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            <option value="">手入力</option>
+            <% Partner.order(:name).each do |p| %>
+              <option value="<%= p.id %>"><%= p.name %></option>
+            <% end %>
+          </select>
+          <input type="text" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][partner_name]"
+              placeholder="会社名を入力"
+              data-partner-select-target="input"
+              class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+        </td>
+        <td class="px-4 py-3">
+          <input type="number" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][headcount]"
+              value="1" min="1" step="1"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+        </td>
+        <td class="px-4 py-3">
+          <select name="daily_report[outsourcing_entries_attributes][NEW_RECORD][attendance_type]"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            <option value="full">1日</option>
+            <option value="half">半日</option>
+          </select>
+        </td>
+        <td class="px-4 py-3">
+          <button type="button" data-action="nested-form#remove"
+              class="text-red-600 hover:text-red-800">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </td>
+      </tr>
+    </template>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">協力会社</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-24">人数</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-28">出勤区分</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-16"></th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200" data-nested-form-target="container">
+          <%= f.fields_for :outsourcing_entries do |oef| %>
+            <tr data-nested-form-target="item" data-controller="partner-select">
+              <td class="px-4 py-3">
+                <%= oef.hidden_field :id %>
+                <%= oef.hidden_field :_destroy %>
+                <%= oef.select :partner_id,
+                    Partner.order(:name).map { |p| [p.name, p.id] },
+                    { include_blank: "手入力" },
+                    { class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+                      data: { action: "change->partner-select#toggle", partner_select_target: "select" } } %>
+                <%= oef.text_field :partner_name, placeholder: "会社名を入力",
+                    data: { partner_select_target: "input" },
+                    class: "mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+              </td>
+              <td class="px-4 py-3">
+                <%= oef.number_field :headcount, min: 1, step: 1,
+                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+              </td>
+              <td class="px-4 py-3">
+                <%= oef.select :attendance_type,
+                    [["1日", "full"], ["半日", "half"]],
+                    {},
+                    { class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+              </td>
+              <td class="px-4 py-3">
+                <button type="button" data-action="nested-form#remove"
+                    class="text-red-600 hover:text-red-800">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if daily_report.outsourcing_entries.empty? %>
+      <p class="mt-4 text-sm text-gray-500 text-center py-4">
+        外注がない場合は入力不要です。「追加」ボタンで協力会社を追加できます。
+      </p>
+    <% end %>
+  </div>
+
   <!-- 原価情報 -->
   <div class="bg-white shadow rounded-lg p-6">
     <h3 class="text-lg font-medium text-gray-900 mb-4">原価情報</h3>
@@ -127,119 +460,6 @@
             class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
       </div>
     </div>
-  </div>
-
-  <!-- 出面一括入力 -->
-  <div class="bg-white shadow rounded-lg p-6" data-controller="nested-form">
-    <div class="flex justify-between items-center mb-4">
-      <div>
-        <h3 class="text-lg font-medium text-gray-900">出面一括入力</h3>
-        <p class="text-sm text-gray-500">各作業員の出勤状況を入力してください。</p>
-      </div>
-      <button type="button" data-action="nested-form#add"
-          class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-        </svg>
-        追加
-      </button>
-    </div>
-
-    <!-- テンプレート（非表示、JSで使用） -->
-    <template data-nested-form-target="template">
-      <tr data-nested-form-target="item">
-        <td class="px-4 py-3">
-          <input type="text" name="daily_report[attendances_attributes][NEW_RECORD][partner_worker_name]"
-              placeholder="氏名を入力"
-              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-        </td>
-        <td class="px-4 py-3">
-          <select name="daily_report[attendances_attributes][NEW_RECORD][attendance_type]"
-              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-            <option value="full">全日</option>
-            <option value="half">半日</option>
-            <option value="absent">欠勤</option>
-          </select>
-        </td>
-        <td class="px-4 py-3">
-          <input type="number" name="daily_report[attendances_attributes][NEW_RECORD][hours_worked]"
-              value="8" step="0.5" min="0" max="24"
-              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-        </td>
-        <td class="px-4 py-3">
-          <input type="number" name="daily_report[attendances_attributes][NEW_RECORD][travel_distance]"
-              min="0" step="0.1"
-              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-        </td>
-        <td class="px-4 py-3">
-          <button type="button" data-action="nested-form#remove"
-              class="text-red-600 hover:text-red-800">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-            </svg>
-          </button>
-        </td>
-      </tr>
-    </template>
-
-    <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">氏名</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">出勤区分</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">労働時間</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">走行距離(km)</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-16"></th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200" data-nested-form-target="container">
-          <%= f.fields_for :attendances do |af| %>
-            <tr data-nested-form-target="item">
-              <td class="px-4 py-3">
-                <%= af.hidden_field :id %>
-                <%= af.hidden_field :_destroy %>
-                <% if af.object.employee_id.present? %>
-                  <%= af.hidden_field :employee_id %>
-                  <span class="text-sm font-medium text-gray-900">
-                    <%= af.object.employee&.name || "不明" %>
-                  </span>
-                <% else %>
-                  <%= af.text_field :partner_worker_name, placeholder: "氏名を入力",
-                      class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-                <% end %>
-              </td>
-              <td class="px-4 py-3">
-                <%= af.select :attendance_type,
-                    [["全日", "full"], ["半日", "half"], ["欠勤", "absent"]],
-                    {},
-                    { class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
-              </td>
-              <td class="px-4 py-3">
-                <%= af.number_field :hours_worked, step: 0.5, min: 0, max: 24,
-                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-              </td>
-              <td class="px-4 py-3">
-                <%= af.number_field :travel_distance, min: 0, step: 0.1,
-                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-              </td>
-              <td class="px-4 py-3">
-                <button type="button" data-action="nested-form#remove"
-                    class="text-red-600 hover:text-red-800">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                  </svg>
-                </button>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
-
-    <p class="mt-4 text-sm text-gray-500">
-      「追加」ボタンで作業員を追加できます。協力会社作業員は氏名を直接入力してください。
-    </p>
   </div>
 
   <!-- 経費・領収書入力 -->
@@ -301,7 +521,7 @@
             </select>
           </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">内容</label>
             <input type="text" name="daily_report[expenses_attributes][NEW_RECORD][description]"
@@ -309,10 +529,25 @@
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
           </div>
           <div>
+            <label class="block text-sm font-medium text-gray-700">伝票番号</label>
+            <input type="text" name="daily_report[expenses_attributes][NEW_RECORD][voucher_number]"
+                placeholder="例: 12345"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+          </div>
+          <div></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+          <div>
             <label class="block text-sm font-medium text-gray-700">領収書</label>
             <input type="file" name="daily_report[expenses_attributes][NEW_RECORD][receipt]"
                 accept="image/*,.pdf"
                 class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">伝票</label>
+            <input type="file" name="daily_report[expenses_attributes][NEW_RECORD][voucher]"
+                accept="image/*,.pdf"
+                class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
           </div>
         </div>
         <div class="mt-4 flex justify-end">
@@ -360,12 +595,20 @@
                   { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
             </div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
             <div>
               <label class="block text-sm font-medium text-gray-700">内容</label>
               <%= ef.text_field :description, placeholder: "例: 現場材料購入（釘、ボルト）",
                   class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
             </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">伝票番号</label>
+              <%= ef.text_field :voucher_number, placeholder: "例: 12345",
+                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+            </div>
+            <div></div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div>
               <label class="block text-sm font-medium text-gray-700">領収書</label>
               <% if ef.object.receipt.attached? %>
@@ -386,6 +629,26 @@
               <%= ef.file_field :receipt, accept: "image/*,.pdf",
                   class: "mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" %>
             </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">伝票</label>
+              <% if ef.object.voucher.attached? %>
+                <div class="mt-1 flex items-center space-x-2">
+                  <% if ef.object.voucher.content_type.start_with?("image/") %>
+                    <%= image_tag ef.object.voucher, class: "h-16 w-16 object-cover rounded" %>
+                  <% else %>
+                    <div class="flex items-center text-sm text-gray-600">
+                      <svg class="w-6 h-6 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      <%= ef.object.voucher.filename %>
+                    </div>
+                  <% end %>
+                  <%= link_to "表示", rails_blob_path(ef.object.voucher, disposition: "inline"), target: "_blank", class: "text-green-600 hover:underline text-sm" %>
+                </div>
+              <% end %>
+              <%= ef.file_field :voucher, accept: "image/*,.pdf",
+                  class: "mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100" %>
+            </div>
           </div>
           <div class="mt-4 flex justify-end">
             <button type="button" data-action="expense-form#remove"
@@ -401,7 +664,7 @@
     </div>
 
     <p class="mt-4 text-sm text-gray-500">
-      「経費追加」ボタンで経費を追加できます。領収書は画像またはPDFでアップロード可能です。
+      「経費追加」ボタンで経費を追加できます。領収書・伝票は画像またはPDFでアップロード可能です。
     </p>
   </div>
 

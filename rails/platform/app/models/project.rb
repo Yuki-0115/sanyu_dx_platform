@@ -12,6 +12,13 @@ class Project < ApplicationRecord
     "misc" => "その他（小工事・常用）"
   }.freeze
 
+  # 受注フロー種別
+  ORDER_FLOWS = %w[standard oral_first].freeze
+  ORDER_FLOW_LABELS = {
+    "standard" => "通常（見積→注文書→受注）",
+    "oral_first" => "口頭先行（口頭受注→後から注文書）"
+  }.freeze
+
   # Associations
   belongs_to :client
   belongs_to :sales_user, class_name: "Employee", optional: true
@@ -25,16 +32,20 @@ class Project < ApplicationRecord
   has_many :invoices, dependent: :restrict_with_error
   has_many :project_assignments, dependent: :destroy
   has_many :assigned_employees, through: :project_assignments, source: :employee
+  has_many :safety_folders, dependent: :nullify
+  has_many :project_documents, dependent: :destroy
 
   # Validations
   validates :code, presence: true, uniqueness: { scope: :tenant_id }
   validates :name, presence: true
   validates :status, inclusion: { in: STATUSES }
   validates :project_type, inclusion: { in: PROJECT_TYPES }
+  validates :order_flow, inclusion: { in: ORDER_FLOWS }
 
   # Defaults
   attribute :status, :string, default: "draft"
   attribute :project_type, :string, default: "regular"
+  attribute :order_flow, :string, default: "standard"
   attribute :has_contract, :boolean, default: false
   attribute :has_order, :boolean, default: false
   attribute :has_payment_terms, :boolean, default: false
@@ -53,6 +64,37 @@ class Project < ApplicationRecord
 
   def regular?
     project_type == "regular"
+  end
+
+  def standard_flow?
+    order_flow == "standard"
+  end
+
+  def oral_first_flow?
+    order_flow == "oral_first"
+  end
+
+  # 口頭受注を記録
+  def record_oral_order!(amount:, note: nil)
+    update!(
+      oral_order_amount: amount,
+      oral_order_received_at: Time.current,
+      oral_order_note: note,
+      order_amount: amount # 受注金額にも反映
+    )
+  end
+
+  # 後から注文書を受領
+  def receive_order_document!
+    update!(
+      order_document_received_at: Time.current,
+      has_order: true
+    )
+  end
+
+  # 注文書が未受領かどうか（口頭先行フローで使用）
+  def order_document_pending?
+    oral_first_flow? && oral_order_received_at.present? && order_document_received_at.blank?
   end
 
   def four_point_completed?

@@ -14,8 +14,9 @@ Rails.application.routes.draw do
   # 経営ダッシュボード
   get "management", to: "management_dashboard#index", as: :management_dashboard
 
-  # 現場カレンダー/段取り表
+  # 現場カレンダー
   get "schedule", to: "schedule#index", as: :schedule
+  get "schedule/project_assignments/:project_id", to: "schedule#project_assignments", as: :schedule_project_assignments
 
   # Projects
   resources :projects do
@@ -43,6 +44,8 @@ Rails.application.routes.draw do
       end
       resources :payments, only: %i[new create destroy]
     end
+    # 書類ファイリング
+    resources :project_documents, only: %i[index new create destroy], path: "documents"
   end
 
   # 常用日報（外部現場）
@@ -53,7 +56,16 @@ Rails.application.routes.draw do
   end
 
   # 全日報一覧
-  resources :all_daily_reports, only: [:index]
+  resources :all_daily_reports, only: [:index, :new]
+
+  # 勤怠管理表
+  resources :attendance_sheets, only: [:index] do
+    collection do
+      get "employee/:employee_id", action: :employee_detail, as: :employee_detail
+      get "employee/:employee_id/export", action: :export_employee, as: :export_employee
+      get :export_all
+    end
+  end
 
   # 全請求書一覧
   resources :all_invoices, only: [:index]
@@ -104,6 +116,9 @@ Rails.application.routes.draw do
       resources :projects, only: %i[index show] do
         collection do
           get :summary
+        end
+        member do
+          get :assignments
         end
       end
       resources :daily_reports, only: %i[index show] do

@@ -451,6 +451,63 @@
                   class: "mt-3 inline-block text-sm text-blue-600 hover:underline" %>
             </div>
           <% end %>
+
+          <% if current_employee.can_access?(:safety_documents) %>
+            <!-- 安全書類 -->
+            <div class="bg-white shadow rounded-lg p-6 mt-6">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">安全書類</h3>
+                <%= link_to "全て見る", safety_documents_path(project_id: @project.id),
+                    class: "text-sm text-blue-600 hover:underline" %>
+              </div>
+              <% safety_folders = @project.safety_folders.order(:name) %>
+              <% if safety_folders.any? %>
+                <ul class="space-y-2">
+                  <% safety_folders.limit(5).each do |folder| %>
+                    <li class="flex items-center text-sm">
+                      <svg class="w-5 h-5 text-yellow-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path>
+                      </svg>
+                      <%= link_to folder.name, safety_document_path(folder), class: "text-blue-600 hover:underline" %>
+                      <span class="text-gray-400 ml-2">(<%= folder.files_count %>件)</span>
+                    </li>
+                  <% end %>
+                </ul>
+                <% if safety_folders.count > 5 %>
+                  <p class="text-xs text-gray-500 mt-2">他 <%= safety_folders.count - 5 %> フォルダ</p>
+                <% end %>
+              <% else %>
+                <p class="text-sm text-gray-500">安全書類フォルダがありません</p>
+              <% end %>
+              <%= link_to "新規フォルダ作成", new_folder_safety_documents_path(project_id: @project.id),
+                  class: "mt-3 inline-block text-sm text-blue-600 hover:underline" %>
+            </div>
+          <% end %>
+
+          <!-- 書類ファイル -->
+          <div class="bg-white shadow rounded-lg p-6 mt-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-medium text-gray-900">書類ファイル</h3>
+              <%= link_to "全て見る", project_project_documents_path(@project),
+                  class: "text-sm text-blue-600 hover:underline" %>
+            </div>
+            <% document_count = @project.project_documents.count %>
+            <% if document_count > 0 %>
+              <div class="space-y-2">
+                <% @project.project_documents.group(:category).count.each do |category, count| %>
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-700"><%= ProjectDocument::CATEGORY_LABELS[category] %></span>
+                    <span class="text-gray-500"><%= count %>件</span>
+                  </div>
+                <% end %>
+              </div>
+              <p class="mt-3 text-xs text-gray-500">計 <%= document_count %> 件のファイル</p>
+            <% else %>
+              <p class="text-sm text-gray-500">アップロードされた書類はありません</p>
+            <% end %>
+            <%= link_to "書類を追加", new_project_project_document_path(@project),
+                class: "mt-3 inline-flex items-center text-sm text-blue-600 hover:underline" %>
+          </div>
         </div>
       </div>
     </div>

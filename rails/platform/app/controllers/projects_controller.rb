@@ -93,7 +93,9 @@ class ProjectsController < ApplicationController
       :has_payment_terms, :has_customer_approval, :drive_folder_url,
       :site_conditions_checked, :night_work_checked, :regulations_checked,
       :safety_docs_checked, :delivery_checked,
-      :scheduled_start_date, :scheduled_end_date, :actual_start_date, :actual_end_date
+      :scheduled_start_date, :scheduled_end_date, :actual_start_date, :actual_end_date,
+      :order_flow, :oral_order_amount, :oral_order_received_at, :oral_order_note,
+      :order_document_received_at, :description
     )
   end
 end

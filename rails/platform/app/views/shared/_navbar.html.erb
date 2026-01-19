@@ -15,12 +15,14 @@
           <% if current_employee.can_access?(:projects) %>
             <%= link_to "案件", projects_path,
                 class: "px-3 py-2 text-sm font-medium #{controller_name == 'projects' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}" %>
-            <%= link_to "段取り表", schedule_path,
+            <%= link_to "現場カレンダー", schedule_path,
                 class: "px-3 py-2 text-sm font-medium #{controller_name == 'schedule' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}" %>
           <% end %>
           <% if current_employee.can_access?(:daily_reports) %>
             <%= link_to "日報", all_daily_reports_path,
                 class: "px-3 py-2 text-sm font-medium #{controller_name.in?(%w[all_daily_reports daily_reports external_daily_reports]) ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}" %>
+            <%= link_to "勤怠", attendance_sheets_path,
+                class: "px-3 py-2 text-sm font-medium #{controller_name == 'attendance_sheets' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}" %>
           <% end %>
           <% if current_employee.can_access?(:invoices) %>
             <%= link_to "請求", all_invoices_path,

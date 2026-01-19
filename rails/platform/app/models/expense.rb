@@ -16,8 +16,9 @@ class Expense < ApplicationRecord
   belongs_to :payer, class_name: "Employee", optional: true
   belongs_to :approved_by, class_name: "Employee", optional: true
 
-  # 領収書添付
+  # 領収書・伝票添付
   has_one_attached :receipt
+  has_one_attached :voucher
 
   # Validations
   validates :expense_type, presence: true, inclusion: { in: EXPENSE_TYPES }

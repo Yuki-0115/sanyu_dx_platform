@@ -1,0 +1,135 @@
+<div class="max-w-5xl mx-auto">
+  <!-- ヘッダー -->
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <nav class="text-sm text-gray-500 mb-2">
+        <%= link_to "案件一覧", projects_path, class: "hover:text-gray-700" %> /
+        <%= link_to @project.name, @project, class: "hover:text-gray-700" %> /
+        書類ファイル
+      </nav>
+      <h1 class="text-2xl font-bold text-gray-900">書類ファイル</h1>
+      <p class="mt-1 text-sm text-gray-500"><%= @project.code %> - <%= @project.name %></p>
+    </div>
+    <div class="flex space-x-2">
+      <%= link_to new_project_project_document_path(@project),
+          class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" do %>
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        書類を追加
+      <% end %>
+    </div>
+  </div>
+
+  <!-- ファイリング本体 -->
+  <div class="space-y-4">
+    <% ProjectDocument::CATEGORIES.each do |category| %>
+      <% documents = @documents_by_category[category] || [] %>
+      <% system_documents = get_system_documents(@project, category) %>
+
+      <div class="bg-white shadow rounded-lg overflow-hidden" data-controller="accordion">
+        <!-- カテゴリヘッダー -->
+        <button type="button"
+                class="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+                data-action="click->accordion#toggle">
+          <div class="flex items-center">
+            <span class="text-lg mr-3"><%= category_icon_svg(category) %></span>
+            <span class="font-medium text-gray-900"><%= ProjectDocument::CATEGORY_LABELS[category] %></span>
+            <span class="ml-2 text-sm text-gray-500">(<%= documents.count + system_documents.count %>件)</span>
+          </div>
+          <svg class="w-5 h-5 text-gray-400 transform transition-transform" data-accordion-target="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <!-- 書類リスト -->
+        <div class="divide-y divide-gray-200" data-accordion-target="content">
+          <% if documents.empty? && system_documents.empty? %>
+            <div class="px-4 py-6 text-center text-gray-500">
+              <p class="text-sm">書類がありません</p>
+              <%= link_to "書類を追加", new_project_project_document_path(@project, category: category),
+                  class: "text-sm text-blue-600 hover:text-blue-800" %>
+            </div>
+          <% else %>
+            <!-- システム生成書類（見積・日報など） -->
+            <% system_documents.each do |doc| %>
+              <div class="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+                <div class="flex items-center min-w-0">
+                  <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded bg-blue-100 text-blue-600 text-xs font-medium">
+                    <%= doc[:type] %>
+                  </span>
+                  <div class="ml-3 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate"><%= doc[:name] %></p>
+                    <p class="text-xs text-gray-500"><%= doc[:date] %></p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <% if doc[:path] %>
+                    <%= link_to doc[:path], class: "inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded hover:bg-blue-200" do %>
+                      詳細
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+
+            <!-- アップロード書類 -->
+            <% documents.each do |document| %>
+              <div class="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+                <div class="flex items-center min-w-0">
+                  <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded bg-gray-100 text-gray-600 text-xs font-medium">
+                    <%= document.file_extension || "FILE" %>
+                  </span>
+                  <div class="ml-3 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate"><%= document.name %></p>
+                    <p class="text-xs text-gray-500">
+                      <%= document.document_date&.strftime("%Y/%m/%d") || document.created_at.strftime("%Y/%m/%d") %>
+                      <% if document.file.attached? %>
+                        · <%= document.file_size_display %>
+                      <% end %>
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <% if document.file.attached? %>
+                    <%= link_to rails_blob_path(document.file, disposition: "attachment"),
+                        class: "inline-flex items-center px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200" do %>
+                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      DL
+                    <% end %>
+                  <% end %>
+                  <%= button_to project_project_document_path(@project, document),
+                      method: :delete,
+                      data: { turbo_confirm: "「#{document.name}」を削除しますか？" },
+                      class: "inline-flex items-center px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded hover:bg-red-200" do %>
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+
+          <!-- 書類追加リンク -->
+          <div class="px-4 py-2 bg-gray-50">
+            <%= link_to new_project_project_document_path(@project, category: category),
+                class: "text-sm text-blue-600 hover:text-blue-800 flex items-center" do %>
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <%= ProjectDocument::CATEGORY_LABELS[category] %>を追加
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 戻るリンク -->
+  <div class="mt-6">
+    <%= link_to "← 案件詳細に戻る", @project, class: "text-sm text-gray-600 hover:text-gray-800" %>
+  </div>
+</div>

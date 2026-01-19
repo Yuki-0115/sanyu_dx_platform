@@ -14,11 +14,37 @@ module DailyReportActions
     authorize_feature!(:daily_reports)
   end
 
+  # 段取り表（ProjectAssignment）から出面データを事前構築
+  # 既存の出面がない場合のみ、配置済み社員を自動追加
   def build_attendances
-    existing_employee_ids = @daily_report.attendances.map(&:employee_id)
-    employees = Employee.where(role: %w[construction worker]).where.not(id: existing_employee_ids)
-    employees.each do |employee|
-      @daily_report.attendances.build(employee: employee, attendance_type: "absent")
+    return if @daily_report.project.nil?  # 外部現場の場合はスキップ
+
+    existing_employee_ids = @daily_report.attendances.map(&:employee_id).compact
+
+    # 段取り表から当日の配置済み社員を取得（正社員・仮社員のみ）
+    assigned_employees = @daily_report.project
+      .project_assignments
+      .active_on(@daily_report.report_date)
+      .includes(:employee)
+      .map(&:employee)
+      .select { |e| e.employment_type.in?(%w[regular temporary]) }
+      .reject { |e| existing_employee_ids.include?(e.id) }
+
+    # 配置済み社員で出面を構築（デフォルト: 1日出勤）
+    assigned_employees.each do |employee|
+      @daily_report.attendances.build(
+        employee: employee,
+        attendance_type: "full",
+        hours_worked: 8
+      )
+    end
+  end
+
+  # 外注入力欄を構築
+  def build_outsourcing_entries
+    # 既存エントリがない場合のみ、空のエントリを1つ追加
+    if @daily_report.outsourcing_entries.empty?
+      @daily_report.outsourcing_entries.build(attendance_type: "full", headcount: 1)
     end
   end
 
@@ -38,6 +64,7 @@ module DailyReportActions
       end
     else
       build_attendances
+      build_outsourcing_entries
       render :edit, status: :unprocessable_entity
     end
   end
@@ -62,10 +89,14 @@ module DailyReportActions
   end
 
   def attendance_params
-    { attendances_attributes: %i[id employee_id partner_worker_name attendance_type hours_worked start_time end_time travel_distance _destroy] }
+    { attendances_attributes: %i[id employee_id partner_worker_name attendance_type work_category hours_worked start_time end_time break_minutes overtime_minutes night_minutes travel_distance travel_minutes site_note _destroy] }
   end
 
   def expense_params
-    { expenses_attributes: %i[id expense_type category description amount payment_method receipt _destroy] }
+    { expenses_attributes: %i[id expense_type category description amount payment_method voucher_number receipt voucher _destroy] }
+  end
+
+  def outsourcing_entry_params
+    { outsourcing_entries_attributes: %i[id partner_id partner_name headcount attendance_type _destroy] }
   end
 end

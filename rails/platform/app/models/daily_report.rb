@@ -21,6 +21,7 @@ class DailyReport < ApplicationRecord
 
   has_many :attendances, dependent: :destroy
   has_many :expenses, dependent: :destroy
+  has_many :outsourcing_entries, dependent: :destroy
 
   # 写真添付（複数）
   has_many_attached :photos
@@ -29,6 +30,8 @@ class DailyReport < ApplicationRecord
                                 reject_if: ->(attrs) { attrs["attendance_type"].blank? }
   accepts_nested_attributes_for :expenses, allow_destroy: true,
                                 reject_if: ->(attrs) { attrs["amount"].blank? || attrs["amount"].to_i <= 0 }
+  accepts_nested_attributes_for :outsourcing_entries, allow_destroy: true,
+                                reject_if: ->(attrs) { attrs["headcount"].blank? || attrs["headcount"].to_i <= 0 }
 
   # Validations
   validates :report_date, presence: true

@@ -18,10 +18,12 @@ class DailyReportsController < ApplicationController
       report_date: Date.current
     )
     build_attendances
+    build_outsourcing_entries
   end
 
   def edit
     build_attendances
+    build_outsourcing_entries
   end
 
   def create
@@ -32,6 +34,7 @@ class DailyReportsController < ApplicationController
       redirect_to project_daily_report_path(@project, @daily_report), notice: "日報を作成しました"
     else
       build_attendances
+      build_outsourcing_entries
       render :new, status: :unprocessable_entity
     end
   end
@@ -66,7 +69,8 @@ class DailyReportsController < ApplicationController
     params.require(:daily_report).permit(
       *base_daily_report_params,
       **attendance_params,
-      **expense_params
+      **expense_params,
+      **outsourcing_entry_params
     )
   end
 end

@@ -47,6 +47,29 @@ module Api
         }
       end
 
+      # GET /api/v1/projects/:id/assignments
+      def assignments
+        @project = Project.find_by(id: params[:id])
+        unless @project
+          render json: { error: "Project not found" }, status: :not_found
+          return
+        end
+
+        assignments = @project.project_assignments.includes(:employee).map do |a|
+          {
+            id: a.id,
+            employee_id: a.employee_id,
+            employee_name: a.employee.name,
+            employment_type: a.employee.employment_type,
+            role: a.role,
+            start_date: a.start_date,
+            end_date: a.end_date
+          }
+        end
+
+        render json: { assignments: assignments }
+      end
+
       private
 
       def project_json(project, detailed: false)

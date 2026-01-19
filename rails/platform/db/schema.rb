@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_15_234032) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_19_051232) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -54,6 +54,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_234032) do
     t.datetime "updated_at", null: false
     t.decimal "hours_worked", precision: 4, scale: 1
     t.string "partner_worker_name"
+    t.integer "break_minutes", default: 60
+    t.integer "overtime_minutes", default: 0
+    t.integer "night_minutes", default: 0
+    t.integer "travel_minutes", default: 0
+    t.string "work_category", default: "work"
+    t.string "site_note"
     t.index ["daily_report_id"], name: "index_attendances_on_daily_report_id"
     t.index ["employee_id"], name: "index_attendances_on_employee_id"
     t.index ["tenant_id", "daily_report_id", "employee_id"], name: "idx_attendances_unique", unique: true
@@ -216,6 +222,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_234032) do
     t.datetime "approved_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "voucher_number"
     t.index ["approved_by_id"], name: "index_expenses_on_approved_by_id"
     t.index ["daily_report_id"], name: "index_expenses_on_daily_report_id"
     t.index ["payer_id"], name: "index_expenses_on_payer_id"
@@ -279,6 +286,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_234032) do
     t.index ["tenant_id"], name: "index_offsets_on_tenant_id"
   end
 
+  create_table "outsourcing_entries", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "daily_report_id", null: false
+    t.bigint "partner_id"
+    t.string "partner_name"
+    t.integer "headcount", default: 1, null: false
+    t.string "attendance_type", default: "full", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["daily_report_id"], name: "index_outsourcing_entries_on_daily_report_id"
+    t.index ["partner_id"], name: "index_outsourcing_entries_on_partner_id"
+    t.index ["tenant_id", "daily_report_id", "partner_id"], name: "idx_outsourcing_entries_unique_partner", unique: true, where: "(partner_id IS NOT NULL)"
+    t.index ["tenant_id"], name: "index_outsourcing_entries_on_tenant_id"
+  end
+
   create_table "partners", force: :cascade do |t|
     t.bigint "tenant_id", null: false
     t.string "code", null: false
@@ -321,6 +343,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_234032) do
     t.index ["tenant_id"], name: "index_project_assignments_on_tenant_id"
   end
 
+  create_table "project_documents", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "project_id", null: false
+    t.bigint "uploaded_by_id"
+    t.string "name", null: false
+    t.string "category", default: "other", null: false
+    t.text "description"
+    t.date "document_date"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id", "category"], name: "index_project_documents_on_project_id_and_category"
+    t.index ["project_id"], name: "index_project_documents_on_project_id"
+    t.index ["tenant_id"], name: "index_project_documents_on_tenant_id"
+    t.index ["uploaded_by_id"], name: "index_project_documents_on_uploaded_by_id"
+  end
+
   create_table "projects", force: :cascade do |t|
     t.bigint "tenant_id", null: false
     t.bigint "client_id", null: false
@@ -358,6 +396,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_234032) do
     t.date "scheduled_end_date"
     t.date "actual_start_date"
     t.date "actual_end_date"
+    t.string "order_flow", default: "standard"
+    t.datetime "oral_order_received_at"
+    t.datetime "order_document_received_at"
+    t.decimal "oral_order_amount", precision: 15, scale: 2
+    t.text "oral_order_note"
     t.index ["client_id"], name: "index_projects_on_client_id"
     t.index ["construction_user_id"], name: "index_projects_on_construction_user_id"
     t.index ["engineering_user_id"], name: "index_projects_on_engineering_user_id"
@@ -433,12 +476,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_234032) do
   add_foreign_key "invoices", "tenants"
   add_foreign_key "offsets", "partners"
   add_foreign_key "offsets", "tenants"
+  add_foreign_key "outsourcing_entries", "daily_reports"
+  add_foreign_key "outsourcing_entries", "partners"
+  add_foreign_key "outsourcing_entries", "tenants"
   add_foreign_key "partners", "tenants"
   add_foreign_key "payments", "invoices"
   add_foreign_key "payments", "tenants"
   add_foreign_key "project_assignments", "employees"
   add_foreign_key "project_assignments", "projects"
   add_foreign_key "project_assignments", "tenants"
+  add_foreign_key "project_documents", "employees", column: "uploaded_by_id"
+  add_foreign_key "project_documents", "projects"
+  add_foreign_key "project_documents", "tenants"
   add_foreign_key "projects", "clients"
   add_foreign_key "projects", "tenants"
   add_foreign_key "safety_files", "employees", column: "uploaded_by_id"
