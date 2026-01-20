@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class AllInvoicesController < ApplicationController
-  before_action :authorize_invoices_access
+  authorize_with :invoices
 
   def index
     @invoices = Invoice.includes(project: :client)
@@ -15,9 +15,4 @@ class AllInvoicesController < ApplicationController
     @projects = Project.all.order(:code)
   end
 
-  private
-
-  def authorize_invoices_access
-    authorize_feature!(:invoices)
-  end
 end

@@ -1,4 +1,4 @@
-<%= form_with model: budget, url: project_budget_path(@project), method: (budget.persisted? ? :patch : :post), class: "space-y-6" do |f| %>
+<%= form_with model: budget, url: project_budget_path(@project), method: (budget.persisted? ? :patch : :post), class: "space-y-6", data: { controller: "budget-form" } do |f| %>
   <% if budget.errors.any? %>
     <div class="rounded-md bg-red-50 p-4">
       <div class="flex">
@@ -15,6 +15,33 @@
             <% end %>
           </ul>
         </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%# ステータス表示 %>
+  <% if budget.persisted? %>
+    <div class="flex items-center justify-between bg-white shadow rounded-lg p-4">
+      <div class="flex items-center space-x-3">
+        <span class="text-sm font-medium text-gray-700">ステータス:</span>
+        <% if budget.status == "confirmed" %>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+            確定済み
+          </span>
+          <% if budget.confirmed_at %>
+            <span class="text-xs text-gray-500">
+              (<%= budget.confirmed_at.strftime("%Y/%m/%d %H:%M") %>
+              <% if budget.confirmed_by %>- <%= budget.confirmed_by.name %><% end %>)
+            </span>
+          <% end %>
+        <% else %>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+            下書き
+          </span>
+        <% end %>
       </div>
     </div>
   <% end %>
@@ -67,39 +94,96 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
     <div>
       <%= f.label :material_cost, "材料費", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.number_field :material_cost, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      <%= f.number_field :material_cost, step: 1,
+          data: { action: "input->budget-form#calculate", "budget-form-target": "material" },
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+          disabled: budget.status == "confirmed" %>
     </div>
 
     <div>
       <%= f.label :outsourcing_cost, "外注費", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.number_field :outsourcing_cost, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      <%= f.number_field :outsourcing_cost, step: 1,
+          data: { action: "input->budget-form#calculate", "budget-form-target": "outsourcing" },
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+          disabled: budget.status == "confirmed" %>
     </div>
 
     <div>
       <%= f.label :labor_cost, "労務費", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.number_field :labor_cost, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      <%= f.number_field :labor_cost, step: 1,
+          data: { action: "input->budget-form#calculate", "budget-form-target": "labor" },
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+          disabled: budget.status == "confirmed" %>
     </div>
 
     <div>
       <%= f.label :expense_cost, "経費", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.number_field :expense_cost, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      <%= f.number_field :expense_cost, step: 1,
+          data: { action: "input->budget-form#calculate", "budget-form-target": "expense" },
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+          disabled: budget.status == "confirmed" %>
     </div>
 
     <div>
       <%= f.label :target_profit_rate, "目標利益率 (%)", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.number_field :target_profit_rate, step: 0.1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      <%= f.number_field :target_profit_rate, step: 0.1,
+          data: { "budget-form-target": "targetRate" },
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+          disabled: budget.status == "confirmed" %>
     </div>
+  </div>
+
+  <%# 原価合計と利益率計算 %>
+  <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg" data-budget-form-target="summary">
+    <h4 class="text-sm font-medium text-blue-900 mb-3">予算サマリー（自動計算）</h4>
+    <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="bg-white p-3 rounded-md">
+        <dt class="text-xs text-gray-500">原価合計</dt>
+        <dd class="text-lg font-bold text-gray-900" data-budget-form-target="totalCost">
+          <%= number_to_currency(budget.total_cost || 0, unit: "¥", precision: 0) %>
+        </dd>
+      </div>
+      <div class="bg-white p-3 rounded-md">
+        <dt class="text-xs text-gray-500">受注金額</dt>
+        <dd class="text-lg font-bold text-gray-900" data-budget-form-target="orderAmount">
+          <%= number_to_currency(@project.order_amount || 0, unit: "¥", precision: 0) %>
+        </dd>
+      </div>
+      <div class="bg-white p-3 rounded-md">
+        <dt class="text-xs text-gray-500">粗利</dt>
+        <dd class="text-lg font-bold <%= ((@project.order_amount || 0) - (budget.total_cost || 0)) >= 0 ? 'text-green-600' : 'text-red-600' %>" data-budget-form-target="grossProfit">
+          <%= number_to_currency((@project.order_amount || 0) - (budget.total_cost || 0), unit: "¥", precision: 0) %>
+        </dd>
+      </div>
+      <div class="bg-white p-3 rounded-md">
+        <dt class="text-xs text-gray-500">利益率</dt>
+        <% profit_rate = @project.order_amount.to_d > 0 ? ((@project.order_amount.to_d - budget.total_cost.to_d) / @project.order_amount.to_d * 100) : 0 %>
+        <dd class="text-lg font-bold <%= profit_rate >= (budget.target_profit_rate || 0) ? 'text-green-600' : 'text-red-600' %>" data-budget-form-target="profitRate">
+          <%= number_with_precision(profit_rate, precision: 1) %>%
+        </dd>
+        <% if budget.target_profit_rate %>
+          <p class="text-xs text-gray-400 mt-1">目標: <%= budget.target_profit_rate %>%</p>
+        <% end %>
+      </div>
+    </dl>
   </div>
 
   <div>
     <%= f.label :notes, "備考", class: "block text-sm font-medium text-gray-700" %>
-    <%= f.text_area :notes, rows: 4, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    <%= f.text_area :notes, rows: 4, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+        disabled: budget.status == "confirmed" %>
   </div>
+
+  <%# 受注金額を隠しフィールドで渡す %>
+  <input type="hidden" data-budget-form-target="orderAmountValue" value="<%= @project.order_amount || 0 %>"
+         data-target-rate="<%= budget.target_profit_rate || 0 %>" />
 
   <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
     <%= link_to "キャンセル", project_budget_path(@project),
         class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-    <%= f.submit budget.persisted? ? "更新" : "作成",
-        class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer" %>
+    <% if budget.status != "confirmed" %>
+      <%= f.submit budget.persisted? ? "更新" : "作成",
+          class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer" %>
+    <% end %>
   </div>
 <% end %>

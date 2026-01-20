@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class EstimatesController < ApplicationController
-  before_action :authorize_estimates_access
+  authorize_with :estimates
   before_action :set_project
   before_action :set_estimate, only: %i[show edit update approve]
 
@@ -54,10 +54,6 @@ class EstimatesController < ApplicationController
   def set_estimate
     @estimate = @project.estimate
     redirect_to new_project_estimate_path(@project), alert: "見積書がありません" unless @estimate
-  end
-
-  def authorize_estimates_access
-    authorize_feature!(:estimates)
   end
 
   def estimate_params

@@ -1,0 +1,10 @@
+<%# Usage: render "shared/work_content_fields", f: form_builder %>
+<div class="mt-6">
+  <%= f.label :work_content, "作業内容", class: "block text-sm font-medium text-gray-700" %>
+  <%= f.text_area :work_content, rows: 4, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+</div>
+
+<div class="mt-6">
+  <%= f.label :notes, "備考", class: "block text-sm font-medium text-gray-700" %>
+  <%= f.text_area :notes, rows: 2, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+</div>

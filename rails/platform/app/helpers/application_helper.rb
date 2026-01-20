@@ -32,4 +32,17 @@ module ApplicationHelper
       "worker" => "作業員"
     }[role] || role
   end
+
+  # 祝日判定
+  def holiday?(date)
+    return false unless defined?(HolidayJp)
+    HolidayJp.holiday?(date)
+  end
+
+  # 祝日名取得
+  def holiday_name(date)
+    return nil unless defined?(HolidayJp)
+    holiday = HolidayJp.between(date, date).first
+    holiday&.name
+  end
 end

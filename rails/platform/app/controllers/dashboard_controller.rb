@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class DashboardController < ApplicationController
-  before_action :authorize_dashboard_access
+  authorize_with :dashboard
 
   def index
     @employee = current_employee
@@ -35,9 +35,4 @@ class DashboardController < ApplicationController
     @unpaid_invoices_amount = Invoice.where(status: %w[issued waiting]).sum(:total_amount) || 0
   end
 
-  private
-
-  def authorize_dashboard_access
-    authorize_feature!(:dashboard)
-  end
 end

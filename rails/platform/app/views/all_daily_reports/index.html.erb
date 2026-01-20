@@ -1,7 +1,4 @@
-<div class="min-h-screen bg-gray-100">
-  <%= render "shared/navbar" %>
-
-  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
     <div class="px-4 py-6 sm:px-0">
       <!-- ヘッダー -->
       <div class="flex justify-between items-center mb-6">
@@ -20,6 +17,27 @@
         <% end %>
       </div>
 
+      <!-- 現場絞り込み表示 -->
+      <% if @selected_project %>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex items-center justify-between">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+            </svg>
+            <span class="text-sm text-blue-800">
+              <span class="font-medium"><%= @selected_project.name %></span> の日報を表示中
+            </span>
+          </div>
+          <%= link_to all_daily_reports_path(filter: @filter, date_from: @date_from, date_to: @date_to),
+              class: "text-sm text-blue-600 hover:text-blue-800 flex items-center" do %>
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            解除
+          <% end %>
+        </div>
+      <% end %>
+
       <!-- フィルター -->
       <div class="bg-white shadow rounded-lg p-4 mb-6">
         <%= form_tag all_daily_reports_path, method: :get, class: "flex flex-wrap items-end gap-4" do %>
@@ -27,13 +45,13 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">種別</label>
             <div class="flex gap-2">
               <%= link_to "すべて",
-                  all_daily_reports_path(date_from: @date_from, date_to: @date_to),
+                  all_daily_reports_path(date_from: @date_from, date_to: @date_to, project_id: @selected_project&.id),
                   class: "px-3 py-1 rounded-md text-sm #{@filter == 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
               <%= link_to "案件",
-                  all_daily_reports_path(filter: "project", date_from: @date_from, date_to: @date_to),
+                  all_daily_reports_path(filter: "project", date_from: @date_from, date_to: @date_to, project_id: @selected_project&.id),
                   class: "px-3 py-1 rounded-md text-sm #{@filter == 'project' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
               <%= link_to "常用",
-                  all_daily_reports_path(filter: "external", date_from: @date_from, date_to: @date_to),
+                  all_daily_reports_path(filter: "external", date_from: @date_from, date_to: @date_to, project_id: @selected_project&.id),
                   class: "px-3 py-1 rounded-md text-sm #{@filter == 'external' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
             </div>
           </div>
@@ -41,6 +59,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">期間</label>
             <div class="flex items-center gap-2">
               <%= hidden_field_tag :filter, @filter %>
+              <%= hidden_field_tag :project_id, @selected_project&.id if @selected_project %>
               <%= date_field_tag :date_from, @date_from, class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
               <span class="text-gray-500">〜</span>
               <%= date_field_tag :date_to, @date_to, class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
@@ -50,7 +69,7 @@
           <div class="flex-grow"></div>
           <div>
             <%= link_to "今月",
-                all_daily_reports_path(filter: @filter),
+                all_daily_reports_path(filter: @filter, project_id: @selected_project&.id),
                 class: "px-3 py-2 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300" %>
           </div>
         <% end %>
@@ -85,11 +104,18 @@
                   <% if report.is_external? %>
                     <div class="text-sm text-gray-900"><%= report.external_site_name %></div>
                     <% if report.project %>
-                      <div class="text-xs text-gray-500">紐付: <%= report.project.name %></div>
+                      <div class="text-xs text-gray-500">
+                        紐付: <%= link_to report.project.name,
+                            all_daily_reports_path(project_id: report.project.id, filter: @filter, date_from: @date_from, date_to: @date_to),
+                            class: "text-blue-600 hover:underline" %>
+                      </div>
                     <% end %>
                   <% else %>
                     <div class="text-sm text-gray-900">
-                      <%= link_to report.project.name, project_path(report.project), class: "text-blue-600 hover:underline" %>
+                      <%= link_to report.project.name,
+                          all_daily_reports_path(project_id: report.project.id, filter: @filter, date_from: @date_from, date_to: @date_to),
+                          class: "text-blue-600 hover:underline",
+                          title: "この現場で絞り込み" %>
                     </div>
                     <div class="text-xs text-gray-500"><%= report.project.code %></div>
                   <% end %>
@@ -147,5 +173,4 @@
         </table>
       </div>
     </div>
-  </main>
-</div>
+  </div>

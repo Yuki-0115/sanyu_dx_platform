@@ -84,6 +84,9 @@ module DailyReportActions
       :materials_used, :machines_used, :labor_details,
       :outsourcing_details, :transportation_cost,
       :labor_cost, :material_cost, :outsourcing_cost,
+      # 燃料費・高速代（カード精算）
+      :fuel_type, :fuel_quantity, :fuel_amount,
+      :highway_count, :highway_amount, :highway_route,
       photos: []
     ]
   end

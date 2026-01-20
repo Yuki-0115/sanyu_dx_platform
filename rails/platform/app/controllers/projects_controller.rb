@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ProjectsController < ApplicationController
-  before_action :authorize_projects_access
+  authorize_with :projects
   before_action :set_project, only: %i[show edit update destroy complete_four_point complete_pre_construction_gate start_construction]
 
   def index
@@ -79,10 +79,6 @@ class ProjectsController < ApplicationController
 
   def set_project
     @project = Project.find(params[:id])
-  end
-
-  def authorize_projects_access
-    authorize_feature!(:projects)
   end
 
   def project_params

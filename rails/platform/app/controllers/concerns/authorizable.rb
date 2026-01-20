@@ -9,6 +9,14 @@ module Authorizable
     rescue_from NotAuthorizedError, with: :handle_not_authorized
   end
 
+  class_methods do
+    # Usage: authorize_with :projects
+    # Equivalent to: before_action { authorize_feature!(:projects) }
+    def authorize_with(feature)
+      before_action { authorize_feature!(feature) }
+    end
+  end
+
   private
 
   # Check if current employee can access a feature

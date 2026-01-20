@@ -14,6 +14,9 @@ class Employee < ApplicationRecord
   # Associations
   belongs_to :partner, optional: true
 
+  has_many :project_assignments, dependent: :destroy
+  has_many :projects, through: :project_assignments
+
   has_many :daily_reports_as_foreman, class_name: "DailyReport", foreign_key: :foreman_id,
                                       dependent: :restrict_with_error, inverse_of: :foreman
   has_many :attendances, dependent: :restrict_with_error
@@ -57,8 +60,8 @@ class Employee < ApplicationRecord
   def can_access?(feature)
     permissions = {
       admin: :all,
-      management: %i[dashboard projects estimates budgets daily_reports invoices offsets safety_documents master],
-      accounting: %i[dashboard invoices payments offsets expenses master],
+      management: %i[dashboard projects estimates budgets daily_reports invoices offsets accounting safety_documents master],
+      accounting: %i[dashboard invoices payments offsets expenses accounting master],
       sales: %i[dashboard projects estimates clients master],
       engineering: %i[dashboard projects budgets daily_reports safety_documents],
       construction: %i[dashboard projects daily_reports attendances expenses safety_documents],

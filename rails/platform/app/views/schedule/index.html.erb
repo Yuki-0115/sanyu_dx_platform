@@ -1,419 +1,538 @@
-<div class="min-h-screen bg-gray-100">
-  <%= render "shared/navbar" %>
+<div class="max-w-full mx-auto py-4 sm:py-6 px-2 sm:px-4" data-controller="dandori" data-dandori-refresh-interval-value="30000">
+  <!-- ヘッダー -->
+  <div class="mb-4 sm:mb-6">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+      <div class="flex items-center gap-3">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">段取り表</h2>
+        <button type="button" data-action="click->dandori#openBulkModal"
+                class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          一括配置
+        </button>
+      </div>
 
-  <main class="max-w-7xl mx-auto py-6 px-4" data-controller="calendar schedule-view">
-    <!-- ヘッダー -->
-    <div class="mb-6">
-      <div class="flex flex-wrap justify-between items-center gap-4">
-        <h2 class="text-2xl font-bold text-gray-900">現場カレンダー</h2>
-
-        <!-- 表示切替タブ -->
-        <div class="flex items-center bg-white rounded-lg shadow-sm p-1">
-          <button type="button"
-                  data-schedule-view-target="weekTab"
-                  data-action="click->schedule-view#showWeekly"
-                  class="px-4 py-2 text-sm font-medium rounded-md transition-colors bg-blue-600 text-white">
-            週表示
-          </button>
-          <button type="button"
-                  data-schedule-view-target="monthTab"
-                  data-action="click->schedule-view#showMonthly"
-                  class="px-4 py-2 text-sm font-medium rounded-md transition-colors text-gray-600 hover:text-gray-900">
-            月表示
-          </button>
-        </div>
-
-        <!-- ナビゲーション -->
-        <div class="flex items-center space-x-2">
-          <!-- 週表示用ナビ -->
-          <div data-schedule-view-target="weekNav" class="flex items-center space-x-2">
-            <%= link_to schedule_path(week: (@current_week_start - 7.days).strftime("%Y-%m-%d"), view: "week"),
-                class: "p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg" do %>
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-              </svg>
-            <% end %>
-            <span class="text-lg font-semibold px-4 min-w-48 text-center">
-              <%= l(@current_week_start, format: "%Y年%m月%d日") %> 〜 <%= l(@current_week_start + 6.days, format: "%m月%d日") %>
-            </span>
-            <%= link_to schedule_path(week: (@current_week_start + 7.days).strftime("%Y-%m-%d"), view: "week"),
-                class: "p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg" do %>
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-            <% end %>
-            <%= link_to "今週", schedule_path(view: "week"), class: "ml-4 px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700" %>
-          </div>
-
-          <!-- 月表示用ナビ -->
-          <div data-schedule-view-target="monthNav" class="hidden flex items-center space-x-2">
-            <%= link_to schedule_path(month: (@current_month - 1.month).strftime("%Y-%m"), view: "month"),
-                class: "p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg" do %>
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-              </svg>
-            <% end %>
-            <span class="text-xl font-semibold px-4 min-w-32 text-center">
-              <%= l(@current_month, format: "%Y年%m月") %>
-            </span>
-            <%= link_to schedule_path(month: (@current_month + 1.month).strftime("%Y-%m"), view: "month"),
-                class: "p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg" do %>
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-            <% end %>
-            <%= link_to "今月", schedule_path(view: "month"), class: "ml-4 px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700" %>
-          </div>
-        </div>
+      <!-- ナビゲーション -->
+      <div class="flex items-center justify-between sm:justify-end space-x-1 sm:space-x-2">
+        <%= link_to schedule_path(week: (@current_week_start - 7.days).strftime("%Y-%m-%d")),
+            class: "p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg" do %>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        <% end %>
+        <span class="text-sm sm:text-lg font-semibold px-2 sm:px-4 text-center flex-1 sm:flex-none">
+          <span class="hidden sm:inline"><%= l(@current_week_start, format: "%Y年%m月%d日") %> 〜 <%= l(@current_week_start + 6.days, format: "%m月%d日") %></span>
+          <span class="sm:hidden"><%= l(@current_week_start, format: "%m/%d") %>〜<%= l(@current_week_start + 6.days, format: "%m/%d") %></span>
+        </span>
+        <%= link_to schedule_path(week: (@current_week_start + 7.days).strftime("%Y-%m-%d")),
+            class: "p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg" do %>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        <% end %>
+        <%= link_to "今週", schedule_path, class: "ml-2 px-2 sm:px-3 py-1 text-xs sm:text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700" %>
       </div>
     </div>
+  </div>
 
-    <!-- 凡例 -->
-    <div class="mb-4 flex flex-wrap items-center gap-4 text-sm">
-      <span class="font-medium text-gray-700">人員:</span>
-      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">正社員</span>
-      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">仮社員</span>
-      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">外注</span>
+  <!-- 残り人員表示エリア -->
+  <div data-dandori-target="availableWorkers" class="mb-3 p-2 sm:p-3 bg-gray-50 rounded-lg min-h-8 text-sm">
+    <span class="text-gray-500">日付をクリックすると残り人員を表示</span>
+  </div>
+
+  <!-- 凡例 -->
+  <details class="mb-3 sm:mb-4 sm:open">
+    <summary class="sm:hidden text-sm text-gray-600 cursor-pointer mb-2">凡例を表示</summary>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 text-xs sm:text-sm">
+      <div class="flex items-center gap-2 sm:gap-4 flex-wrap">
+        <span class="font-medium text-gray-700">凡例:</span>
+        <span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded font-medium bg-orange-100 text-orange-800">日勤</span>
+        <span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded font-medium bg-indigo-100 text-indigo-800">夜勤</span>
+        <span class="text-red-600 font-bold">赤字</span>
+        <span class="text-gray-500">= 日勤夜勤重複</span>
+        <span class="text-amber-500">★</span>
+        <span class="text-gray-500">= 職長</span>
+      </div>
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+        <span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded font-medium bg-blue-100 text-blue-700 border border-blue-300">正</span>
+        <span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded font-medium bg-yellow-100 text-yellow-700 border border-yellow-300">仮</span>
+        <span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded font-medium bg-purple-100 text-purple-700 border border-purple-300">外</span>
+      </div>
     </div>
+  </details>
 
-    <!-- ======================== -->
-    <!-- 週表示（Excel形式） -->
-    <!-- ======================== -->
-    <div data-schedule-view-target="weekView" class="bg-white shadow rounded-lg overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="sticky left-0 z-10 bg-gray-50 px-4 py-3 text-left text-sm font-medium text-gray-700 border-r min-w-48">
-                現場名
+  <!-- 段取り表本体 -->
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="overflow-x-auto -webkit-overflow-scrolling-touch">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="sticky left-0 z-10 bg-gray-50 px-2 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 border-r min-w-28 sm:min-w-52">
+              案件名
+            </th>
+            <% @week_dates.each_with_index do |date, i| %>
+              <%
+                is_today = date == Date.current
+                is_sunday = i == 0
+                is_saturday = i == 6
+                remaining = @remaining_by_date[date] || { day: 0, night: 0 }
+                date_label = l(date, format: "%m/%d(%a)")
+              %>
+              <th class="px-0.5 sm:px-1 py-1 sm:py-2 text-center text-xs sm:text-sm font-medium min-w-14 sm:min-w-28 border-r cursor-pointer hover:bg-gray-100 <%= is_today ? 'bg-blue-50' : '' %> <%= is_sunday ? 'text-red-600' : (is_saturday ? 'text-blue-600' : 'text-gray-700') %>"
+                  data-action="click->dandori#showAvailableWorkers"
+                  data-date="<%= date.strftime('%Y-%m-%d') %>"
+                  data-date-label="<%= date_label %>">
+                <div class="text-xs"><%= %w[日 月 火 水 木 金 土][i] %></div>
+                <div class="text-sm sm:text-lg font-bold"><%= date.day %></div>
+                <% if is_today %>
+                  <span class="hidden sm:inline-block text-xs bg-blue-600 text-white px-1 rounded">今日</span>
+                <% end %>
+                <div class="mt-0.5 sm:mt-1 text-xs">
+                  <span class="text-orange-600"><%= remaining[:day] %></span>
+                  <span class="text-gray-400">/</span>
+                  <span class="text-indigo-600"><%= remaining[:night] %></span>
+                </div>
               </th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @projects.each do |project| %>
+            <tr class="hover:bg-gray-50">
+              <!-- 案件名 -->
+              <td class="sticky left-0 z-10 bg-white px-2 sm:px-3 py-1 sm:py-2 border-r">
+                <div class="min-w-0 flex items-center justify-between">
+                  <div class="flex-1 min-w-0">
+                    <%= link_to project.name, project_path(project), class: "text-xs sm:text-sm font-medium text-blue-600 hover:underline block truncate", title: project.name %>
+                    <p class="text-xs text-gray-500 truncate hidden sm:block"><%= project.client&.name %></p>
+                  </div>
+                </div>
+              </td>
+              <!-- 各日の配置 -->
               <% @week_dates.each_with_index do |date, i| %>
                 <%
                   is_today = date == Date.current
-                  is_sunday = i == 0
-                  is_saturday = i == 6
+                  day_schedules = @schedule_map[[project.id, date, "day"]] || []
+                  night_schedules = @schedule_map[[project.id, date, "night"]] || []
+                  overlapping_ids = @overlapping_employees[date] || Set.new
+                  note = @notes_map[[project.id, date]]
+                  has_note = note&.has_content?
+                  date_label = l(date, format: "%m/%d(%a)")
                 %>
-                <th class="px-2 py-3 text-center text-sm font-medium min-w-28 <%= is_today ? 'bg-blue-50' : '' %> <%= is_sunday ? 'text-red-600' : (is_saturday ? 'text-blue-600' : 'text-gray-700') %>">
-                  <div><%= %w[日 月 火 水 木 金 土][i] %></div>
-                  <div class="text-lg"><%= date.day %></div>
-                  <% if is_today %>
-                    <span class="inline-block text-xs bg-blue-600 text-white px-1 rounded">今日</span>
-                  <% end %>
-                </th>
-              <% end %>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <% @projects.each do |project| %>
-              <tr class="hover:bg-gray-50">
-                <!-- 現場名 -->
-                <td class="sticky left-0 z-10 bg-white px-4 py-3 border-r">
-                  <div class="flex items-center justify-between">
-                    <div class="min-w-0 flex-1">
-                      <%= link_to project.name, project_path(project), class: "text-sm font-medium text-blue-600 hover:underline block truncate", title: project.name %>
-                      <p class="text-xs text-gray-500 truncate"><%= project.client&.name %></p>
-                    </div>
-                    <button type="button"
-                            class="ml-2 p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded flex-shrink-0"
-                            data-action="click->calendar#openModal"
-                            data-calendar-project-id-param="<%= project.id %>"
-                            data-calendar-project-name-param="<%= project.name %>"
-                            data-calendar-date-param=""
-                            title="人員配置">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-                <!-- 各日の人員 -->
-                <% @week_dates.each_with_index do |date, i| %>
-                  <%
-                    is_today = date == Date.current
-                    is_active = project_active_on?(project, date)
-                    assignments_on_date = project.project_assignments.select { |a|
-                      (a.start_date.nil? || a.start_date <= date) && (a.end_date.nil? || a.end_date >= date)
-                    }
-                  %>
-                  <td class="px-2 py-2 text-center <%= is_today ? 'bg-blue-50' : '' %> <%= !is_active ? 'bg-gray-100' : '' %>">
-                    <% if is_active %>
-                      <div class="space-y-1">
-                        <% assignments_on_date.each do |assignment| %>
-                          <% emp = assignment.employee %>
-                          <div class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium
-                            <%= case emp.employment_type
-                                when 'regular' then 'bg-blue-100 text-blue-700'
-                                when 'temporary' then 'bg-yellow-100 text-yellow-700'
-                                when 'external' then 'bg-purple-100 text-purple-700'
-                                else 'bg-gray-100 text-gray-700'
-                                end %>"
-                              title="<%= emp.name %> (<%= { 'foreman' => '職長', 'worker' => '作業員', 'support' => '応援' }[assignment.role] || assignment.role %>)">
-                            <%= emp.name.first(3) %>
-                            <% if assignment.role == 'foreman' %>
-                              <span class="ml-0.5 text-red-500">★</span>
+                <td class="px-0.5 sm:px-1 py-0.5 sm:py-1 text-center border-r <%= is_today ? 'bg-blue-50' : '' %>"
+                    data-project-id="<%= project.id %>"
+                    data-date="<%= date.strftime('%Y-%m-%d') %>">
+                  <div class="min-h-12 sm:min-h-20 flex flex-col">
+                    <!-- 日勤セル -->
+                    <div class="flex-1 bg-orange-50 border-b border-orange-200 rounded-t px-0.5 py-0.5 relative">
+                      <div class="cursor-pointer hover:ring-2 hover:ring-orange-300 transition-all min-h-6"
+                           data-action="click->dandori#openCellModal"
+                           data-project-id="<%= project.id %>"
+                           data-project-name="<%= project.name %>"
+                           data-date="<%= date.strftime('%Y-%m-%d') %>"
+                           data-date-label="<%= date_label %>"
+                           data-shift="day">
+                        <% if day_schedules.any? %>
+                          <div class="flex flex-wrap gap-0.5 justify-center">
+                            <% day_schedules.take(4).each do |s| %>
+                              <% is_overlapping = overlapping_ids.include?(s.employee_id) %>
+                              <% is_foreman = s.role == "foreman" %>
+                              <span class="text-xs <%= is_overlapping ? 'text-red-600 font-bold' : '' %>"
+                                    title="<%= s.employee.name %><%= is_foreman ? '(職長)' : '' %> 日勤<%= is_overlapping ? ' ※夜勤と重複' : '' %>">
+                                <%= is_foreman ? '★' : '' %><%= s.employee.name.first(2) %>
+                              </span>
+                            <% end %>
+                            <% if day_schedules.size > 4 %>
+                              <span class="text-xs text-gray-500">+<%= day_schedules.size - 4 %></span>
                             <% end %>
                           </div>
-                        <% end %>
-                        <% if assignments_on_date.empty? %>
-                          <button type="button"
-                                  class="w-full py-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded text-xs"
-                                  data-action="click->calendar#openModal"
-                                  data-calendar-project-id-param="<%= project.id %>"
-                                  data-calendar-project-name-param="<%= project.name %>"
-                                  data-calendar-date-param="<%= date.strftime('%Y-%m-%d') %>"
-                                  title="人員を配置">
-                            <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
-                          </button>
+                        <% else %>
+                          <span class="text-xs text-orange-300">-</span>
                         <% end %>
                       </div>
-                    <% else %>
-                      <span class="text-gray-300">-</span>
-                    <% end %>
-                  </td>
-                <% end %>
-              </tr>
-            <% end %>
-            <% if @projects.empty? %>
-              <tr>
-                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
-                  進行中の案件がありません
+                      <!-- 日勤備考ボタン -->
+                      <button type="button"
+                              class="absolute bottom-0 right-0 p-0.5 <%= has_note ? 'text-amber-500' : 'text-gray-300 hover:text-gray-400' %>"
+                              data-action="click->dandori#openNoteModal"
+                              data-project-id="<%= project.id %>"
+                              data-project-name="<%= project.name %>"
+                              data-date="<%= date.strftime('%Y-%m-%d') %>"
+                              data-date-label="<%= date_label %>"
+                              title="<%= has_note ? '備考（入力あり）' : '備考' %>">
+                        <svg class="w-3 h-3" fill="<%= has_note ? 'currentColor' : 'none' %>" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                        </svg>
+                      </button>
+                    </div>
+                    <!-- 夜勤セル -->
+                    <div class="flex-1 bg-indigo-50 rounded-b px-0.5 py-0.5 relative">
+                      <div class="cursor-pointer hover:ring-2 hover:ring-indigo-300 transition-all min-h-6"
+                           data-action="click->dandori#openCellModal"
+                           data-project-id="<%= project.id %>"
+                           data-project-name="<%= project.name %>"
+                           data-date="<%= date.strftime('%Y-%m-%d') %>"
+                           data-date-label="<%= date_label %>"
+                           data-shift="night">
+                        <% if night_schedules.any? %>
+                          <div class="flex flex-wrap gap-0.5 justify-center">
+                            <% night_schedules.take(4).each do |s| %>
+                              <% is_overlapping = overlapping_ids.include?(s.employee_id) %>
+                              <% is_foreman = s.role == "foreman" %>
+                              <span class="text-xs <%= is_overlapping ? 'text-red-600 font-bold' : '' %>"
+                                    title="<%= s.employee.name %><%= is_foreman ? '(職長)' : '' %> 夜勤<%= is_overlapping ? ' ※日勤と重複' : '' %>">
+                                <%= is_foreman ? '★' : '' %><%= s.employee.name.first(2) %>
+                              </span>
+                            <% end %>
+                            <% if night_schedules.size > 4 %>
+                              <span class="text-xs text-gray-500">+<%= night_schedules.size - 4 %></span>
+                            <% end %>
+                          </div>
+                        <% else %>
+                          <span class="text-xs text-indigo-300">-</span>
+                        <% end %>
+                      </div>
+                      <!-- 夜勤備考ボタン -->
+                      <button type="button"
+                              class="absolute bottom-0 right-0 p-0.5 <%= has_note ? 'text-amber-500' : 'text-gray-300 hover:text-gray-400' %>"
+                              data-action="click->dandori#openNoteModal"
+                              data-project-id="<%= project.id %>"
+                              data-project-name="<%= project.name %>"
+                              data-date="<%= date.strftime('%Y-%m-%d') %>"
+                              data-date-label="<%= date_label %>"
+                              title="<%= has_note ? '備考（入力あり）' : '備考' %>">
+                        <svg class="w-3 h-3" fill="<%= has_note ? 'currentColor' : 'none' %>" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
                 </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ======================== -->
-    <!-- 月表示（グリッド形式） -->
-    <!-- ======================== -->
-    <div data-schedule-view-target="monthView" class="hidden">
-      <!-- カレンダーグリッド -->
-      <div class="bg-white shadow rounded-lg overflow-hidden">
-        <!-- 曜日ヘッダー -->
-        <div class="grid grid-cols-7 bg-gray-50 border-b">
-          <% %w[日 月 火 水 木 金 土].each_with_index do |day, i| %>
-            <div class="py-3 text-center text-sm font-medium <%= i == 0 ? 'text-red-600' : (i == 6 ? 'text-blue-600' : 'text-gray-700') %>">
-              <%= day %>
-            </div>
-          <% end %>
-        </div>
-
-        <!-- カレンダー本体 -->
-        <div class="grid grid-cols-7">
-          <% @weeks.each do |week| %>
-            <% week.each_with_index do |date, day_index| %>
-              <%
-                is_today = date == Date.current
-                is_current_month = date.month == @current_month.month
-                is_sunday = day_index == 0
-                is_saturday = day_index == 6
-                projects_today = @projects_by_date[date] || []
-              %>
-              <div class="min-h-32 border-b border-r p-1 <%= is_current_month ? 'bg-white' : 'bg-gray-50' %> <%= is_today ? 'ring-2 ring-inset ring-blue-500' : '' %>"
-                   data-date="<%= date.strftime('%Y-%m-%d') %>">
-                <!-- 日付 -->
-                <div class="flex justify-between items-center mb-1">
-                  <span class="text-sm font-medium <%= is_sunday ? 'text-red-600' : (is_saturday ? 'text-blue-600' : 'text-gray-700') %> <%= is_current_month ? '' : 'opacity-40' %>">
-                    <%= date.day %>
-                  </span>
-                  <% if is_today %>
-                    <span class="text-xs bg-blue-600 text-white px-1 rounded">今日</span>
-                  <% end %>
-                </div>
-
-                <!-- 案件リスト -->
-                <div class="space-y-1 overflow-y-auto max-h-24">
-                  <% projects_today.first(3).each do |project| %>
-                    <button type="button"
-                            class="w-full text-left px-1.5 py-1 rounded text-xs truncate bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer"
-                            data-action="click->calendar#openModal"
-                            data-calendar-project-id-param="<%= project.id %>"
-                            data-calendar-project-name-param="<%= project.name %>"
-                            data-calendar-date-param="<%= date.strftime('%Y-%m-%d') %>"
-                            title="<%= project.name %>&#10;クリックで人員配置">
-                      <%= truncate(project.name, length: 12) %>
-                      <% if project.project_assignments.any? %>
-                        <span class="text-gray-500">(<%= project.project_assignments.size %>人)</span>
-                      <% end %>
-                    </button>
-                  <% end %>
-                  <% if projects_today.size > 3 %>
-                    <div class="text-xs text-gray-500 px-1">+<%= projects_today.size - 3 %>件</div>
-                  <% end %>
-                </div>
-              </div>
-            <% end %>
-          <% end %>
-        </div>
-      </div>
-
-      <!-- 案件一覧（サイドパネル的に表示） -->
-      <div class="mt-6 bg-white shadow rounded-lg p-4">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">進行中の案件一覧</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <% @projects.each do |project| %>
-            <div class="border rounded-lg p-3 hover:bg-gray-50">
-              <div class="flex justify-between items-start">
-                <div class="flex-1 min-w-0">
-                  <%= link_to project.name, project_path(project), class: "text-sm font-medium text-blue-600 hover:underline block truncate" %>
-                  <p class="text-xs text-gray-500 mt-1">
-                    <%= project.scheduled_start_date&.strftime("%m/%d") || "未定" %> 〜 <%= project.scheduled_end_date&.strftime("%m/%d") || "未定" %>
-                  </p>
-                </div>
-                <button type="button"
-                        class="ml-2 p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
-                        data-action="click->calendar#openModal"
-                        data-calendar-project-id-param="<%= project.id %>"
-                        data-calendar-project-name-param="<%= project.name %>"
-                        data-calendar-date-param=""
-                        title="人員配置">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                  </svg>
-                </button>
-              </div>
-              <!-- 配置済み人員 -->
-              <% if project.project_assignments.any? %>
-                <div class="mt-2 flex flex-wrap gap-1">
-                  <% project.project_assignments.includes(:employee).each do |assignment| %>
-                    <% emp = assignment.employee %>
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium
-                      <%= case emp.employment_type
-                          when 'regular' then 'bg-blue-100 text-blue-700'
-                          when 'temporary' then 'bg-yellow-100 text-yellow-700'
-                          when 'external' then 'bg-purple-100 text-purple-700'
-                          else 'bg-gray-100 text-gray-700'
-                          end %>">
-                      <%= emp.name %>
-                    </span>
-                  <% end %>
-                </div>
-              <% else %>
-                <p class="mt-2 text-xs text-gray-400">人員未配置</p>
               <% end %>
-            </div>
+            </tr>
           <% end %>
-        </div>
-      </div>
+          <% if @projects.empty? %>
+            <tr>
+              <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                進行中の案件がありません
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
     </div>
+  </div>
 
-    <!-- 人員配置モーダル -->
-    <div data-calendar-target="modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-      <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-        <!-- オーバーレイ -->
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" data-action="click->calendar#closeModal"></div>
+  <!-- セルモーダル（人員配置） -->
+  <div data-dandori-target="cellModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-end sm:items-center justify-center min-h-screen px-0 sm:px-4 pt-4 pb-0 sm:pb-20 text-center">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" data-action="click->dandori#closeCellModal"></div>
+      <div class="relative bg-white rounded-t-xl sm:rounded-lg shadow-xl transform transition-all w-full sm:max-w-2xl max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
+        <div data-dandori-target="cellModalHeader" class="px-4 py-3 border-b bg-orange-50">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <h3 class="text-base sm:text-lg font-medium text-gray-900" data-dandori-target="cellModalTitle">人員配置</h3>
+              <span data-dandori-target="cellModalShiftBadge" class="px-2 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-700">日勤</span>
+            </div>
+            <button type="button" class="text-gray-400 hover:text-gray-500 p-1" data-action="click->dandori#closeCellModal">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <p class="text-sm text-gray-600 mt-1" data-dandori-target="cellModalDate"></p>
+        </div>
 
-        <!-- モーダル本体 -->
-        <div class="relative bg-white rounded-lg shadow-xl transform transition-all sm:max-w-lg sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-medium text-gray-900" data-calendar-target="modalTitle">人員配置</h3>
-              <button type="button" class="text-gray-400 hover:text-gray-500" data-action="click->calendar#closeModal">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-              </button>
+        <div class="p-4 sm:p-6">
+          <!-- 選択数表示 -->
+          <div class="mb-4 flex justify-between items-center">
+            <span data-dandori-target="cellSelectedCount" class="text-sm font-medium text-gray-700">0名選択中</span>
+            <div class="flex gap-2">
+              <button type="button" data-action="click->dandori#selectAllInCell" class="text-xs text-blue-600 hover:underline">全選択</button>
+              <button type="button" data-action="click->dandori#deselectAllInCell" class="text-xs text-gray-600 hover:underline">全解除</button>
+            </div>
+          </div>
+
+          <!-- 社員選択（チェックボックス形式） -->
+          <div class="space-y-4 max-h-[50vh] overflow-y-auto">
+            <!-- 正社員 -->
+            <div>
+              <p class="text-xs font-medium text-gray-700 mb-2 sticky top-0 bg-white">正社員</p>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <% @regular_employees.each do |emp| %>
+                  <label class="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox"
+                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                           data-dandori-target="cellEmployeeCheckbox"
+                           data-employee-id="<%= emp.id %>"
+                           data-employee-name="<%= emp.name %>">
+                    <span class="text-sm truncate"><%= emp.name %></span>
+                    <select data-dandori-target="cellRoleSelect" data-employee-id="<%= emp.id %>"
+                            class="ml-auto text-xs border-gray-300 rounded py-0.5 px-1">
+                      <option value="worker">作業</option>
+                      <option value="foreman">職長</option>
+                    </select>
+                  </label>
+                <% end %>
+              </div>
             </div>
 
-            <!-- 現在の配置 -->
-            <div class="mb-4">
-              <h4 class="text-sm font-medium text-gray-700 mb-2">現在の配置</h4>
-              <div data-calendar-target="currentAssignments" class="min-h-12 p-2 bg-gray-50 rounded-lg">
-                <p class="text-sm text-gray-500">読み込み中...</p>
-              </div>
-            </div>
-
-            <!-- 人員追加フォーム -->
-            <%= form_with url: "#", method: :post, data: { calendar_target: "assignForm", action: "submit->calendar#submitAssignment" }, class: "border-t pt-4" do |f| %>
-              <input type="hidden" name="project_assignment[project_id]" data-calendar-target="projectIdInput">
-
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">社員を選択</label>
-                  <select name="project_assignment[employee_id]" data-calendar-target="employeeSelect" required
-                          class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                    <option value="">選択...</option>
-                    <optgroup label="正社員">
-                      <% @employees.select { |e| e.employment_type == 'regular' }.each do |emp| %>
-                        <option value="<%= emp.id %>"><%= emp.name %></option>
-                      <% end %>
-                    </optgroup>
-                    <optgroup label="仮社員">
-                      <% @employees.select { |e| e.employment_type == 'temporary' }.each do |emp| %>
-                        <option value="<%= emp.id %>"><%= emp.name %></option>
-                      <% end %>
-                    </optgroup>
-                    <optgroup label="外注">
-                      <% @employees.select { |e| e.employment_type == 'external' }.each do |emp| %>
-                        <option value="<%= emp.id %>"><%= emp.name %></option>
-                      <% end %>
-                    </optgroup>
-                  </select>
+            <!-- 仮社員 -->
+            <% if @temporary_employees.any? %>
+              <div>
+                <p class="text-xs font-medium text-gray-700 mb-2 sticky top-0 bg-white">仮社員</p>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <% @temporary_employees.each do |emp| %>
+                    <label class="flex items-center gap-2 p-2 border border-yellow-200 rounded-lg hover:bg-yellow-50 cursor-pointer">
+                      <input type="checkbox"
+                             class="rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+                             data-dandori-target="cellEmployeeCheckbox"
+                             data-employee-id="<%= emp.id %>"
+                             data-employee-name="<%= emp.name %>">
+                      <span class="text-sm truncate"><%= emp.name %></span>
+                      <select data-dandori-target="cellRoleSelect" data-employee-id="<%= emp.id %>"
+                              class="ml-auto text-xs border-gray-300 rounded py-0.5 px-1">
+                        <option value="worker">作業</option>
+                        <option value="foreman">職長</option>
+                      </select>
+                    </label>
+                  <% end %>
                 </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">役割</label>
-                  <select name="project_assignment[role]" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                    <option value="worker">作業員</option>
-                    <option value="foreman">職長</option>
-                    <option value="support">応援</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- 配置タイプ選択 -->
-              <div class="mt-3">
-                <label class="block text-sm font-medium text-gray-700 mb-2">配置タイプ</label>
-                <div class="flex space-x-4">
-                  <label class="inline-flex items-center">
-                    <input type="radio" name="assignment_type" value="permanent" checked
-                           data-calendar-target="assignmentTypePermanent"
-                           data-action="change->calendar#toggleDateField"
-                           class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-gray-700">固定（全期間）</span>
-                  </label>
-                  <label class="inline-flex items-center">
-                    <input type="radio" name="assignment_type" value="period"
-                           data-calendar-target="assignmentTypePeriod"
-                           data-action="change->calendar#toggleDateField"
-                           class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-gray-700">期間指定</span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- 期間選択（期間指定の場合のみ表示） -->
-              <div data-calendar-target="dateFieldContainer" class="mt-3 hidden">
-                <label class="block text-sm font-medium text-gray-700 mb-1">配置期間</label>
-                <div class="flex items-center space-x-2">
-                  <input type="date" name="project_assignment[start_date]"
-                         data-calendar-target="startDateInput"
-                         class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                  <span class="text-gray-500">〜</span>
-                  <input type="date" name="project_assignment[end_date]"
-                         data-calendar-target="endDateInput"
-                         class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                </div>
-                <p class="mt-1 text-xs text-gray-500">※同じ日を選択すると単日配置になります</p>
-              </div>
-
-              <div class="mt-4 flex justify-end space-x-3">
-                <button type="button" data-action="click->calendar#closeModal"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                  閉じる
-                </button>
-                <button type="submit"
-                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
-                  追加
-                </button>
               </div>
             <% end %>
+
+            <!-- 外注 -->
+            <% if @external_employees.any? %>
+              <div>
+                <p class="text-xs font-medium text-gray-700 mb-2 sticky top-0 bg-white">外注</p>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <% @external_employees.each do |emp| %>
+                    <label class="flex items-center gap-2 p-2 border border-purple-200 rounded-lg hover:bg-purple-50 cursor-pointer">
+                      <input type="checkbox"
+                             class="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                             data-dandori-target="cellEmployeeCheckbox"
+                             data-employee-id="<%= emp.id %>"
+                             data-employee-name="<%= emp.name %>">
+                      <span class="text-sm truncate"><%= emp.name %></span>
+                      <select data-dandori-target="cellRoleSelect" data-employee-id="<%= emp.id %>"
+                              class="ml-auto text-xs border-gray-300 rounded py-0.5 px-1">
+                        <option value="worker">作業</option>
+                        <option value="foreman">職長</option>
+                      </select>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+
+          <div class="mt-6 flex justify-end gap-3">
+            <button type="button" data-action="click->dandori#closeCellModal"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+              キャンセル
+            </button>
+            <button type="button" data-dandori-target="cellSaveBtn" data-action="click->dandori#saveCellAssignments"
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
+              保存
+            </button>
           </div>
         </div>
       </div>
     </div>
-  </main>
+  </div>
+
+  <!-- 一括配置モーダル -->
+  <div data-dandori-target="bulkModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-end sm:items-center justify-center min-h-screen px-0 sm:px-4 pt-4 pb-0 sm:pb-20 text-center">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" data-action="click->dandori#closeBulkModal"></div>
+      <div class="relative bg-white rounded-t-xl sm:rounded-lg shadow-xl transform transition-all w-full sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div class="px-4 py-3 border-b bg-green-50">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-medium text-gray-900">一括配置</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-500 p-1" data-action="click->dandori#closeBulkModal">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="p-4 sm:p-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <!-- 案件選択 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">案件</label>
+              <select data-dandori-target="projectSelect" data-action="change->dandori#onProjectChange"
+                      class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                <option value="">選択してください</option>
+                <% @projects.each do |p| %>
+                  <option value="<%= p.id %>"
+                          data-start="<%= p.scheduled_start_date&.strftime('%Y-%m-%d') %>"
+                          data-end="<%= p.scheduled_end_date&.strftime('%Y-%m-%d') %>">
+                    <%= p.name %>
+                  </option>
+                <% end %>
+              </select>
+            </div>
+
+            <!-- 勤務帯 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">勤務帯</label>
+              <select data-dandori-target="bulkShift" data-action="change->dandori#updateBulkSummary"
+                      class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                <option value="day">日勤</option>
+                <option value="night">夜勤</option>
+              </select>
+            </div>
+
+            <!-- 期間 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">開始日</label>
+              <input type="date" data-dandori-target="bulkStartDate" data-action="change->dandori#updateBulkSummary"
+                     class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">終了日</label>
+              <input type="date" data-dandori-target="bulkEndDate" data-action="change->dandori#updateBulkSummary"
+                     class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+            </div>
+
+            <!-- 役割 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">役割</label>
+              <select data-dandori-target="bulkRole" data-action="change->dandori#updateBulkSummary"
+                      class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                <option value="worker">作業員</option>
+                <option value="foreman">職長</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 社員選択 -->
+          <div class="border-t pt-4">
+            <div class="flex justify-between items-center mb-2">
+              <p class="text-sm font-medium text-gray-700">社員選択</p>
+              <div class="flex gap-2">
+                <button type="button" data-action="click->dandori#selectAllEmployees" class="text-xs text-blue-600 hover:underline">全選択</button>
+                <button type="button" data-action="click->dandori#deselectAllEmployees" class="text-xs text-gray-600 hover:underline">全解除</button>
+                <span data-dandori-target="selectedEmployeesCount" class="text-xs text-gray-500">0名選択中</span>
+              </div>
+            </div>
+            <div class="max-h-48 overflow-y-auto grid grid-cols-3 sm:grid-cols-4 gap-2">
+              <% @employees.each do |emp| %>
+                <label class="flex items-center gap-1 p-1.5 border rounded hover:bg-gray-50 cursor-pointer text-sm">
+                  <input type="checkbox"
+                         data-dandori-target="bulkEmployeeCheckbox"
+                         data-employee-id="<%= emp.id %>"
+                         data-action="change->dandori#updateBulkSummary"
+                         class="rounded border-gray-300">
+                  <span class="truncate"><%= emp.name %></span>
+                </label>
+              <% end %>
+            </div>
+          </div>
+
+          <!-- サマリー -->
+          <div data-dandori-target="bulkSummary" class="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
+            案件と作業員を選択してください
+          </div>
+
+          <div class="mt-6 flex justify-end gap-3">
+            <button type="button" data-action="click->dandori#closeBulkModal"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+              キャンセル
+            </button>
+            <button type="button" data-dandori-target="bulkSubmitBtn" data-action="click->dandori#executeBulkAssign"
+                    disabled
+                    class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              一括配置を実行
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 備考モーダル -->
+  <div data-dandori-target="noteModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-end sm:items-center justify-center min-h-screen px-0 sm:px-4 pt-4 pb-0 sm:pb-20 text-center">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" data-action="click->dandori#closeNoteModal"></div>
+      <div class="relative bg-white rounded-t-xl sm:rounded-lg shadow-xl transform transition-all w-full sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="px-4 py-3 border-b bg-amber-50">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-medium text-gray-900" data-dandori-target="noteModalTitle">備考</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-500 p-1" data-action="click->dandori#closeNoteModal">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <p class="text-sm text-gray-600 mt-1" data-dandori-target="noteModalDate"></p>
+        </div>
+
+        <div class="p-4 sm:p-6 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">作業内容</label>
+            <textarea data-dandori-target="noteWorkContent" rows="2"
+                      class="w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500"
+                      placeholder="本日の主な作業内容"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">車両</label>
+            <input type="text" data-dandori-target="noteVehicles"
+                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500"
+                   placeholder="例: 2tダンプ、軽トラ">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">工具・機材</label>
+            <input type="text" data-dandori-target="noteEquipment"
+                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500"
+                   placeholder="例: 発電機、溶接機">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">重機搬入</label>
+            <input type="text" data-dandori-target="noteHeavyEquipment"
+                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500"
+                   placeholder="例: バックホー 0.25m³">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">備考・連絡事項</label>
+            <textarea data-dandori-target="noteNotes" rows="2"
+                      class="w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500"
+                      placeholder="その他連絡事項"></textarea>
+          </div>
+
+          <div class="flex justify-between items-center pt-2">
+            <div class="flex gap-2">
+              <button type="button" data-action="click->dandori#copyNote"
+                      class="inline-flex items-center px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 border rounded-md">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                コピー
+              </button>
+              <button type="button" data-dandori-target="notePasteBtn" data-action="click->dandori#pasteNote"
+                      disabled
+                      class="inline-flex items-center px-3 py-1.5 text-xs text-gray-400 border rounded-md disabled:cursor-not-allowed">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                貼り付け
+              </button>
+            </div>
+            <div class="flex gap-3">
+              <button type="button" data-action="click->dandori#closeNoteModal"
+                      class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                キャンセル
+              </button>
+              <button type="button" data-dandori-target="noteSaveBtn" data-action="click->dandori#saveNote"
+                      class="px-4 py-2 text-sm font-medium text-white bg-amber-600 border border-transparent rounded-md hover:bg-amber-700">
+                保存
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

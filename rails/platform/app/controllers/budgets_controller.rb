@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class BudgetsController < ApplicationController
-  before_action :authorize_budgets_access
+  authorize_with :budgets
   before_action :set_project
   before_action :set_budget, only: %i[show edit update confirm]
 
@@ -76,10 +76,6 @@ class BudgetsController < ApplicationController
 
   def set_budget
     @budget = @project.budget || @project.build_budget
-  end
-
-  def authorize_budgets_access
-    authorize_feature!(:budgets)
   end
 
   def budget_params

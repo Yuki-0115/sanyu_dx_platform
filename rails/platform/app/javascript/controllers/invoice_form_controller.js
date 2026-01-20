@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { formatCurrency } from "utils/currency"
 
 export default class extends Controller {
   static targets = ["subtotalSum", "taxAmount", "totalAmount", "amountInput", "taxInput", "totalInput"]
@@ -21,7 +22,7 @@ export default class extends Controller {
       const unitPrice = parseFloat(unitPriceInput.value) || 0
       const subtotal = Math.round(quantity * unitPrice)
 
-      subtotalDisplay.textContent = this.formatCurrency(subtotal)
+      subtotalDisplay.textContent = formatCurrency(subtotal)
       subtotalInput.value = subtotal
     }
 
@@ -47,13 +48,13 @@ export default class extends Controller {
     const grandTotal = total + tax
 
     if (this.hasSubtotalSumTarget) {
-      this.subtotalSumTarget.textContent = this.formatCurrency(total)
+      this.subtotalSumTarget.textContent = formatCurrency(total)
     }
     if (this.hasTaxAmountTarget) {
-      this.taxAmountTarget.textContent = this.formatCurrency(tax)
+      this.taxAmountTarget.textContent = formatCurrency(tax)
     }
     if (this.hasTotalAmountTarget) {
-      this.totalAmountTarget.textContent = this.formatCurrency(grandTotal)
+      this.totalAmountTarget.textContent = formatCurrency(grandTotal)
     }
     if (this.hasAmountInputTarget) {
       this.amountInputTarget.value = total
@@ -64,9 +65,5 @@ export default class extends Controller {
     if (this.hasTotalInputTarget) {
       this.totalInputTarget.value = grandTotal
     }
-  }
-
-  formatCurrency(amount) {
-    return "¥" + amount.toLocaleString("ja-JP")
   }
 }

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class OffsetsController < ApplicationController
-  before_action :authorize_offsets_access
+  authorize_with :offsets
   before_action :set_offset, only: %i[show edit update confirm]
 
   def index
@@ -54,10 +54,6 @@ class OffsetsController < ApplicationController
 
   def set_offset
     @offset = Offset.find(params[:id])
-  end
-
-  def authorize_offsets_access
-    authorize_feature!(:offsets)
   end
 
   def offset_params

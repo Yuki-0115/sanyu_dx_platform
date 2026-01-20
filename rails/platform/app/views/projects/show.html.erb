@@ -1,7 +1,6 @@
-<div class="min-h-screen bg-gray-100">
-  <%= render "shared/navbar" %>
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 
-  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+  
     <div class="px-4 py-6 sm:px-0">
       <div class="flex justify-between items-center mb-6">
         <div>
@@ -66,6 +65,22 @@
                   <%= @project.actual_cost ? number_to_currency(@project.actual_cost, unit: "¥", precision: 0) : "未計上" %>
                 </dd>
               </div>
+              <% if @project.order_amount && @project.actual_cost && @project.actual_cost > 0 %>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">実績粗利</dt>
+                  <% gross_profit = @project.gross_profit %>
+                  <dd class="mt-1 text-sm font-medium <%= gross_profit && gross_profit >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <%= number_to_currency(gross_profit, unit: "¥", precision: 0) %>
+                  </dd>
+                </div>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">実績利益率</dt>
+                  <% profit_rate = @project.profit_margin %>
+                  <dd class="mt-1 text-sm font-medium <%= profit_rate && profit_rate >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <%= profit_rate ? "#{profit_rate}%" : "-" %>
+                  </dd>
+                </div>
+              <% end %>
               <% if @project.site_address.present? %>
                 <div class="sm:col-span-2">
                   <dt class="text-sm font-medium text-gray-500">現場住所</dt>
@@ -331,8 +346,8 @@
                     <dd class="font-medium"><%= number_to_currency(@project.estimate.selling_price, unit: "¥", precision: 0) %></dd>
                   </div>
                   <div>
-                    <dt class="text-gray-500">利益率</dt>
-                    <dd class="font-medium <%= @project.estimate.profit_margin && @project.estimate.profit_margin >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <dt class="text-gray-500">見積利益率</dt>
+                    <dd class="font-medium text-gray-700">
                       <%= @project.estimate.profit_margin ? "#{@project.estimate.profit_margin}%" : "-" %>
                     </dd>
                   </div>
@@ -511,5 +526,5 @@
         </div>
       </div>
     </div>
-  </main>
+  
 </div>

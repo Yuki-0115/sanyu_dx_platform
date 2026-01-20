@@ -1,9 +1,5 @@
-<div class="min-h-screen bg-gray-100">
-  <%= render "shared/navbar" %>
-
-  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <div class="px-4 py-6 sm:px-0">
-      <h2 class="text-2xl font-bold text-gray-900 mb-6">ダッシュボード</h2>
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <h2 class="text-2xl font-bold text-gray-900 mb-6">ダッシュボード</h2>
 
       <!-- サマリーカード -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -235,15 +231,6 @@
             <% end %>
 
             <% if current_employee.can_access?(:projects) %>
-              <%= link_to projects_path, class: "flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100" do %>
-                <svg class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                </svg>
-                <span class="ml-3 text-sm font-medium text-gray-900">案件一覧</span>
-              <% end %>
-            <% end %>
-
-            <% if current_employee.can_access?(:projects) %>
               <%= link_to schedule_path, class: "flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100" do %>
                 <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -253,32 +240,39 @@
             <% end %>
 
             <% if current_employee.can_access?(:daily_reports) %>
-              <%= link_to external_daily_reports_path, class: "flex items-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100" do %>
-                <svg class="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <%= link_to new_all_daily_report_path, class: "flex items-center p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100" do %>
+                <svg class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                <span class="ml-3 text-sm font-medium text-orange-900">常用日報一覧</span>
+                <span class="ml-3 text-sm font-medium text-indigo-900">新規日報</span>
               <% end %>
             <% end %>
 
-            <% if current_employee.can_access?(:daily_reports) %>
-              <%= link_to new_external_daily_report_path, class: "flex items-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100" do %>
-                <svg class="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            <% if current_employee.can_access?(:provisional_expenses) %>
+              <%= link_to provisional_expenses_path, class: "flex items-center p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100" do %>
+                <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
-                <span class="ml-3 text-sm font-medium text-orange-900">新規常用日報</span>
+                <span class="ml-3 text-sm font-medium text-yellow-900">仮経費確定</span>
+              <% end %>
+            <% end %>
+
+            <% if current_employee.can_access?(:attendance) %>
+              <%= link_to attendance_sheets_path, class: "flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100" do %>
+                <svg class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="ml-3 text-sm font-medium text-purple-900">勤怠管理表</span>
               <% end %>
             <% end %>
           </div>
         </div>
       </div>
 
-      <div class="mt-8 bg-white shadow rounded-lg p-6">
-        <p class="text-gray-600">
-          <%= current_employee.name %>さん、sunyutechへようこそ。<br>
-          ロール: <span class="font-semibold"><%= current_employee.role %></span>
-        </p>
-      </div>
-    </div>
-  </main>
+  <div class="mt-8 bg-white shadow rounded-lg p-6">
+    <p class="text-gray-600">
+      <%= current_employee.name %>さん、sunyutechへようこそ。<br>
+      ロール: <span class="font-semibold"><%= current_employee.role %></span>
+    </p>
+  </div>
 </div>

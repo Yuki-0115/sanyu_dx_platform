@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class InvoicesController < ApplicationController
-  before_action :authorize_invoices_access
+  authorize_with :invoices
   before_action :set_project
   before_action :set_invoice, only: %i[show edit update destroy issue]
 
@@ -65,10 +65,6 @@ class InvoicesController < ApplicationController
 
   def set_invoice
     @invoice = @project.invoices.find(params[:id])
-  end
-
-  def authorize_invoices_access
-    authorize_feature!(:invoices)
   end
 
   def invoice_params

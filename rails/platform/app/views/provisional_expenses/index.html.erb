@@ -1,0 +1,219 @@
+<main class="py-6 px-4 sm:px-6 lg:px-8">
+      <!-- ヘッダー -->
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">仮経費確定</h2>
+          <p class="text-sm text-gray-500 mt-1">ガソリンカード・ETCカードの請求書到着後に確定処理を行ってください</p>
+        </div>
+      </div>
+
+      <!-- 月選択 -->
+      <div class="bg-white shadow rounded-lg p-4 mb-6">
+        <%= form_with url: provisional_expenses_path, method: :get, local: true, class: "flex items-center gap-4" do %>
+          <label class="text-sm font-medium text-gray-700">対象月:</label>
+          <%= month_field_tag :month, @year_month.strftime("%Y-%m"),
+              class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+          <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">
+            表示
+          </button>
+        <% end %>
+      </div>
+
+      <!-- サマリー -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- 燃料費サマリー -->
+        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div class="flex items-center mb-2">
+            <svg class="w-6 h-6 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900">燃料費（未確定）</h3>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <p class="text-sm text-gray-500">件数</p>
+              <p class="text-2xl font-bold text-orange-600"><%= @fuel_count %>件</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">仮金額合計</p>
+              <p class="text-2xl font-bold text-orange-600"><%= number_to_currency(@fuel_total || 0, unit: "¥", precision: 0) %></p>
+            </div>
+          </div>
+          <% if @fuel_count > 0 %>
+            <!-- 単価一括入力（油種別） -->
+            <div class="border-t border-orange-200 pt-3" data-controller="fuel-price-fill">
+              <p class="text-sm font-medium text-gray-700 mb-2">単価を一括入力（油種別）</p>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <% DailyReport::FUEL_TYPES.each do |type| %>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-700 w-16"><%= DailyReport::FUEL_TYPE_LABELS[type] %></span>
+                    <div class="flex rounded-md shadow-sm">
+                      <span class="inline-flex items-center px-2 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">¥</span>
+                      <input type="number" data-fuel-price-fill-target="price" data-fuel-type="<%= type %>" step="0.1" min="0" placeholder="単価"
+                             class="w-20 rounded-r-md border-gray-300 focus:border-orange-500 focus:ring-orange-500 text-sm">
+                    </div>
+                    <span class="text-xs text-gray-500">/L</span>
+                  </div>
+                <% end %>
+              </div>
+              <div class="mt-3">
+                <button type="button" data-action="click->fuel-price-fill#applyAll"
+                        class="px-4 py-1.5 bg-orange-600 text-white text-sm rounded hover:bg-orange-700">
+                  一括反映
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">※単価を入力して「一括反映」を押すと、下の一覧の該当油種に単価がセットされます</p>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- 高速代サマリー -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div class="flex items-center mb-2">
+            <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900">高速代（未確定）</h3>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-500">件数</p>
+              <p class="text-2xl font-bold text-blue-600"><%= @highway_count %>件</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">仮金額合計</p>
+              <p class="text-2xl font-bold text-blue-600"><%= number_to_currency(@highway_total || 0, unit: "¥", precision: 0) %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 未確定一覧 -->
+      <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">日付</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">現場</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">職長</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">種別</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">数量</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">仮金額</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">確定金額</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% @daily_reports.each do |report| %>
+              <%# 燃料費 %>
+              <% if report.fuel_quantity.to_f > 0 && !report.fuel_confirmed? %>
+                <tr class="hover:bg-gray-50 fuel-row" data-fuel-type="<%= report.fuel_type %>" data-controller="fuel-calc" data-fuel-calc-quantity-value="<%= report.fuel_quantity %>">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <%= l(report.report_date) %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <%= report.project&.name || report.external_site_name || "-" %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <%= report.foreman.name %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
+                      <%= report.fuel_type_label %>
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <%= report.fuel_quantity %>L
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_currency(report.fuel_amount || 0, unit: "¥", precision: 0) %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <%= form_with url: confirm_fuel_provisional_expense_path(report), method: :patch, local: true, class: "flex flex-col gap-1" do %>
+                      <div class="flex items-center gap-2">
+                        <div class="flex rounded-md shadow-sm">
+                          <span class="inline-flex items-center px-2 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">¥</span>
+                          <%= number_field_tag :unit_price,
+                              report.fuel_amount && report.fuel_quantity ? (report.fuel_amount / report.fuel_quantity).round(1) : 160,
+                              step: 0.1, min: 0, placeholder: "単価",
+                              data: { action: "input->fuel-calc#calculate", fuel_calc_target: "unitPrice" },
+                              class: "w-20 rounded-r-md border-gray-300 focus:border-orange-500 focus:ring-orange-500 text-sm" %>
+                        </div>
+                        <span class="text-gray-500 text-sm">/L</span>
+                        <button type="submit" class="px-3 py-1 bg-orange-600 text-white text-sm rounded hover:bg-orange-700">
+                          確定
+                        </button>
+                      </div>
+                      <div class="text-xs text-gray-500">
+                        確定金額: <span data-fuel-calc-target="total" class="font-medium text-orange-600"><%= number_to_currency((report.fuel_amount || 0), unit: "¥", precision: 0) %></span>
+                      </div>
+                    <% end %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <%= link_to "日報", (report.is_external? ? external_daily_report_path(report) : project_daily_report_path(report.project, report)),
+                        class: "text-blue-600 hover:underline" %>
+                  </td>
+                </tr>
+              <% end %>
+
+              <%# 高速代 %>
+              <% if report.highway_count.to_i > 0 && !report.highway_confirmed? %>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <%= l(report.report_date) %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <%= report.project&.name || report.external_site_name || "-" %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <%= report.foreman.name %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                      高速代
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <%= report.highway_count %>回
+                    <% if report.highway_route.present? %>
+                      <br><span class="text-xs text-gray-500"><%= report.highway_route %></span>
+                    <% end %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_currency(report.highway_amount || 0, unit: "¥", precision: 0) %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <%= form_with url: confirm_highway_provisional_expense_path(report), method: :patch, local: true, class: "flex items-center gap-2" do %>
+                      <div class="flex rounded-md shadow-sm">
+                        <span class="inline-flex items-center px-2 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">¥</span>
+                        <%= number_field_tag :confirmed_amount, report.highway_amount,
+                            step: 1, min: 0,
+                            class: "w-24 rounded-r-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm" %>
+                      </div>
+                      <button type="submit" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                        確定
+                      </button>
+                    <% end %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <%= link_to "日報", (report.is_external? ? external_daily_report_path(report) : project_daily_report_path(report.project, report)),
+                        class: "text-blue-600 hover:underline" %>
+                  </td>
+                </tr>
+              <% end %>
+            <% end %>
+
+            <% if @daily_reports.empty? %>
+              <tr>
+                <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500">
+                  <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <p class="mt-2">未確定の仮経費はありません</p>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+</main>

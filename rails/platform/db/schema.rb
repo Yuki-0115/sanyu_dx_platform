@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_19_051232) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_20_100002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -120,6 +120,31 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_19_051232) do
     t.index ["tenant_id"], name: "index_clients_on_tenant_id"
   end
 
+  create_table "company_events", force: :cascade do |t|
+    t.date "event_date", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.string "calendar_type", default: "all", null: false
+    t.string "color", default: "purple"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["calendar_type"], name: "index_company_events_on_calendar_type"
+    t.index ["event_date", "calendar_type"], name: "index_company_events_on_event_date_and_calendar_type"
+    t.index ["event_date"], name: "index_company_events_on_event_date"
+  end
+
+  create_table "company_holidays", force: :cascade do |t|
+    t.date "holiday_date", null: false
+    t.string "calendar_type", null: false
+    t.string "name"
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["calendar_type"], name: "index_company_holidays_on_calendar_type"
+    t.index ["holiday_date", "calendar_type"], name: "index_company_holidays_on_holiday_date_and_calendar_type", unique: true
+    t.index ["holiday_date"], name: "index_company_holidays_on_holiday_date"
+  end
+
   create_table "daily_reports", force: :cascade do |t|
     t.bigint "tenant_id", null: false
     t.bigint "project_id"
@@ -144,11 +169,38 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_19_051232) do
     t.decimal "outsourcing_cost", precision: 15, scale: 2, default: "0.0"
     t.boolean "is_external", default: false, null: false
     t.string "external_site_name"
+    t.decimal "fuel_quantity", precision: 10, scale: 2
+    t.decimal "fuel_amount", precision: 12, scale: 2
+    t.boolean "fuel_confirmed", default: false
+    t.decimal "fuel_confirmed_amount", precision: 12, scale: 2
+    t.integer "highway_count"
+    t.decimal "highway_amount", precision: 12, scale: 2
+    t.string "highway_route"
+    t.boolean "highway_confirmed", default: false
+    t.decimal "highway_confirmed_amount", precision: 12, scale: 2
+    t.string "fuel_type", default: "regular"
+    t.decimal "fuel_unit_price", precision: 10, scale: 2
     t.index ["foreman_id"], name: "index_daily_reports_on_foreman_id"
     t.index ["project_id"], name: "index_daily_reports_on_project_id"
     t.index ["revised_by_id"], name: "index_daily_reports_on_revised_by_id"
     t.index ["tenant_id", "project_id", "report_date"], name: "idx_on_tenant_id_project_id_report_date_7d91023d27", unique: true
     t.index ["tenant_id"], name: "index_daily_reports_on_tenant_id"
+  end
+
+  create_table "daily_schedule_notes", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "project_id", null: false
+    t.date "scheduled_date", null: false
+    t.text "work_content"
+    t.text "vehicles"
+    t.text "equipment"
+    t.text "heavy_equipment_transport"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id"], name: "index_daily_schedule_notes_on_project_id"
+    t.index ["tenant_id", "project_id", "scheduled_date"], name: "idx_schedule_notes_unique", unique: true
+    t.index ["tenant_id"], name: "index_daily_schedule_notes_on_tenant_id"
   end
 
   create_table "employees", force: :cascade do |t|
@@ -223,8 +275,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_19_051232) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "voucher_number"
+    t.decimal "quantity", precision: 10, scale: 2
+    t.string "unit"
+    t.decimal "unit_price", precision: 12, scale: 2
+    t.boolean "is_provisional", default: false
+    t.datetime "confirmed_at"
+    t.integer "confirmed_by_id"
+    t.decimal "provisional_amount", precision: 15, scale: 2
     t.index ["approved_by_id"], name: "index_expenses_on_approved_by_id"
+    t.index ["confirmed_by_id"], name: "index_expenses_on_confirmed_by_id"
     t.index ["daily_report_id"], name: "index_expenses_on_daily_report_id"
+    t.index ["is_provisional"], name: "index_expenses_on_is_provisional"
     t.index ["payer_id"], name: "index_expenses_on_payer_id"
     t.index ["project_id"], name: "index_expenses_on_project_id"
     t.index ["tenant_id"], name: "index_expenses_on_tenant_id"
@@ -337,9 +398,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_19_051232) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "shift", default: "day", null: false
     t.index ["employee_id"], name: "index_project_assignments_on_employee_id"
     t.index ["project_id"], name: "index_project_assignments_on_project_id"
-    t.index ["tenant_id", "project_id", "employee_id"], name: "idx_project_assignments_unique", unique: true
+    t.index ["tenant_id", "employee_id", "project_id", "shift"], name: "idx_project_assignments_unique", unique: true
     t.index ["tenant_id"], name: "index_project_assignments_on_tenant_id"
   end
 
@@ -447,6 +509,24 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_19_051232) do
     t.index ["code"], name: "index_tenants_on_code", unique: true
   end
 
+  create_table "work_schedules", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.date "scheduled_date", null: false
+    t.string "shift", default: "day", null: false
+    t.bigint "employee_id", null: false
+    t.string "site_name"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "project_id"
+    t.string "role", default: "worker"
+    t.index ["employee_id"], name: "index_work_schedules_on_employee_id"
+    t.index ["project_id"], name: "index_work_schedules_on_project_id"
+    t.index ["scheduled_date", "shift"], name: "index_work_schedules_on_scheduled_date_and_shift"
+    t.index ["tenant_id", "scheduled_date", "shift", "project_id", "employee_id"], name: "idx_work_schedules_unique", unique: true
+    t.index ["tenant_id"], name: "index_work_schedules_on_tenant_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "attendances", "daily_reports"
@@ -461,6 +541,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_19_051232) do
   add_foreign_key "daily_reports", "employees", column: "revised_by_id"
   add_foreign_key "daily_reports", "projects"
   add_foreign_key "daily_reports", "tenants"
+  add_foreign_key "daily_schedule_notes", "projects"
+  add_foreign_key "daily_schedule_notes", "tenants"
   add_foreign_key "employees", "partners"
   add_foreign_key "employees", "tenants"
   add_foreign_key "estimates", "employees", column: "created_by_id"
@@ -495,4 +577,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_19_051232) do
   add_foreign_key "safety_files", "tenants"
   add_foreign_key "safety_folders", "projects"
   add_foreign_key "safety_folders", "tenants"
+  add_foreign_key "work_schedules", "employees"
+  add_foreign_key "work_schedules", "projects"
+  add_foreign_key "work_schedules", "tenants"
 end

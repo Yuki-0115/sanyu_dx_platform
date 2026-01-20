@@ -1,0 +1,354 @@
+<main class="py-4 sm:py-6 px-3 sm:px-6 lg:px-8" data-controller="company-holiday">
+  <!-- ヘッダー -->
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 sm:mb-6">
+    <div>
+      <h2 class="text-xl sm:text-2xl font-bold text-gray-900">年間休日カレンダー</h2>
+      <p class="text-sm text-gray-600 mt-1">
+        クリックで休日を追加/削除できます
+      </p>
+    </div>
+    <%= link_to "戻る", :back, class: "inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+  </div>
+
+  <!-- カレンダー切替・年選択 -->
+  <div class="bg-white shadow rounded-lg p-4 mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <!-- カレンダー種別タブ -->
+      <div class="flex items-center gap-2">
+        <%= link_to master_company_holidays_path(year: @year, calendar_type: "worker"),
+            class: "px-4 py-2 rounded-lg text-sm font-medium #{@calendar_type == 'worker' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
+          <span class="hidden sm:inline">作業員用カレンダー</span>
+          <span class="sm:hidden">作業員</span>
+        <% end %>
+        <% if can_manage_calendars? %>
+          <%= link_to master_company_holidays_path(year: @year, calendar_type: "office"),
+              class: "px-4 py-2 rounded-lg text-sm font-medium #{@calendar_type == 'office' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
+            <span class="hidden sm:inline">事務用カレンダー</span>
+            <span class="sm:hidden">事務</span>
+          <% end %>
+        <% end %>
+      </div>
+
+      <!-- 年選択 -->
+      <div class="flex items-center gap-2">
+        <%= link_to master_company_holidays_path(year: @year - 1, calendar_type: @calendar_type),
+            class: "p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" do %>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        <% end %>
+        <span class="text-xl font-bold text-gray-900 px-4"><%= @year %>年</span>
+        <%= link_to master_company_holidays_path(year: @year + 1, calendar_type: @calendar_type),
+            class: "p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" do %>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        <% end %>
+      </div>
+
+      <!-- 統計 -->
+      <div class="text-sm text-gray-600">
+        <span class="font-medium <%= @calendar_type == 'worker' ? 'text-blue-600' : 'text-green-600' %>">
+          <%= @total_holidays %>日
+        </span>
+        <% if can_manage_calendars? %>
+          <span class="text-gray-400 mx-1">|</span>
+          <span class="text-gray-500">
+            <%= @other_type == 'worker' ? '作業員' : '事務' %>: <%= @other_count %>日
+          </span>
+        <% end %>
+      </div>
+    </div>
+
+    <% if can_manage_calendars? %>
+      <!-- 一括設定ボタン（管理者のみ） -->
+      <div class="mt-4 pt-4 border-t flex flex-wrap items-center gap-2">
+        <span class="text-sm text-gray-600 mr-2">一括設定:</span>
+        <%= button_to "土日を追加", bulk_set_master_company_holidays_path(year: @year, calendar_type: @calendar_type, bulk_action: "add_weekends"),
+            method: :post,
+            data: { turbo_confirm: "#{@year}年の全ての土日を休日に設定しますか？" },
+            class: "px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200" %>
+        <%= button_to "祝日を追加", bulk_set_master_company_holidays_path(year: @year, calendar_type: @calendar_type, bulk_action: "add_national_holidays"),
+            method: :post,
+            data: { turbo_confirm: "#{@year}年の祝日を追加しますか？" },
+            class: "px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200" %>
+        <% if @calendar_type == "office" %>
+          <%= button_to "作業員からコピー", copy_from_master_company_holidays_path(year: @year, from_type: "worker", to_type: "office"),
+              method: :post,
+              data: { turbo_confirm: "作業員カレンダーから事務カレンダーにコピーしますか？" },
+              class: "px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200" %>
+        <% else %>
+          <%= button_to "事務からコピー", copy_from_master_company_holidays_path(year: @year, from_type: "office", to_type: "worker"),
+              method: :post,
+              data: { turbo_confirm: "事務カレンダーから作業員カレンダーにコピーしますか？" },
+              class: "px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200" %>
+        <% end %>
+        <%= button_to "全てクリア", bulk_set_master_company_holidays_path(year: @year, calendar_type: @calendar_type, bulk_action: "clear_all"),
+            method: :post,
+            data: { turbo_confirm: "#{@year}年の#{@calendar_type == 'worker' ? '作業員用' : '事務用'}カレンダーを全てクリアしますか？この操作は取り消せません。" },
+            class: "px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 年間カレンダー（3列×4行） -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <% @months.each do |month_data| %>
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <!-- 月ヘッダー -->
+        <div class="px-3 py-2 <%= @calendar_type == 'worker' ? 'bg-blue-50' : 'bg-green-50' %> border-b">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-gray-900"><%= month_data[:name] %></span>
+            <span class="text-xs text-gray-500"><%= month_data[:holiday_dates].size %>日</span>
+          </div>
+        </div>
+
+        <!-- カレンダーグリッド -->
+        <div class="p-2">
+          <!-- 曜日ヘッダー -->
+          <div class="grid grid-cols-7 gap-0.5 mb-1">
+            <% %w[日 月 火 水 木 金 土].each_with_index do |day, i| %>
+              <div class="text-center text-xs font-medium <%= i == 0 ? 'text-red-500' : (i == 6 ? 'text-blue-500' : 'text-gray-500') %>">
+                <%= day %>
+              </div>
+            <% end %>
+          </div>
+
+          <!-- 日付グリッド -->
+          <% month_data[:weeks].each do |week| %>
+            <div class="grid grid-cols-7 gap-0.5">
+              <% week.each do |date| %>
+                <%
+                  is_current_month = date.month == month_data[:month]
+                  is_holiday = month_data[:holiday_dates].include?(date)
+                  is_today = date == Date.current
+                  is_sunday = date.sunday?
+                  is_saturday = date.saturday?
+                  is_national_holiday = holiday?(date)
+                  has_event = @events_by_date&.key?(date)
+                %>
+                <% if is_current_month %>
+                  <%
+                    base_classes = "relative w-full aspect-square flex items-center justify-center text-xs rounded"
+                    color_class = if is_holiday
+                                    @calendar_type == 'worker' ? 'bg-blue-500 text-white' : 'bg-green-500 text-white'
+                                  elsif is_national_holiday
+                                    'bg-red-100 text-red-600'
+                                  elsif is_sunday
+                                    'text-red-500'
+                                  elsif is_saturday
+                                    'text-blue-500'
+                                  else
+                                    'text-gray-700'
+                                  end
+                    hover_class = can_manage_calendars? ? (is_holiday ? 'hover:opacity-80' : 'hover:bg-gray-100') : ''
+                    today_class = is_today ? 'ring-2 ring-offset-1 ring-blue-400' : ''
+                  %>
+                  <%
+                    event_names = has_event ? @events_by_date[date].map(&:name).join(", ") : nil
+                    title_text = l(date)
+                    title_text += " (#{holiday_name(date)})" if is_national_holiday
+                    title_text += " - 休日" if is_holiday
+                    title_text += " - #{event_names}" if event_names
+                  %>
+                  <% if can_manage_calendars? %>
+                    <button type="button"
+                            class="<%= [base_classes, color_class, hover_class, today_class, 'transition-colors cursor-pointer'].join(' ') %>"
+                            data-action="click->company-holiday#toggleDate"
+                            data-date="<%= date.strftime('%Y-%m-%d') %>"
+                            data-calendar-type="<%= @calendar_type %>"
+                            data-is-holiday="<%= is_holiday %>"
+                            title="<%= title_text %>（クリックで休日切替）">
+                      <%= date.day %>
+                      <% if is_holiday %>
+                        <span class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full <%= @calendar_type == 'worker' ? 'bg-blue-300' : 'bg-green-300' %>"></span>
+                      <% end %>
+                      <% if has_event %>
+                        <span class="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-500"></span>
+                      <% end %>
+                    </button>
+                  <% else %>
+                    <div class="<%= [base_classes, color_class, today_class].join(' ') %>"
+                         title="<%= title_text %>">
+                      <%= date.day %>
+                      <% if is_holiday %>
+                        <span class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full <%= @calendar_type == 'worker' ? 'bg-blue-300' : 'bg-green-300' %>"></span>
+                      <% end %>
+                      <% if has_event %>
+                        <span class="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-500"></span>
+                      <% end %>
+                    </div>
+                  <% end %>
+                <% else %>
+                  <div class="w-full aspect-square"></div>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 凡例 -->
+  <div class="mt-6 bg-white shadow rounded-lg p-4">
+    <h3 class="text-sm font-medium text-gray-700 mb-3">凡例</h3>
+    <div class="flex flex-wrap items-center gap-4 text-xs">
+      <div class="flex items-center gap-1">
+        <span class="w-6 h-6 rounded flex items-center justify-center <%= @calendar_type == 'worker' ? 'bg-blue-500 text-white' : 'bg-green-500 text-white' %>">1</span>
+        <span>会社休日</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <span class="w-6 h-6 rounded flex items-center justify-center bg-red-100 text-red-600">1</span>
+        <span>国民の祝日</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <span class="w-6 h-6 rounded flex items-center justify-center text-red-500">1</span>
+        <span>日曜日</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <span class="w-6 h-6 rounded flex items-center justify-center text-blue-500">1</span>
+        <span>土曜日</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <span class="w-6 h-6 rounded flex items-center justify-center ring-2 ring-offset-1 ring-blue-400 text-gray-700">1</span>
+        <span>今日</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <span class="relative w-6 h-6 rounded flex items-center justify-center text-gray-700">
+          1
+          <span class="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-500"></span>
+        </span>
+        <span>行事あり</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 休日一覧 -->
+  <div class="mt-6 bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-4 py-3 border-b bg-gray-50">
+      <h3 class="text-sm font-medium text-gray-700"><%= @year %>年 <%= @calendar_type == 'worker' ? '作業員用' : '事務用' %>休日一覧（<%= @total_holidays %>日）</h3>
+    </div>
+    <% if @holidays.any? %>
+      <div class="divide-y divide-gray-200 max-h-64 overflow-y-auto">
+        <% @holidays.each do |holiday| %>
+          <div class="px-4 py-2 flex items-center justify-between hover:bg-gray-50">
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-medium text-gray-900"><%= l(holiday.holiday_date, format: "%-m月%-d日(%a)") %></span>
+              <% if holiday.name.present? %>
+                <span class="text-xs text-gray-500"><%= holiday.name %></span>
+              <% end %>
+            </div>
+            <% if can_manage_calendars? %>
+              <%= button_to master_company_holiday_path(holiday),
+                  method: :delete,
+                  data: { turbo_confirm: "#{l(holiday.holiday_date)}を削除しますか？" },
+                  class: "text-red-500 hover:text-red-700 p-1" do %>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="px-4 py-8 text-center text-gray-500">
+        休日が設定されていません
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 年間行事一覧 -->
+  <div class="mt-6 bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-4 py-3 border-b bg-purple-50 flex items-center justify-between">
+      <h3 class="text-sm font-medium text-gray-700"><%= @year %>年 年間行事一覧（<%= @events.count %>件）</h3>
+      <% if can_manage_calendars? %>
+        <button type="button"
+                onclick="document.getElementById('event-form').classList.toggle('hidden')"
+                class="text-xs px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors">
+          + 行事を追加
+        </button>
+      <% end %>
+    </div>
+
+    <% if can_manage_calendars? %>
+      <!-- 行事追加フォーム（管理者のみ） -->
+      <div id="event-form" class="hidden px-4 py-4 border-b bg-gray-50">
+        <%= form_with model: CompanyEvent.new, url: master_company_events_path, method: :post, class: "space-y-4" do |f| %>
+          <%= hidden_field_tag :current_calendar_type, @calendar_type %>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <%= f.label :event_date, "日付", class: "block text-sm font-medium text-gray-700 mb-1" %>
+              <%= f.date_field :event_date, value: Date.new(@year, 1, 1), class: "w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm" %>
+            </div>
+            <div>
+              <%= f.label :name, "行事名", class: "block text-sm font-medium text-gray-700 mb-1" %>
+              <%= f.text_field :name, placeholder: "例: 新年会", class: "w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm" %>
+            </div>
+            <div>
+              <%= f.label :calendar_type, "対象", class: "block text-sm font-medium text-gray-700 mb-1" %>
+              <%= f.select :calendar_type, CompanyEvent::CALENDAR_TYPES.map { |k, v| [v, k] }, {}, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm" %>
+            </div>
+            <div>
+              <%= f.label :color, "色", class: "block text-sm font-medium text-gray-700 mb-1" %>
+              <%= f.select :color, CompanyEvent::COLORS.map { |k, v| [v, k] }, {}, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm" %>
+            </div>
+          </div>
+          <div>
+            <%= f.label :description, "説明（任意）", class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= f.text_area :description, rows: 2, placeholder: "行事の詳細など", class: "w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm" %>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button"
+                    onclick="document.getElementById('event-form').classList.add('hidden')"
+                    class="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+              キャンセル
+            </button>
+            <%= f.submit "追加", class: "px-4 py-2 text-sm text-white bg-purple-600 rounded-md hover:bg-purple-700 cursor-pointer" %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if @events.any? %>
+      <div class="divide-y divide-gray-200 max-h-64 overflow-y-auto">
+        <% @events.each do |event| %>
+          <div class="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+            <div class="flex items-center gap-3">
+              <span class="w-2 h-2 rounded-full <%= event.bg_color_class %>"></span>
+              <span class="text-sm font-medium text-gray-900"><%= l(event.event_date, format: "%-m月%-d日(%a)") %></span>
+              <span class="text-sm text-gray-700"><%= event.name %></span>
+              <% if event.calendar_type != "all" %>
+                <span class="text-xs px-2 py-0.5 rounded-full <%= event.calendar_type == 'worker' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700' %>">
+                  <%= event.calendar_type_label %>
+                </span>
+              <% end %>
+              <% if event.description.present? %>
+                <span class="text-xs text-gray-500" title="<%= event.description %>">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </span>
+              <% end %>
+            </div>
+            <% if can_manage_calendars? %>
+              <%= button_to master_company_event_path(event, current_calendar_type: @calendar_type),
+                  method: :delete,
+                  data: { turbo_confirm: "「#{event.name}」を削除しますか？" },
+                  class: "text-red-500 hover:text-red-700 p-1" do %>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="px-4 py-8 text-center text-gray-500">
+        年間行事が設定されていません
+      </div>
+    <% end %>
+  </div>
+</main>

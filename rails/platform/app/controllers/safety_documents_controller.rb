@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class SafetyDocumentsController < ApplicationController
-  before_action :authorize_safety_documents_access
+  authorize_with :safety_documents
   before_action :set_folder, only: %i[show edit_folder update_folder destroy_folder]
   before_action :set_file, only: %i[edit_file update_file destroy_file]
 
@@ -101,10 +101,6 @@ class SafetyDocumentsController < ApplicationController
 
   def set_file
     @file = SafetyFile.find(params[:id])
-  end
-
-  def authorize_safety_documents_access
-    authorize_feature!(:safety_documents)
   end
 
   def folder_params

@@ -13,6 +13,12 @@ class DailyReport < ApplicationRecord
     "rainy" => "雨",
     "snowy" => "雪"
   }.freeze
+  FUEL_TYPES = %w[regular high_octane diesel].freeze
+  FUEL_TYPE_LABELS = {
+    "regular" => "レギュラー",
+    "high_octane" => "ハイオク",
+    "diesel" => "軽油"
+  }.freeze
 
   # Associations
   belongs_to :project, optional: true  # 常用（外部現場）の場合はnil
@@ -46,9 +52,7 @@ class DailyReport < ApplicationRecord
   attribute :is_external, :boolean, default: false
 
   # Scopes
-  scope :draft, -> { where(status: "draft") }
   scope :confirmed, -> { where(status: "confirmed") }
-  scope :by_date, ->(date) { where(report_date: date) }
   scope :internal, -> { where(is_external: false) }
   scope :external, -> { where(is_external: true) }
 
@@ -95,6 +99,55 @@ class DailyReport < ApplicationRecord
 
   # 日報の原価合計
   def total_cost
-    (labor_cost || 0) + (material_cost || 0) + (outsourcing_cost || 0) + (transportation_cost || 0)
+    (labor_cost || 0) + (material_cost || 0) + (outsourcing_cost || 0) + (transportation_cost || 0) +
+      fuel_cost_for_calculation + highway_cost_for_calculation
+  end
+
+  # 燃料費（計算用：確定金額があればそれを使用、なければ仮金額）
+  def fuel_cost_for_calculation
+    fuel_confirmed? ? (fuel_confirmed_amount || 0) : (fuel_amount || 0)
+  end
+
+  # 高速代（計算用：確定金額があればそれを使用、なければ仮金額）
+  def highway_cost_for_calculation
+    highway_confirmed? ? (highway_confirmed_amount || 0) : (highway_amount || 0)
+  end
+
+  # 燃料費を確定（単価から確定金額を計算）
+  def confirm_fuel!(unit_price)
+    confirmed_amount = (fuel_quantity || 0) * unit_price
+    update!(
+      fuel_confirmed: true,
+      fuel_unit_price: unit_price,
+      fuel_confirmed_amount: confirmed_amount
+    )
+  end
+
+  # 油種のラベル
+  def fuel_type_label
+    FUEL_TYPE_LABELS[fuel_type] || fuel_type
+  end
+
+  # 高速代を確定
+  def confirm_highway!(confirmed_amount)
+    update!(
+      highway_confirmed: true,
+      highway_confirmed_amount: confirmed_amount
+    )
+  end
+
+  # 燃料費が入力されているか
+  def has_fuel?
+    fuel_quantity.present? && fuel_quantity.positive?
+  end
+
+  # 高速代が入力されているか
+  def has_highway?
+    highway_count.present? && highway_count.positive?
+  end
+
+  # 仮経費（未確定の燃料費・高速代）があるか
+  def has_provisional_card_expenses?
+    (has_fuel? && !fuel_confirmed?) || (has_highway? && !highway_confirmed?)
   end
 end

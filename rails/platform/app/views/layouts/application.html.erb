@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "sunyutech" %></title>
+    <title><%= content_for(:title) || "SanyuTech" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -22,7 +22,46 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <%= yield %>
+  <body class="bg-gray-100">
+    <% if employee_signed_in? %>
+      <div class="min-h-screen flex" data-controller="sidebar">
+        <!-- サイドバー -->
+        <%= render "shared/sidebar" %>
+
+        <!-- メインコンテンツ -->
+        <div class="flex-1 flex flex-col min-w-0">
+          <!-- トップバー（モバイル用ハンバーガー） -->
+          <header class="lg:hidden bg-white shadow-sm sticky top-0 z-20">
+            <div class="flex items-center justify-between px-4 py-3">
+              <button type="button" data-action="click->sidebar#toggle" class="text-gray-600 hover:text-gray-900 p-1">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+              </button>
+              <span class="text-lg font-semibold text-gray-900">SanyuTech</span>
+              <div class="w-8"></div>
+            </div>
+          </header>
+
+          <!-- ページコンテンツ -->
+          <main class="flex-1 overflow-y-auto">
+            <% if flash[:notice] %>
+              <div class="bg-green-50 border-l-4 border-green-400 p-4 mx-4 mt-4">
+                <p class="text-sm text-green-700"><%= flash[:notice] %></p>
+              </div>
+            <% end %>
+            <% if flash[:alert] %>
+              <div class="bg-red-50 border-l-4 border-red-400 p-4 mx-4 mt-4">
+                <p class="text-sm text-red-700"><%= flash[:alert] %></p>
+              </div>
+            <% end %>
+
+            <%= yield %>
+          </main>
+        </div>
+      </div>
+    <% else %>
+      <%= yield %>
+    <% end %>
   </body>
 </html>

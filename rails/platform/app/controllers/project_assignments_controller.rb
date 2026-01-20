@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ProjectAssignmentsController < ApplicationController
-  before_action :authorize_projects_access
+  authorize_with :projects
   before_action :set_project
 
   def create
@@ -32,10 +32,6 @@ class ProjectAssignmentsController < ApplicationController
 
   def set_project
     @project = Project.find(params[:project_id])
-  end
-
-  def authorize_projects_access
-    authorize_feature!(:projects)
   end
 
   def assignment_params

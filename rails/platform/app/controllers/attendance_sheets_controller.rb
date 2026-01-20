@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class AttendanceSheetsController < ApplicationController
-  before_action :authorize_attendance_access
+  authorize_with :daily_reports
 
   def index
     # 表示月（デフォルトは今月）
@@ -255,10 +255,6 @@ class AttendanceSheetsController < ApplicationController
       end
     end
     bom + csv_data
-  end
-
-  def authorize_attendance_access
-    authorize_feature!(:daily_reports)
   end
 
   # 1日の出勤状況を判定（複数現場でも1日としてカウント）

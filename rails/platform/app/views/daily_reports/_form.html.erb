@@ -1,23 +1,5 @@
 <%= form_with model: [@project, daily_report], class: "space-y-6" do |f| %>
-  <% if daily_report.errors.any? %>
-    <div class="rounded-md bg-red-50 p-4">
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-red-800">入力エラーがあります</h3>
-          <ul class="mt-2 list-disc list-inside text-sm text-red-700">
-            <% daily_report.errors.full_messages.each do |message| %>
-              <li><%= message %></li>
-            <% end %>
-          </ul>
-        </div>
-      </div>
-    </div>
-  <% end %>
+  <%= render "shared/form_errors", resource: daily_report %>
 
   <!-- 基本情報 -->
   <div class="bg-white shadow rounded-lg p-6">
@@ -37,40 +19,8 @@
       </div>
     </div>
 
-    <div class="mt-6">
-      <%= f.label :work_content, "作業内容", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.text_area :work_content, rows: 4, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-    </div>
-
-    <div class="mt-6">
-      <%= f.label :notes, "備考", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.text_area :notes, rows: 2, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-    </div>
-
-    <!-- 写真添付 -->
-    <div class="mt-6">
-      <%= f.label :photos, "写真添付", class: "block text-sm font-medium text-gray-700" %>
-      <div class="mt-1">
-        <%= f.file_field :photos, multiple: true, accept: "image/*",
-            class: "block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" %>
-      </div>
-      <p class="mt-1 text-xs text-gray-500">複数の写真を選択できます（JPEG, PNG対応）</p>
-
-      <% if daily_report.photos.attached? %>
-        <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <% daily_report.photos.each do |photo| %>
-            <div class="relative group">
-              <%= image_tag photo, class: "w-full h-24 object-cover rounded-lg" %>
-              <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                <%= link_to url_for(photo), target: "_blank", class: "text-white text-sm" do %>
-                  拡大
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
+    <%= render "shared/work_content_fields", f: f %>
+    <%= render "shared/photos_field", f: f, resource: daily_report %>
   </div>
 
   <!-- 出面一括入力（勤怠管理用）-->
@@ -458,6 +408,104 @@
         <%= f.label :outsourcing_details, "外注（メモ）", class: "block text-sm font-medium text-gray-700" %>
         <%= f.text_area :outsourcing_details, rows: 2, placeholder: "例: 電気工事 ○○電気、配管工事 △△設備",
             class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- カード経費（仮）：燃料・高速代 -->
+  <div class="bg-white shadow rounded-lg p-6">
+    <div class="mb-4">
+      <h3 class="text-lg font-medium text-gray-900">カード経費（仮）</h3>
+      <p class="text-sm text-gray-500">会社カードで支払った燃料代・高速代を入力してください。確定金額は後日「仮経費確定」画面で入力します。</p>
+    </div>
+
+    <!-- 注意書き -->
+    <div class="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-amber-700">
+            <strong>カード精算のため仮金額で入力してください。</strong>カード明細が届いたら「仮経費確定」画面で確定金額を入力すると原価に反映されます。
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- 燃料（ガソリン） -->
+      <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+        <h4 class="text-base font-medium text-green-800 mb-3 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          燃料（ガソリン）
+        </h4>
+        <% if daily_report.fuel_confirmed? %>
+          <div class="mb-3 p-2 bg-green-100 rounded">
+            <span class="text-sm font-medium text-green-800">✓ 確定済み</span>
+            <span class="text-sm text-green-700 ml-2">
+              確定金額: <%= number_to_currency(daily_report.fuel_confirmed_amount, unit: "¥", precision: 0) %>
+            </span>
+          </div>
+        <% end %>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <%= f.label :fuel_type, "油種", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.select :fuel_type,
+                DailyReport::FUEL_TYPE_LABELS.map { |k, v| [v, k] },
+                { include_blank: "選択" },
+                { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" } %>
+          </div>
+          <div>
+            <%= f.label :fuel_quantity, "給油量 (L)", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.number_field :fuel_quantity, step: 0.1, min: 0, placeholder: "0.0",
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" %>
+          </div>
+          <div>
+            <%= f.label :fuel_amount, "仮金額 (円)", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.number_field :fuel_amount, step: 1, min: 0, placeholder: "0",
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm bg-amber-50" %>
+          </div>
+        </div>
+      </div>
+
+      <!-- 高速代（ETC） -->
+      <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <h4 class="text-base font-medium text-blue-800 mb-3 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+          </svg>
+          高速代（ETC）
+        </h4>
+        <% if daily_report.highway_confirmed? %>
+          <div class="mb-3 p-2 bg-blue-100 rounded">
+            <span class="text-sm font-medium text-blue-800">✓ 確定済み</span>
+            <span class="text-sm text-blue-700 ml-2">
+              確定金額: <%= number_to_currency(daily_report.highway_confirmed_amount, unit: "¥", precision: 0) %>
+            </span>
+          </div>
+        <% end %>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <%= f.label :highway_count, "使用回数", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.number_field :highway_count, step: 1, min: 0, placeholder: "0",
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+          </div>
+          <div>
+            <%= f.label :highway_amount, "仮金額 (円)", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.number_field :highway_amount, step: 1, min: 0, placeholder: "0",
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm bg-amber-50" %>
+          </div>
+          <div>
+            <%= f.label :highway_route, "経路メモ", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.text_field :highway_route, placeholder: "例: 東名→名神",
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+          </div>
+        </div>
       </div>
     </div>
   </div>

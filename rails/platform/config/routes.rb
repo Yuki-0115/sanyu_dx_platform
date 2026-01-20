@@ -14,9 +14,23 @@ Rails.application.routes.draw do
   # 経営ダッシュボード
   get "management", to: "management_dashboard#index", as: :management_dashboard
 
-  # 現場カレンダー
+  # 段取り表（dandori_controller対応）
   get "schedule", to: "schedule#index", as: :schedule
-  get "schedule/project_assignments/:project_id", to: "schedule#project_assignments", as: :schedule_project_assignments
+  # セル操作
+  get "schedule/cell_data", to: "schedule#cell_data", as: :schedule_cell_data
+  post "schedule/save_cell", to: "schedule#save_cell", as: :schedule_save_cell
+  # 案件別配置取得
+  get "schedule/project_assignments/:id", to: "schedule#project_assignments", as: :schedule_project_assignments
+  # 一括配置
+  post "schedule/bulk_assign", to: "schedule#bulk_assign", as: :schedule_bulk_assign
+  # 配置解除
+  delete "schedule/remove_assignment/:id", to: "schedule#remove_assignment", as: :schedule_remove_assignment
+  # 残り人員
+  get "schedule/remaining_workers", to: "schedule#remaining_workers", as: :schedule_remaining_workers
+  get "schedule/employee_schedule/available", to: "schedule#available_workers", as: :schedule_available_workers
+  # 備考（DailyScheduleNote）
+  get "schedule/schedule_note", to: "schedule#schedule_note", as: :schedule_note
+  post "schedule/save_schedule_note", to: "schedule#save_schedule_note", as: :save_schedule_note
 
   # Projects
   resources :projects do
@@ -70,11 +84,35 @@ Rails.application.routes.draw do
   # 全請求書一覧
   resources :all_invoices, only: [:index]
 
+  # 仮経費確定
+  resources :provisional_expenses, only: [:index] do
+    member do
+      patch :confirm_fuel
+      patch :confirm_highway
+    end
+    collection do
+      post :bulk_confirm_fuel
+    end
+  end
+
   # マスター管理
   namespace :master do
     resources :clients
     resources :partners
     resources :employees
+    resources :company_holidays, only: [:index, :create, :destroy] do
+      collection do
+        post :add_holiday
+        post :add_weekends
+        post :add_national_holidays
+        delete :remove_holiday
+        post :copy_calendar
+        post :bulk_set
+        post :copy_from
+        post :toggle
+      end
+    end
+    resources :company_events, only: [:index, :create, :update, :destroy]
   end
 
   # Offsets (仮社員相殺)

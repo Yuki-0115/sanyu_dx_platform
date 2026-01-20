@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PaymentsController < ApplicationController
-  before_action :authorize_payments_access
+  authorize_with :payments
   before_action :set_project
   before_action :set_invoice
   before_action :set_payment, only: %i[destroy]
@@ -39,10 +39,6 @@ class PaymentsController < ApplicationController
 
   def set_payment
     @payment = @invoice.payments.find(params[:id])
-  end
-
-  def authorize_payments_access
-    authorize_feature!(:payments)
   end
 
   def payment_params
