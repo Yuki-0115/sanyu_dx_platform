@@ -111,8 +111,7 @@ make postgres-backup     # バックアップ作成
 
 ```
 sanyu_dx_platform/
-├── config/
-│   └── company.yaml           # 会社設定（将来マルチテナント用）
+├── config/                    # 設定ファイル
 ├── docs/
 │   ├── adr/                   # Architecture Decision Records
 │   └── guides/                # セットアップガイド
