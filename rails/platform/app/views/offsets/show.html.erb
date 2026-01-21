@@ -15,6 +15,78 @@
         </div>
       </div>
 
+      <%# 稼働・給与データ表示 %>
+      <% if @employee_summaries.present? && @attendance_total %>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+          <h3 class="text-lg font-medium text-blue-900 mb-4">稼働・給与データ（自動集計）</h3>
+
+          <div class="grid grid-cols-5 gap-4 mb-4">
+            <div class="bg-white p-4 rounded-lg text-center">
+              <div class="text-2xl font-bold text-blue-600"><%= @attendance_total[:full_days] %></div>
+              <div class="text-sm text-gray-600">1日出勤</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg text-center">
+              <div class="text-2xl font-bold text-blue-500"><%= @attendance_total[:half_days] %></div>
+              <div class="text-sm text-gray-600">半日出勤</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg text-center">
+              <div class="text-2xl font-bold text-blue-800"><%= @attendance_total[:man_days] %></div>
+              <div class="text-sm text-gray-600">合計人日</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg text-center">
+              <div class="text-xl font-bold text-green-600"><%= number_to_currency(@attendance_total[:total_salary], unit: "¥", precision: 0) %></div>
+              <div class="text-sm text-gray-600">給与計</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg text-center">
+              <div class="text-xl font-bold text-orange-600"><%= number_to_currency(@attendance_total[:total_social_insurance], unit: "¥", precision: 0) %></div>
+              <div class="text-sm text-gray-600">社保計</div>
+            </div>
+          </div>
+
+          <% if @employee_summaries.any? %>
+            <table class="min-w-full divide-y divide-blue-200 bg-white rounded-lg overflow-hidden text-sm">
+              <thead class="bg-blue-100">
+                <tr>
+                  <th class="px-3 py-2 text-left text-xs font-medium text-blue-800">仮社員名</th>
+                  <th class="px-3 py-2 text-right text-xs font-medium text-blue-800">人日</th>
+                  <th class="px-3 py-2 text-right text-xs font-medium text-blue-800">月給/日給</th>
+                  <th class="px-3 py-2 text-right text-xs font-medium text-blue-800">給与</th>
+                  <th class="px-3 py-2 text-right text-xs font-medium text-blue-800">社保</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-blue-100">
+                <% @employee_summaries.each do |summary| %>
+                  <tr>
+                    <td class="px-3 py-2 text-gray-900"><%= summary[:employee].name %></td>
+                    <td class="px-3 py-2 text-gray-900 text-right"><%= summary[:man_days] %></td>
+                    <td class="px-3 py-2 text-gray-500 text-right">
+                      <% if summary[:daily_rate] > 0 %>
+                        日給 <%= number_to_currency(summary[:daily_rate], unit: "¥", precision: 0) %>
+                      <% elsif summary[:monthly_salary] > 0 %>
+                        月給 <%= number_to_currency(summary[:monthly_salary], unit: "¥", precision: 0) %>
+                      <% else %>
+                        <span class="text-red-500">未設定</span>
+                      <% end %>
+                    </td>
+                    <td class="px-3 py-2 font-medium text-green-600 text-right"><%= number_to_currency(summary[:calculated_salary], unit: "¥", precision: 0) %></td>
+                    <td class="px-3 py-2 font-medium text-orange-600 text-right"><%= number_to_currency(summary[:calculated_social_insurance], unit: "¥", precision: 0) %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+              <tfoot class="bg-blue-50">
+                <tr>
+                  <td class="px-3 py-2 font-medium text-gray-900">合計</td>
+                  <td class="px-3 py-2 font-bold text-blue-800 text-right"><%= @attendance_total[:man_days] %></td>
+                  <td class="px-3 py-2 text-right">-</td>
+                  <td class="px-3 py-2 font-bold text-green-600 text-right"><%= number_to_currency(@attendance_total[:total_salary], unit: "¥", precision: 0) %></td>
+                  <td class="px-3 py-2 font-bold text-orange-600 text-right"><%= number_to_currency(@attendance_total[:total_social_insurance], unit: "¥", precision: 0) %></td>
+                </tr>
+              </tfoot>
+            </table>
+          <% end %>
+        </div>
+      <% end %>
+
       <div class="bg-white shadow rounded-lg p-6">
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-lg font-medium text-gray-900">相殺内容</h3>

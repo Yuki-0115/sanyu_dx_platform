@@ -117,18 +117,6 @@
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
         </td>
         <td class="px-3 py-2">
-          <input type="number" name="daily_report[attendances_attributes][NEW_RECORD][overtime_minutes]"
-              value="0" min="0" step="15"
-              data-attendance-time-target="overtimeMinutes"
-              class="block w-full rounded-md border-gray-300 shadow-sm bg-orange-50 text-orange-700 text-sm focus:bg-white">
-        </td>
-        <td class="px-3 py-2">
-          <input type="number" name="daily_report[attendances_attributes][NEW_RECORD][night_minutes]"
-              value="0" min="0" step="15"
-              data-attendance-time-target="nightMinutes"
-              class="block w-full rounded-md border-gray-300 shadow-sm bg-purple-50 text-purple-700 text-sm focus:bg-white">
-        </td>
-        <td class="px-3 py-2">
           <input type="text" name="daily_report[attendances_attributes][NEW_RECORD][site_note]"
               placeholder="現場名"
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
@@ -154,8 +142,6 @@
             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">出社</th>
             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">退社</th>
             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">休憩(分)</th>
-            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">残業(分)</th>
-            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">深夜(分)</th>
             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">現場メモ</th>
             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-12"></th>
           </tr>
@@ -207,16 +193,6 @@
                 <%= af.number_field :break_minutes, min: 0, step: 15,
                     class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm",
                     data: { attendance_time_target: "breakMinutes", action: "change->attendance-time#calculate" } %>
-              </td>
-              <td class="px-3 py-2">
-                <%= af.number_field :overtime_minutes, min: 0, step: 15,
-                    class: "block w-full rounded-md border-gray-300 shadow-sm bg-orange-50 text-orange-700 text-sm focus:bg-white",
-                    data: { attendance_time_target: "overtimeMinutes" } %>
-              </td>
-              <td class="px-3 py-2">
-                <%= af.number_field :night_minutes, min: 0, step: 15,
-                    class: "block w-full rounded-md border-gray-300 shadow-sm bg-purple-50 text-purple-700 text-sm focus:bg-white",
-                    data: { attendance_time_target: "nightMinutes" } %>
               </td>
               <td class="px-3 py-2">
                 <%= af.text_field :site_note, placeholder: "現場名",
@@ -279,7 +255,7 @@
         </td>
         <td class="px-4 py-3">
           <input type="number" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][headcount]"
-              value="1" min="1" step="1"
+              value="0" min="0" step="1" placeholder="0"
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
         </td>
         <td class="px-4 py-3">
@@ -326,7 +302,7 @@
                     class: "mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
               </td>
               <td class="px-4 py-3">
-                <%= oef.number_field :headcount, min: 1, step: 1,
+                <%= oef.number_field :headcount, min: 0, step: 1, placeholder: "0",
                     class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
               </td>
               <td class="px-4 py-3">

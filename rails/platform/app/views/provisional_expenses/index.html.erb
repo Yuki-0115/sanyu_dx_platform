@@ -11,7 +11,14 @@
       <div class="bg-white shadow rounded-lg p-4 mb-6">
         <%= form_with url: provisional_expenses_path, method: :get, local: true, class: "flex items-center gap-4" do %>
           <label class="text-sm font-medium text-gray-700">対象月:</label>
-          <%= month_field_tag :month, @year_month.strftime("%Y-%m"),
+          <%
+            current = Date.current
+            month_options = (-12..3).map do |m_offset|
+              date = current.beginning_of_month + m_offset.months
+              [date.strftime("%Y年%m月"), date.strftime("%Y-%m")]
+            end
+          %>
+          <%= select_tag :month, options_for_select(month_options, @year_month.strftime("%Y-%m")),
               class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
           <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">
             表示

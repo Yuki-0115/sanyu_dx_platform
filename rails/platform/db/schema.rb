@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_20_100002) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -225,6 +225,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_20_100002) do
     t.datetime "last_sign_in_at"
     t.string "current_sign_in_ip"
     t.string "last_sign_in_ip"
+    t.decimal "monthly_salary", precision: 12, default: "0"
+    t.decimal "social_insurance_monthly", precision: 12, default: "0"
+    t.decimal "daily_rate", precision: 10, default: "0"
     t.index ["employment_type"], name: "index_employees_on_employment_type"
     t.index ["partner_id"], name: "index_employees_on_partner_id"
     t.index ["reset_password_token"], name: "index_employees_on_reset_password_token", unique: true

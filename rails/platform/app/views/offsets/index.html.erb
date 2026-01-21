@@ -8,11 +8,19 @@
 
       <!-- 月選択 -->
       <div class="bg-white shadow rounded-lg p-4 mb-6">
-        <%= form_with url: offsets_path, method: :get, class: "flex items-center space-x-4" do |f| %>
+        <%= form_tag offsets_path, method: :get, class: "flex items-center space-x-4" do %>
           <label class="text-sm font-medium text-gray-700">対象月:</label>
-          <%= f.month_field :year_month, value: @year_month,
+          <%
+            # 過去12ヶ月 + 今月 + 未来3ヶ月の選択肢を生成
+            current = Date.current
+            month_options = (-12..3).map do |offset|
+              date = current.beginning_of_month + offset.months
+              [date.strftime("%Y年%m月"), date.strftime("%Y-%m")]
+            end
+          %>
+          <%= select_tag :year_month, options_for_select(month_options, @year_month),
               class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-          <%= f.submit "表示", class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer" %>
+          <%= submit_tag "表示", class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer" %>
         <% end %>
       </div>
 
@@ -23,6 +31,7 @@
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">協力会社</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">稼働人日</th>
                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">給与</th>
                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">社保</th>
                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">相殺額</th>
@@ -33,9 +42,13 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
               <% @offsets.each do |offset| %>
+                <% summary = @attendance_summaries[offset.partner_id] || { man_days: 0 } %>
                 <tr class="hover:bg-gray-50">
                   <td class="px-6 py-4 whitespace-nowrap">
                     <%= link_to offset.partner.name, offset_path(offset), class: "text-sm font-medium text-blue-600 hover:underline" %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 text-right font-medium">
+                    <%= summary[:man_days] %>人日
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
                     <%= number_to_currency(offset.total_salary, unit: "¥", precision: 0) %>
@@ -63,6 +76,9 @@
             <tfoot class="bg-gray-50">
               <tr>
                 <td class="px-6 py-4 text-sm font-medium text-gray-900">合計</td>
+                <td class="px-6 py-4 text-sm font-bold text-blue-600 text-right">
+                  <%= @attendance_summaries.values.sum { |s| s[:man_days] } %>人日
+                </td>
                 <td class="px-6 py-4 text-sm font-bold text-gray-900 text-right">
                   <%= number_to_currency(@offsets.sum(&:total_salary), unit: "¥", precision: 0) %>
                 </td>
@@ -89,9 +105,33 @@
         <% end %>
       </div>
 
-      <% if @partners.any? && @offsets.count < @partners.count %>
-        <div class="mt-4 text-sm text-gray-500">
-          未登録の協力会社: <%= @partners.count - @offsets.count %>社
+      <%
+        registered_partner_ids = @offsets.map(&:partner_id)
+        unregistered_partners = @partners.reject { |p| registered_partner_ids.include?(p.id) }
+      %>
+      <% if unregistered_partners.any? %>
+        <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h4 class="text-sm font-medium text-yellow-800 mb-3">未登録の協力会社（<%= unregistered_partners.count %>社）</h4>
+          <div class="space-y-2">
+            <% unregistered_partners.each do |partner| %>
+              <% summary = @attendance_summaries[partner.id] || { employee_count: 0, man_days: 0 } %>
+              <div class="flex items-center justify-between bg-white rounded p-3">
+                <div>
+                  <span class="font-medium text-gray-900"><%= partner.name %></span>
+                  <span class="text-sm text-gray-500 ml-2">
+                    （仮社員<%= summary[:employee_count] %>名 / 稼働<%= summary[:man_days] %>人日）
+                  </span>
+                </div>
+                <% if summary[:man_days] > 0 %>
+                  <%= link_to "相殺登録",
+                      new_offset_path(year_month: @year_month, partner_id: partner.id),
+                      class: "text-sm text-blue-600 hover:underline" %>
+                <% else %>
+                  <span class="text-sm text-gray-400">稼働なし</span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
         </div>
       <% end %>
     </div>

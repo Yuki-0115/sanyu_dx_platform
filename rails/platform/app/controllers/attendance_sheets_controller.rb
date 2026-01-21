@@ -114,10 +114,10 @@ class AttendanceSheetsController < ApplicationController
                              .includes(daily_report: :project)
                              .order("daily_reports.report_date")
 
-    # 日付 → 出面データ のマッピング
+    # 日付 → 出面データ のマッピング（同じ日に複数ある場合は最長勤務のものを使用）
     @attendance_by_date = {}
-    @attendances.each do |att|
-      @attendance_by_date[att.daily_report.report_date] = att
+    @attendances.group_by { |att| att.daily_report.report_date }.each do |date, daily_atts|
+      @attendance_by_date[date] = daily_atts.max_by { |att| att.total_work_minutes }
     end
 
     # 月間集計
@@ -368,10 +368,22 @@ class AttendanceSheetsController < ApplicationController
     total_night_minutes = 0
     total_break_minutes = 0
 
-    @attendances.each do |att|
-      case att.work_category
+    # 同じ日に複数の出面がある場合、最も長い勤務時間のレコードを使用
+    # 日付ごとにグループ化して代表レコードを選択
+    attendances_by_date = @attendances.group_by { |att| att.daily_report.report_date }
+
+    attendances_by_date.each do |_date, daily_attendances|
+      # 出勤区分を集計（1日につき1回のみカウント）
+      primary_att = daily_attendances.max_by { |att| att.total_work_minutes }
+
+      case primary_att.work_category
       when "work"
-        work_days += att.man_days
+        # 1日 or 半日を判定（複数現場でも1日は1日）
+        if daily_attendances.any? { |a| a.attendance_type == "full" }
+          work_days += 1
+        elsif daily_attendances.any? { |a| a.attendance_type == "half" }
+          work_days += 0.5
+        end
       when "day_off"
         day_off_days += 1
       when "paid_leave"
@@ -382,10 +394,11 @@ class AttendanceSheetsController < ApplicationController
         substitute_holiday_days += 1
       end
 
-      total_regular_minutes += att.regular_work_minutes
-      total_overtime_minutes += (att.overtime_minutes || 0)
-      total_night_minutes += (att.night_minutes || 0)
-      total_break_minutes += (att.break_minutes || 0)
+      # 時間は代表レコード（最も長い勤務）のみを集計
+      total_regular_minutes += primary_att.regular_work_minutes
+      total_overtime_minutes += (primary_att.overtime_minutes || 0)
+      total_night_minutes += (primary_att.night_minutes || 0)
+      total_break_minutes += (primary_att.break_minutes || 0)
     end
 
     {

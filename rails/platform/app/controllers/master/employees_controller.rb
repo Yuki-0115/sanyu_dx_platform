@@ -69,7 +69,8 @@ module Master
     def employee_params
       params.require(:employee).permit(
         :code, :name, :name_kana, :email, :phone, :password,
-        :employment_type, :hire_date, :role, :partner_id
+        :employment_type, :hire_date, :role, :partner_id,
+        :monthly_salary, :social_insurance_monthly, :daily_rate
       )
     end
   end
