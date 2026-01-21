@@ -1,14 +1,13 @@
 # frozen_string_literal: true
 
 class DailyScheduleNote < ApplicationRecord
-  include TenantScoped
 
   # Associations
   belongs_to :project
 
   # Validations
   validates :scheduled_date, presence: true
-  validates :project_id, uniqueness: { scope: [:tenant_id, :scheduled_date], message: "は同じ日に既に備考があります" }
+  validates :project_id, uniqueness: { scope: [:scheduled_date], message: "は同じ日に既に備考があります" }
 
   # Scopes
   scope :for_date, ->(date) { where(scheduled_date: date) }

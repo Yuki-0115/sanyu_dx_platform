@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class ProjectAssignment < ApplicationRecord
-  include TenantScoped
 
   # Constants
   ROLES = %w[foreman worker support].freeze
@@ -16,7 +15,7 @@ class ProjectAssignment < ApplicationRecord
   belongs_to :employee
 
   # Validations
-  validates :employee_id, uniqueness: { scope: %i[tenant_id project_id shift], message: "は既にこの案件・勤務帯に配置されています" }
+  validates :employee_id, uniqueness: { scope: %i[project_id shift], message: "は既にこの案件・勤務帯に配置されています" }
   validates :shift, inclusion: { in: SHIFTS }
 
   # Scopes

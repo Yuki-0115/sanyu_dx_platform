@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Attendance < ApplicationRecord
-  include TenantScoped
 
   # Constants
   ATTENDANCE_TYPES = %w[full half].freeze
@@ -35,7 +34,7 @@ class Attendance < ApplicationRecord
 
   # Validations
   validates :attendance_type, presence: true, inclusion: { in: ATTENDANCE_TYPES }
-  validates :employee_id, presence: true, uniqueness: { scope: %i[tenant_id daily_report_id] }
+  validates :employee_id, presence: true, uniqueness: { scope: :daily_report_id }
   validates :work_category, inclusion: { in: WORK_CATEGORIES }, allow_blank: true
 
   # Scopes

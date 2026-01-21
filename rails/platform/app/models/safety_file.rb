@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class SafetyFile < ApplicationRecord
-  include TenantScoped
 
   # Associations
   belongs_to :safety_folder, counter_cache: :files_count

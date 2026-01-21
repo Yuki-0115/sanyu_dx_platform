@@ -3,7 +3,6 @@
 module Api
   module V1
     class ProjectsController < BaseController
-      before_action :set_tenant_from_code
 
       # GET /api/v1/projects
       def index

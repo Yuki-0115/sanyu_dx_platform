@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Budget < ApplicationRecord
-  include TenantScoped
   include Auditable
 
   # Constants
@@ -12,7 +11,7 @@ class Budget < ApplicationRecord
   belongs_to :confirmed_by, class_name: "Employee", optional: true
 
   # Validations
-  validates :project_id, uniqueness: { scope: :tenant_id }
+  validates :project_id, uniqueness: true
   validates :status, inclusion: { in: STATUSES }
 
   # Defaults

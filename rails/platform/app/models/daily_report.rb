@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class DailyReport < ApplicationRecord
-  include TenantScoped
   include Auditable
 
   # Constants
@@ -41,7 +40,7 @@ class DailyReport < ApplicationRecord
 
   # Validations
   validates :report_date, presence: true
-  validates :report_date, uniqueness: { scope: %i[tenant_id project_id], message: "この案件の同日の日報は既に存在します。編集画面から更新してください。" }, unless: :is_external?
+  validates :report_date, uniqueness: { scope: :project_id, message: "この案件の同日の日報は既に存在します。編集画面から更新してください。" }, unless: :is_external?
   validates :status, inclusion: { in: STATUSES }
   validates :weather, inclusion: { in: WEATHERS }, allow_blank: true
   validates :external_site_name, presence: true, if: :is_external?

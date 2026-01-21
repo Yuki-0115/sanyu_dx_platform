@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Expense < ApplicationRecord
-  include TenantScoped
   include Auditable
 
   # Constants

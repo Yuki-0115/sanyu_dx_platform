@@ -3,7 +3,6 @@
 module Api
   module V1
     class DailyReportsController < BaseController
-      before_action :set_tenant_from_code
 
       # GET /api/v1/daily_reports
       def index

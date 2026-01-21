@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Invoice < ApplicationRecord
-  include TenantScoped
   include Auditable
 
   # Constants
@@ -17,7 +16,7 @@ class Invoice < ApplicationRecord
                                 reject_if: ->(attrs) { attrs["name"].blank? }
 
   # Validations
-  validates :invoice_number, uniqueness: { scope: :tenant_id }, allow_blank: true
+  validates :invoice_number, uniqueness: true, allow_blank: true
   validates :amount, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :status, inclusion: { in: STATUSES }
 

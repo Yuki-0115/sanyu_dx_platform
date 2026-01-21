@@ -7,14 +7,11 @@ class ApplicationController < ActionController::Base
   allow_browser versions: :modern
 
   before_action :authenticate_employee!
-  before_action :set_current_tenant
+  before_action :set_current_user
 
   private
 
-  def set_current_tenant
-    return unless current_employee
-
-    Current.tenant_id = current_employee.tenant_id
+  def set_current_user
     Current.user = current_employee
   end
 

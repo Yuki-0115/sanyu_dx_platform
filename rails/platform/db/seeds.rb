@@ -1,19 +1,12 @@
 # frozen_string_literal: true
 
-# Create default tenant
-tenant = Tenant.find_by(code: "sunyutech") || Tenant.find_by(code: "sanyu") || Tenant.create!(code: "sunyutech", name: "sunyutech")
-tenant.update!(code: "sunyutech", name: "sunyutech") if tenant.code != "sunyutech"
-
-puts "Created tenant: #{tenant.name}"
-
-# Temporarily set current tenant for seeding
-Current.tenant_id = tenant.id
+puts "=== Seeding database ==="
 
 # Create admin employee
-admin = Employee.unscoped.find_by(email: "admin@sanyu.example.com")
+admin = Employee.find_by(email: "admin@sanyu.example.com")
 unless admin
   admin = Employee.new(
-    tenant: tenant, code: "EMP001", name: "管理者",
+    code: "EMP001", name: "管理者",
     email: "admin@sanyu.example.com", employment_type: "regular",
     role: "admin", password: "password123", password_confirmation: "password123"
   )
@@ -23,10 +16,10 @@ end
 puts "Created admin: #{admin.email} (password: password123)"
 
 # Create management employee
-manager = Employee.unscoped.find_by(email: "manager@sanyu.example.com")
+manager = Employee.find_by(email: "manager@sanyu.example.com")
 unless manager
   manager = Employee.new(
-    tenant: tenant, code: "EMP002", name: "経営担当",
+    code: "EMP002", name: "経営担当",
     email: "manager@sanyu.example.com", employment_type: "regular",
     role: "management", password: "password123", password_confirmation: "password123"
   )
@@ -36,10 +29,10 @@ end
 puts "Created manager: #{manager.email} (password: password123)"
 
 # Create construction employee
-foreman = Employee.unscoped.find_by(email: "foreman@sanyu.example.com")
+foreman = Employee.find_by(email: "foreman@sanyu.example.com")
 unless foreman
   foreman = Employee.new(
-    tenant: tenant, code: "EMP003", name: "職長太郎",
+    code: "EMP003", name: "職長太郎",
     email: "foreman@sanyu.example.com", employment_type: "regular",
     role: "construction", password: "password123", password_confirmation: "password123"
   )
@@ -50,12 +43,10 @@ puts "Created foreman: #{foreman.email} (password: password123)"
 
 # Create sample clients
 client1 = Client.find_or_create_by!(code: "CLI001") do |c|
-  c.tenant = tenant
   c.name = "株式会社テスト建設"
 end
 
 client2 = Client.find_or_create_by!(code: "CLI002") do |c|
-  c.tenant = tenant
   c.name = "サンプル工業株式会社"
 end
 
@@ -63,7 +54,6 @@ puts "Created clients: #{client1.name}, #{client2.name}"
 
 # Create sample project
 project = Project.find_or_create_by!(code: "PJ001") do |p|
-  p.tenant = tenant
   p.name = "サンプル新築工事"
   p.client = client1
   p.sales_user = manager
@@ -78,32 +68,27 @@ puts "Created project: #{project.name}"
 # Create sample partners (協力会社)
 # 仮社員を持つ協力会社（勤怠管理対象）
 partner1 = Partner.find_or_create_by!(code: "PTN001") do |p|
-  p.tenant = tenant
   p.name = "協力建設株式会社"
   p.has_temporary_employees = true
 end
 
 partner2 = Partner.find_or_create_by!(code: "PTN002") do |p|
-  p.tenant = tenant
   p.name = "テスト工業"
   p.has_temporary_employees = true
 end
 
 # 外注会社（原価管理対象）
 partner3 = Partner.find_or_create_by!(code: "PTN003") do |p|
-  p.tenant = tenant
   p.name = "大和電設"
   p.has_temporary_employees = false
 end
 
 partner4 = Partner.find_or_create_by!(code: "PTN004") do |p|
-  p.tenant = tenant
   p.name = "関東配管工業"
   p.has_temporary_employees = false
 end
 
 partner5 = Partner.find_or_create_by!(code: "PTN005") do |p|
-  p.tenant = tenant
   p.name = "東京塗装"
   p.has_temporary_employees = false
 end
@@ -134,10 +119,9 @@ workers_data = [
 
 workers = []
 workers_data.each do |data|
-  emp = Employee.unscoped.find_by(code: data[:code])
+  emp = Employee.find_by(code: data[:code])
   unless emp
     emp = Employee.new(
-      tenant: tenant,
       code: data[:code],
       name: data[:name],
       employment_type: data[:employment_type],
@@ -156,7 +140,6 @@ puts "Created #{workers.size} workers"
 
 # Create additional projects for variety
 project2 = Project.find_or_create_by!(code: "PJ002") do |p|
-  p.tenant = tenant
   p.name = "駅前ビル改修工事"
   p.client = client2
   p.sales_user = manager
@@ -167,7 +150,6 @@ project2 = Project.find_or_create_by!(code: "PJ002") do |p|
 end
 
 project3 = Project.find_or_create_by!(code: "PJ003") do |p|
-  p.tenant = tenant
   p.name = "マンション外壁工事"
   p.client = client1
   p.sales_user = manager
@@ -190,7 +172,6 @@ projects = [project, project2, project3]
   projects.each_with_index do |proj, proj_idx|
     # 各案件に対して日報を作成（職長が入力）
     daily_report = DailyReport.find_or_initialize_by(
-      tenant: tenant,
       project: proj,
       report_date: date
     )
@@ -213,7 +194,6 @@ projects = [project, project2, project3]
                           end
 
         Attendance.find_or_create_by!(
-          tenant: tenant,
           daily_report: daily_report,
           employee: worker
         ) do |att|
@@ -229,9 +209,8 @@ projects = [project, project2, project3]
         attendance_type = rand < 0.85 ? "full" : "half"
 
         # 同じ日報・同じ協力会社の重複を避ける
-        unless OutsourcingEntry.exists?(tenant: tenant, daily_report: daily_report, partner: partner)
+        unless OutsourcingEntry.exists?(daily_report: daily_report, partner: partner)
           OutsourcingEntry.create!(
-            tenant: tenant,
             daily_report: daily_report,
             partner: partner,
             headcount: headcount,

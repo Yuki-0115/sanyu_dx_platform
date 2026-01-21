@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class WorkSchedule < ApplicationRecord
-  include TenantScoped
 
   # Constants
   SHIFTS = %w[day night].freeze
@@ -18,7 +17,7 @@ class WorkSchedule < ApplicationRecord
   validates :scheduled_date, presence: true
   validates :shift, presence: true, inclusion: { in: SHIFTS }
   validates :employee_id, uniqueness: {
-    scope: %i[tenant_id scheduled_date shift project_id],
+    scope: %i[scheduled_date shift project_id],
     message: "は同じ案件・日・勤務帯に既に登録されています"
   }
 

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class SafetyFolder < ApplicationRecord
-  include TenantScoped
 
   # Associations
   belongs_to :project, optional: true

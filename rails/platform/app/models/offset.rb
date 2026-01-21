@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Offset < ApplicationRecord
-  include TenantScoped
   include Auditable
 
   # Constants
@@ -13,7 +12,7 @@ class Offset < ApplicationRecord
 
   # Validations
   validates :year_month, presence: true, format: { with: /\A\d{4}-\d{2}\z/ }
-  validates :year_month, uniqueness: { scope: %i[tenant_id partner_id] }
+  validates :year_month, uniqueness: { scope: :partner_id }
   validates :status, inclusion: { in: STATUSES }
 
   # Defaults

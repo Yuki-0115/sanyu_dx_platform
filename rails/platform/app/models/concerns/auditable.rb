@@ -28,10 +28,7 @@ module Auditable
   end
 
   def create_audit_log(action, changed_data, _new_data)
-    return unless Current.tenant_id
-
-    AuditLog.unscoped.create!(
-      tenant_id: tenant_id_for_audit,
+    AuditLog.create!(
       user_id: Current.user&.id,
       auditable_type: self.class.name,
       auditable_id: id,
@@ -40,9 +37,5 @@ module Auditable
     )
   rescue StandardError => e
     Rails.logger.error("Failed to create audit log: #{e.message}")
-  end
-
-  def tenant_id_for_audit
-    respond_to?(:tenant_id) ? tenant_id : Current.tenant_id
   end
 end

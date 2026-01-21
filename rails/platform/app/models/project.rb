@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Project < ApplicationRecord
-  include TenantScoped
   include Auditable
 
   # Constants
@@ -36,7 +35,7 @@ class Project < ApplicationRecord
   has_many :project_documents, dependent: :destroy
 
   # Validations
-  validates :code, presence: true, uniqueness: { scope: :tenant_id }
+  validates :code, presence: true, uniqueness: true
   validates :name, presence: true
   validates :status, inclusion: { in: STATUSES }
   validates :project_type, inclusion: { in: PROJECT_TYPES }

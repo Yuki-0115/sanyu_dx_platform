@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_21_030000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -43,7 +43,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
   end
 
   create_table "attendances", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "daily_report_id", null: false
     t.bigint "employee_id"
     t.string "attendance_type", null: false
@@ -62,12 +61,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.string "site_note"
     t.index ["daily_report_id"], name: "index_attendances_on_daily_report_id"
     t.index ["employee_id"], name: "index_attendances_on_employee_id"
-    t.index ["tenant_id", "daily_report_id", "employee_id"], name: "idx_attendances_unique", unique: true
-    t.index ["tenant_id"], name: "index_attendances_on_tenant_id"
   end
 
   create_table "audit_logs", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "user_id"
     t.string "auditable_type", null: false
     t.integer "auditable_id", null: false
@@ -77,12 +73,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.datetime "updated_at", null: false
     t.index ["auditable_type", "auditable_id"], name: "index_audit_logs_on_auditable_type_and_auditable_id"
     t.index ["created_at"], name: "index_audit_logs_on_created_at"
-    t.index ["tenant_id"], name: "index_audit_logs_on_tenant_id"
     t.index ["user_id"], name: "index_audit_logs_on_user_id"
   end
 
   create_table "budgets", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "project_id", null: false
     t.decimal "target_profit_rate", precision: 5, scale: 2
     t.decimal "material_cost", precision: 15, scale: 2, default: "0.0"
@@ -98,12 +92,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.datetime "updated_at", null: false
     t.index ["confirmed_by_id"], name: "index_budgets_on_confirmed_by_id"
     t.index ["project_id"], name: "index_budgets_on_project_id"
-    t.index ["tenant_id", "project_id"], name: "index_budgets_on_tenant_id_and_project_id", unique: true
-    t.index ["tenant_id"], name: "index_budgets_on_tenant_id"
   end
 
   create_table "clients", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.string "code", null: false
     t.string "name", null: false
     t.string "name_kana"
@@ -116,8 +107,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["tenant_id", "code"], name: "index_clients_on_tenant_id_and_code", unique: true
-    t.index ["tenant_id"], name: "index_clients_on_tenant_id"
   end
 
   create_table "company_events", force: :cascade do |t|
@@ -146,7 +135,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
   end
 
   create_table "daily_reports", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "project_id"
     t.bigint "foreman_id", null: false
     t.date "report_date", null: false
@@ -183,12 +171,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.index ["foreman_id"], name: "index_daily_reports_on_foreman_id"
     t.index ["project_id"], name: "index_daily_reports_on_project_id"
     t.index ["revised_by_id"], name: "index_daily_reports_on_revised_by_id"
-    t.index ["tenant_id", "project_id", "report_date"], name: "idx_on_tenant_id_project_id_report_date_7d91023d27", unique: true
-    t.index ["tenant_id"], name: "index_daily_reports_on_tenant_id"
   end
 
   create_table "daily_schedule_notes", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "project_id", null: false
     t.date "scheduled_date", null: false
     t.text "work_content"
@@ -199,12 +184,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["project_id"], name: "index_daily_schedule_notes_on_project_id"
-    t.index ["tenant_id", "project_id", "scheduled_date"], name: "idx_schedule_notes_unique", unique: true
-    t.index ["tenant_id"], name: "index_daily_schedule_notes_on_tenant_id"
   end
 
   create_table "employees", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "partner_id"
     t.string "code", null: false
     t.string "name", null: false
@@ -232,13 +214,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.index ["partner_id"], name: "index_employees_on_partner_id"
     t.index ["reset_password_token"], name: "index_employees_on_reset_password_token", unique: true
     t.index ["role"], name: "index_employees_on_role"
-    t.index ["tenant_id", "code"], name: "index_employees_on_tenant_id_and_code", unique: true
-    t.index ["tenant_id", "email"], name: "index_employees_on_tenant_id_and_email", unique: true
-    t.index ["tenant_id"], name: "index_employees_on_tenant_id"
   end
 
   create_table "estimates", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "project_id", null: false
     t.bigint "created_by_id"
     t.string "status", default: "draft", null: false
@@ -257,13 +235,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_estimates_on_created_by_id"
     t.index ["project_id"], name: "index_estimates_on_project_id"
-    t.index ["tenant_id", "estimate_number"], name: "index_estimates_on_tenant_id_and_estimate_number", unique: true
-    t.index ["tenant_id", "project_id"], name: "index_estimates_on_tenant_id_and_project_id", unique: true
-    t.index ["tenant_id"], name: "index_estimates_on_tenant_id"
   end
 
   create_table "expenses", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "daily_report_id"
     t.bigint "project_id"
     t.string "expense_type", null: false
@@ -291,11 +265,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.index ["is_provisional"], name: "index_expenses_on_is_provisional"
     t.index ["payer_id"], name: "index_expenses_on_payer_id"
     t.index ["project_id"], name: "index_expenses_on_project_id"
-    t.index ["tenant_id"], name: "index_expenses_on_tenant_id"
   end
 
   create_table "invoice_items", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "invoice_id", null: false
     t.string "name", null: false
     t.date "work_date"
@@ -309,11 +281,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.datetime "updated_at", null: false
     t.index ["invoice_id", "position"], name: "index_invoice_items_on_invoice_id_and_position"
     t.index ["invoice_id"], name: "index_invoice_items_on_invoice_id"
-    t.index ["tenant_id"], name: "index_invoice_items_on_tenant_id"
   end
 
   create_table "invoices", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "project_id", null: false
     t.string "invoice_number"
     t.decimal "amount", precision: 15, scale: 2, null: false
@@ -326,12 +296,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.datetime "updated_at", null: false
     t.index ["project_id"], name: "index_invoices_on_project_id"
     t.index ["status"], name: "index_invoices_on_status"
-    t.index ["tenant_id", "invoice_number"], name: "index_invoices_on_tenant_id_and_invoice_number", unique: true
-    t.index ["tenant_id"], name: "index_invoices_on_tenant_id"
   end
 
   create_table "offsets", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "partner_id", null: false
     t.string "year_month", null: false
     t.decimal "total_salary", precision: 15, scale: 2, default: "0.0"
@@ -346,12 +313,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.datetime "updated_at", null: false
     t.index ["confirmed_by_id"], name: "index_offsets_on_confirmed_by_id"
     t.index ["partner_id"], name: "index_offsets_on_partner_id"
-    t.index ["tenant_id", "partner_id", "year_month"], name: "index_offsets_on_tenant_id_and_partner_id_and_year_month", unique: true
-    t.index ["tenant_id"], name: "index_offsets_on_tenant_id"
   end
 
   create_table "outsourcing_entries", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "daily_report_id", null: false
     t.bigint "partner_id"
     t.string "partner_name"
@@ -361,12 +325,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.datetime "updated_at", null: false
     t.index ["daily_report_id"], name: "index_outsourcing_entries_on_daily_report_id"
     t.index ["partner_id"], name: "index_outsourcing_entries_on_partner_id"
-    t.index ["tenant_id", "daily_report_id", "partner_id"], name: "idx_outsourcing_entries_unique_partner", unique: true, where: "(partner_id IS NOT NULL)"
-    t.index ["tenant_id"], name: "index_outsourcing_entries_on_tenant_id"
   end
 
   create_table "partners", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.string "code", null: false
     t.string "name", null: false
     t.boolean "has_temporary_employees", default: false
@@ -375,12 +336,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.decimal "carryover_balance", precision: 15, scale: 2, default: "0.0"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["tenant_id", "code"], name: "index_partners_on_tenant_id_and_code", unique: true
-    t.index ["tenant_id"], name: "index_partners_on_tenant_id"
   end
 
   create_table "payments", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "invoice_id", null: false
     t.date "payment_date", null: false
     t.decimal "amount", precision: 15, scale: 2, null: false
@@ -388,11 +346,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["invoice_id"], name: "index_payments_on_invoice_id"
-    t.index ["tenant_id"], name: "index_payments_on_tenant_id"
   end
 
   create_table "project_assignments", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "project_id", null: false
     t.bigint "employee_id", null: false
     t.date "start_date"
@@ -404,12 +360,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.string "shift", default: "day", null: false
     t.index ["employee_id"], name: "index_project_assignments_on_employee_id"
     t.index ["project_id"], name: "index_project_assignments_on_project_id"
-    t.index ["tenant_id", "employee_id", "project_id", "shift"], name: "idx_project_assignments_unique", unique: true
-    t.index ["tenant_id"], name: "index_project_assignments_on_tenant_id"
   end
 
   create_table "project_documents", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "project_id", null: false
     t.bigint "uploaded_by_id"
     t.string "name", null: false
@@ -420,12 +373,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.datetime "updated_at", null: false
     t.index ["project_id", "category"], name: "index_project_documents_on_project_id_and_category"
     t.index ["project_id"], name: "index_project_documents_on_project_id"
-    t.index ["tenant_id"], name: "index_project_documents_on_tenant_id"
     t.index ["uploaded_by_id"], name: "index_project_documents_on_uploaded_by_id"
   end
 
   create_table "projects", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "client_id", null: false
     t.string "code", null: false
     t.string "name", null: false
@@ -474,12 +425,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.index ["scheduled_end_date"], name: "index_projects_on_scheduled_end_date"
     t.index ["scheduled_start_date"], name: "index_projects_on_scheduled_start_date"
     t.index ["status"], name: "index_projects_on_status"
-    t.index ["tenant_id", "code"], name: "index_projects_on_tenant_id_and_code", unique: true
-    t.index ["tenant_id"], name: "index_projects_on_tenant_id"
   end
 
   create_table "safety_files", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "safety_folder_id", null: false
     t.string "name", null: false
     t.text "description"
@@ -487,11 +435,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["safety_folder_id"], name: "index_safety_files_on_safety_folder_id"
-    t.index ["tenant_id"], name: "index_safety_files_on_tenant_id"
   end
 
   create_table "safety_folders", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.bigint "project_id"
     t.string "name", null: false
     t.text "description"
@@ -499,21 +445,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["project_id"], name: "index_safety_folders_on_project_id"
-    t.index ["tenant_id", "name"], name: "index_safety_folders_on_tenant_id_and_name"
-    t.index ["tenant_id", "project_id"], name: "index_safety_folders_on_tenant_id_and_project_id"
-    t.index ["tenant_id"], name: "index_safety_folders_on_tenant_id"
-  end
-
-  create_table "tenants", force: :cascade do |t|
-    t.string "code", null: false
-    t.string "name", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["code"], name: "index_tenants_on_code", unique: true
   end
 
   create_table "work_schedules", force: :cascade do |t|
-    t.bigint "tenant_id", null: false
     t.date "scheduled_date", null: false
     t.string "shift", default: "day", null: false
     t.bigint "employee_id", null: false
@@ -526,61 +460,38 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_023306) do
     t.index ["employee_id"], name: "index_work_schedules_on_employee_id"
     t.index ["project_id"], name: "index_work_schedules_on_project_id"
     t.index ["scheduled_date", "shift"], name: "index_work_schedules_on_scheduled_date_and_shift"
-    t.index ["tenant_id", "scheduled_date", "shift", "project_id", "employee_id"], name: "idx_work_schedules_unique", unique: true
-    t.index ["tenant_id"], name: "index_work_schedules_on_tenant_id"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "attendances", "daily_reports"
   add_foreign_key "attendances", "employees"
-  add_foreign_key "attendances", "tenants"
   add_foreign_key "audit_logs", "employees", column: "user_id"
-  add_foreign_key "audit_logs", "tenants"
   add_foreign_key "budgets", "projects"
-  add_foreign_key "budgets", "tenants"
-  add_foreign_key "clients", "tenants"
   add_foreign_key "daily_reports", "employees", column: "foreman_id"
   add_foreign_key "daily_reports", "employees", column: "revised_by_id"
   add_foreign_key "daily_reports", "projects"
-  add_foreign_key "daily_reports", "tenants"
   add_foreign_key "daily_schedule_notes", "projects"
-  add_foreign_key "daily_schedule_notes", "tenants"
   add_foreign_key "employees", "partners"
-  add_foreign_key "employees", "tenants"
   add_foreign_key "estimates", "employees", column: "created_by_id"
   add_foreign_key "estimates", "projects"
-  add_foreign_key "estimates", "tenants"
   add_foreign_key "expenses", "daily_reports"
   add_foreign_key "expenses", "employees", column: "payer_id"
   add_foreign_key "expenses", "projects"
-  add_foreign_key "expenses", "tenants"
   add_foreign_key "invoice_items", "invoices"
-  add_foreign_key "invoice_items", "tenants"
   add_foreign_key "invoices", "projects"
-  add_foreign_key "invoices", "tenants"
   add_foreign_key "offsets", "partners"
-  add_foreign_key "offsets", "tenants"
   add_foreign_key "outsourcing_entries", "daily_reports"
   add_foreign_key "outsourcing_entries", "partners"
-  add_foreign_key "outsourcing_entries", "tenants"
-  add_foreign_key "partners", "tenants"
   add_foreign_key "payments", "invoices"
-  add_foreign_key "payments", "tenants"
   add_foreign_key "project_assignments", "employees"
   add_foreign_key "project_assignments", "projects"
-  add_foreign_key "project_assignments", "tenants"
   add_foreign_key "project_documents", "employees", column: "uploaded_by_id"
   add_foreign_key "project_documents", "projects"
-  add_foreign_key "project_documents", "tenants"
   add_foreign_key "projects", "clients"
-  add_foreign_key "projects", "tenants"
   add_foreign_key "safety_files", "employees", column: "uploaded_by_id"
   add_foreign_key "safety_files", "safety_folders"
-  add_foreign_key "safety_files", "tenants"
   add_foreign_key "safety_folders", "projects"
-  add_foreign_key "safety_folders", "tenants"
   add_foreign_key "work_schedules", "employees"
   add_foreign_key "work_schedules", "projects"
-  add_foreign_key "work_schedules", "tenants"
 end

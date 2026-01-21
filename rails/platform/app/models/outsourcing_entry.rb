@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class OutsourcingEntry < ApplicationRecord
-  include TenantScoped
 
   # Constants
   ATTENDANCE_TYPES = %w[full half].freeze

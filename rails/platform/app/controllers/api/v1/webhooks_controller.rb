@@ -3,7 +3,6 @@
 module Api
   module V1
     class WebhooksController < BaseController
-      before_action :set_tenant_from_code
 
       # POST /api/v1/webhooks/project_created
       # n8nから呼ばれ、LINE WORKS通知をトリガー

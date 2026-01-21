@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class InvoiceItem < ApplicationRecord
-  include TenantScoped
 
   # 単位の選択肢
   UNITS = %w[式 個 本 m m² m³ kg t 台 日 人工 一式].freeze

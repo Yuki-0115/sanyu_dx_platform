@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class ProjectDocument < ApplicationRecord
-  include TenantScoped
 
   # カテゴリ定義
   CATEGORIES = %w[

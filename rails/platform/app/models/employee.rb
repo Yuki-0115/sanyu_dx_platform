@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Employee < ApplicationRecord
-  include TenantScoped
   include Auditable
 
   # Devise modules
@@ -24,11 +23,11 @@ class Employee < ApplicationRecord
                                dependent: :restrict_with_error, inverse_of: :payer
 
   # Validations
-  validates :code, presence: true, uniqueness: { scope: :tenant_id }
+  validates :code, presence: true, uniqueness: true
   validates :name, presence: true
   validates :employment_type, presence: true, inclusion: { in: EMPLOYMENT_TYPES }
   validates :role, presence: true, inclusion: { in: ROLES }
-  validates :email, presence: true, uniqueness: { scope: :tenant_id }
+  validates :email, presence: true, uniqueness: true
 
   # Scopes
   scope :regular, -> { where(employment_type: "regular") }
