@@ -1,0 +1,228 @@
+<div class="bg-white shadow rounded-lg p-6">
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="text-lg font-medium text-gray-900">内訳明細</h3>
+    <button type="button" id="add-item-btn" class="btn-secondary text-sm">
+      + 行追加
+    </button>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200" id="estimate-items-table">
+      <thead class="bg-gray-50">
+        <tr>
+          <th colspan="7" class="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase bg-blue-50 border-r">見積金額</th>
+          <th colspan="5" class="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase bg-green-50">予算明細</th>
+          <th class="px-2 py-2 w-10"></th>
+        </tr>
+        <tr>
+          <th class="px-2 py-2 text-left text-xs font-medium text-gray-500">名称</th>
+          <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 w-24">規格</th>
+          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-20">数量</th>
+          <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 w-16">単位</th>
+          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-24">単価</th>
+          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-28">金額</th>
+          <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 w-24 border-r">備考</th>
+          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-20 bg-green-50">数量</th>
+          <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 w-16 bg-green-50">単位</th>
+          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-24 bg-green-50">単価</th>
+          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-28 bg-green-50">金額</th>
+          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-16 bg-green-50">日数</th>
+          <th class="px-2 py-2 w-10"></th>
+        </tr>
+      </thead>
+      <tbody id="estimate-items-body" class="bg-white divide-y divide-gray-200">
+        <%= f.fields_for :estimate_items do |item_f| %>
+          <%= render "estimates/item_fields", f: item_f %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- サマリー -->
+  <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+    <div class="text-center">
+      <p class="text-sm text-gray-600">見積小計</p>
+      <p class="text-xl font-bold text-gray-900" id="estimate-subtotal">
+        <%= number_to_currency(@estimate.direct_cost, unit: "¥", precision: 0) %>
+      </p>
+    </div>
+    <div class="text-center">
+      <p class="text-sm text-gray-600">予算小計</p>
+      <p class="text-xl font-bold text-gray-900" id="budget-subtotal">
+        <%= number_to_currency(@estimate.budget_total, unit: "¥", precision: 0) %>
+      </p>
+    </div>
+    <div class="text-center">
+      <p class="text-sm text-gray-600">粗利</p>
+      <p class="text-xl font-bold <%= @estimate.gross_profit >= 0 ? 'text-green-600' : 'text-red-600' %>" id="gross-profit">
+        <%= number_to_currency(@estimate.gross_profit, unit: "¥", precision: 0) %>
+        （<%= @estimate.profit_rate %>%）
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- 行追加用テンプレート -->
+<template id="item-row-template">
+  <tr class="item-row">
+    <td class="px-1 py-1">
+      <input type="text" name="estimate[estimate_items_attributes][NEW_INDEX][name]"
+             class="block w-full rounded border-gray-300 text-sm" placeholder="工種名">
+    </td>
+    <td class="px-1 py-1">
+      <input type="text" name="estimate[estimate_items_attributes][NEW_INDEX][specification]"
+             class="block w-full rounded border-gray-300 text-sm" placeholder="t=800等">
+    </td>
+    <td class="px-1 py-1">
+      <input type="number" name="estimate[estimate_items_attributes][NEW_INDEX][quantity]"
+             step="0.01" class="block w-full rounded border-gray-300 text-sm text-right estimate-qty">
+    </td>
+    <td class="px-1 py-1">
+      <select name="estimate[estimate_items_attributes][NEW_INDEX][unit]"
+              class="block w-full rounded border-gray-300 text-sm">
+        <option value="">-</option>
+        <% UNIT_OPTIONS.each do |unit| %>
+          <option value="<%= unit %>"><%= unit %></option>
+        <% end %>
+      </select>
+    </td>
+    <td class="px-1 py-1">
+      <input type="number" name="estimate[estimate_items_attributes][NEW_INDEX][unit_price]"
+             step="1" class="block w-full rounded border-gray-300 text-sm text-right estimate-price">
+    </td>
+    <td class="px-1 py-1 text-right font-medium estimate-amount">-</td>
+    <td class="px-1 py-1 border-r">
+      <input type="text" name="estimate[estimate_items_attributes][NEW_INDEX][note]"
+             class="block w-full rounded border-gray-300 text-sm">
+    </td>
+    <td class="px-1 py-1 bg-green-50">
+      <input type="number" name="estimate[estimate_items_attributes][NEW_INDEX][budget_quantity]"
+             step="0.01" class="block w-full rounded border-gray-300 text-sm text-right budget-qty" placeholder="同上">
+    </td>
+    <td class="px-1 py-1 bg-green-50">
+      <select name="estimate[estimate_items_attributes][NEW_INDEX][budget_unit]"
+              class="block w-full rounded border-gray-300 text-sm">
+        <option value="">同上</option>
+        <% UNIT_OPTIONS.each do |unit| %>
+          <option value="<%= unit %>"><%= unit %></option>
+        <% end %>
+      </select>
+    </td>
+    <td class="px-1 py-1 bg-green-50">
+      <input type="number" name="estimate[estimate_items_attributes][NEW_INDEX][budget_unit_price]"
+             step="1" class="block w-full rounded border-gray-300 text-sm text-right budget-price">
+    </td>
+    <td class="px-1 py-1 text-right font-medium bg-green-50 budget-amount">-</td>
+    <td class="px-1 py-1 bg-green-50">
+      <input type="number" name="estimate[estimate_items_attributes][NEW_INDEX][construction_days]"
+             step="1" class="block w-full rounded border-gray-300 text-sm text-right">
+    </td>
+    <td class="px-1 py-1">
+      <input type="hidden" name="estimate[estimate_items_attributes][NEW_INDEX][sort_order]" value="0">
+      <button type="button" class="text-red-500 hover:text-red-700 remove-item-btn">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </td>
+  </tr>
+</template>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  let itemIndex = <%= @estimate.estimate_items.size %>;
+  const tbody = document.getElementById('estimate-items-body');
+  const template = document.getElementById('item-row-template');
+  const addBtn = document.getElementById('add-item-btn');
+
+  // 行追加
+  addBtn.addEventListener('click', function() {
+    const newRow = template.content.cloneNode(true);
+    const html = newRow.querySelector('tr').outerHTML.replace(/NEW_INDEX/g, itemIndex);
+    tbody.insertAdjacentHTML('beforeend', html);
+    itemIndex++;
+    attachRowEvents();
+  });
+
+  // 行削除・計算イベント
+  function attachRowEvents() {
+    document.querySelectorAll('.remove-item-btn').forEach(btn => {
+      btn.onclick = function() {
+        const row = this.closest('tr');
+        const destroyInput = row.querySelector('input[name*="_destroy"]');
+        if (destroyInput) {
+          destroyInput.value = '1';
+          row.style.display = 'none';
+        } else {
+          row.remove();
+        }
+        calculateTotals();
+      };
+    });
+
+    document.querySelectorAll('.estimate-qty, .estimate-price').forEach(input => {
+      input.oninput = function() {
+        const row = this.closest('tr');
+        calculateRowAmount(row);
+        calculateTotals();
+      };
+    });
+
+    document.querySelectorAll('.budget-qty, .budget-price').forEach(input => {
+      input.oninput = function() {
+        const row = this.closest('tr');
+        calculateBudgetAmount(row);
+        calculateTotals();
+      };
+    });
+  }
+
+  function calculateRowAmount(row) {
+    const qty = parseFloat(row.querySelector('.estimate-qty')?.value) || 0;
+    const price = parseFloat(row.querySelector('.estimate-price')?.value) || 0;
+    const amount = Math.round(qty * price);
+    const amountCell = row.querySelector('.estimate-amount');
+    if (amountCell) {
+      amountCell.textContent = amount > 0 ? '¥' + amount.toLocaleString() : '-';
+    }
+  }
+
+  function calculateBudgetAmount(row) {
+    const budgetQty = parseFloat(row.querySelector('.budget-qty')?.value) || parseFloat(row.querySelector('.estimate-qty')?.value) || 0;
+    const budgetPrice = parseFloat(row.querySelector('.budget-price')?.value) || 0;
+    const amount = Math.round(budgetQty * budgetPrice);
+    const amountCell = row.querySelector('.budget-amount');
+    if (amountCell) {
+      amountCell.textContent = amount > 0 ? '¥' + amount.toLocaleString() : '-';
+    }
+  }
+
+  function calculateTotals() {
+    let estimateTotal = 0;
+    let budgetTotal = 0;
+
+    document.querySelectorAll('.item-row').forEach(row => {
+      if (row.style.display !== 'none') {
+        const qty = parseFloat(row.querySelector('.estimate-qty')?.value) || 0;
+        const price = parseFloat(row.querySelector('.estimate-price')?.value) || 0;
+        estimateTotal += Math.round(qty * price);
+
+        const budgetQty = parseFloat(row.querySelector('.budget-qty')?.value) || qty;
+        const budgetPrice = parseFloat(row.querySelector('.budget-price')?.value) || 0;
+        budgetTotal += Math.round(budgetQty * budgetPrice);
+      }
+    });
+
+    document.getElementById('estimate-subtotal').textContent = '¥' + estimateTotal.toLocaleString();
+    document.getElementById('budget-subtotal').textContent = '¥' + budgetTotal.toLocaleString();
+
+    const grossProfit = estimateTotal - budgetTotal;
+    const profitRate = estimateTotal > 0 ? (grossProfit / estimateTotal * 100).toFixed(1) : 0;
+    const profitEl = document.getElementById('gross-profit');
+    profitEl.textContent = '¥' + grossProfit.toLocaleString() + '（' + profitRate + '%）';
+    profitEl.className = 'text-xl font-bold ' + (grossProfit >= 0 ? 'text-green-600' : 'text-red-600');
+  }
+
+  attachRowEvents();
+});
+</script>

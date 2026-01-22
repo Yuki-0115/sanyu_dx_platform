@@ -1,0 +1,172 @@
+<div class="bg-white shadow rounded-lg p-6">
+  <h3 class="text-lg font-medium text-gray-900 mb-6">表紙情報</h3>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- 左列 -->
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <%= f.label :estimate_number, "見積番号", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :estimate_number, readonly: true, placeholder: "自動採番",
+              class: "mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm sm:text-sm" %>
+        </div>
+        <div>
+          <%= f.label :estimate_date, "見積日", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.date_field :estimate_date,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :recipient, "宛先", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :recipient, placeholder: "○○株式会社 御中",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= f.label :subject, "工事名", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :subject,
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= f.label :location, "工事場所", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :location,
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <%= f.label :period_start, "工期（自）", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.date_field :period_start,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
+        <div>
+          <%= f.label :period_end, "工期（至）", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.date_field :period_end,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <%= f.label :validity_period, "有効期限", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :validity_period, placeholder: "3ヵ月",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
+        <div>
+          <%= f.label :person_in_charge, "担当者", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :person_in_charge,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :payment_terms, "支払条件", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :payment_terms, rows: 2, placeholder: "出来高現金払 現金100％",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= f.label :waste_disposal_note, "産業廃棄物", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :waste_disposal_note, rows: 2,
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= f.label :special_note, "特記事項", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :special_note, rows: 2,
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+    </div>
+
+    <!-- 右列: 金額サマリー -->
+    <div>
+      <div class="bg-gray-50 rounded-lg p-4">
+        <h4 class="text-sm font-medium text-gray-700 mb-4">金額サマリー</h4>
+
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <%= f.label :overhead_rate, "諸経費率（%）", class: "block text-sm font-medium text-gray-700" %>
+              <%= f.number_field :overhead_rate, step: 0.1, min: 0, max: 100,
+                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+            </div>
+            <div>
+              <%= f.label :welfare_rate, "法定福利費率（%）", class: "block text-sm font-medium text-gray-700" %>
+              <%= f.number_field :welfare_rate, step: 0.1, min: 0, max: 100,
+                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+            </div>
+          </div>
+
+          <div>
+            <%= f.label :adjustment, "端数調整（円）", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.number_field :adjustment, step: 1,
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <table class="w-full text-sm">
+          <tbody>
+            <tr>
+              <td class="py-2 text-gray-600">1. 直接工事費</td>
+              <td class="py-2 text-right font-medium"><%= number_to_currency(@estimate.direct_cost, unit: "¥", precision: 0) %></td>
+            </tr>
+            <tr>
+              <td class="py-2 text-gray-600">2. 諸経費（<%= @estimate.overhead_rate %>%）</td>
+              <td class="py-2 text-right font-medium"><%= number_to_currency(@estimate.overhead_cost, unit: "¥", precision: 0) %></td>
+            </tr>
+            <tr>
+              <td class="py-2 text-gray-600">3. 法定福利費（<%= @estimate.welfare_rate %>%）</td>
+              <td class="py-2 text-right font-medium"><%= number_to_currency(@estimate.welfare_cost, unit: "¥", precision: 0) %></td>
+            </tr>
+            <tr>
+              <td class="py-2 text-gray-600">4. 端数調整</td>
+              <td class="py-2 text-right font-medium"><%= number_to_currency(@estimate.adjustment || 0, unit: "¥", precision: 0) %></td>
+            </tr>
+            <tr class="border-t">
+              <td class="py-2 font-medium">合計（税抜）</td>
+              <td class="py-2 text-right font-bold text-lg"><%= number_to_currency(@estimate.subtotal, unit: "¥", precision: 0) %></td>
+            </tr>
+            <tr>
+              <td class="py-2 text-gray-600">消費税（10%）</td>
+              <td class="py-2 text-right font-medium"><%= number_to_currency(@estimate.tax_amount, unit: "¥", precision: 0) %></td>
+            </tr>
+            <tr class="border-t bg-blue-50">
+              <td class="py-3 font-bold text-blue-900">合計（税込）</td>
+              <td class="py-3 text-right font-bold text-xl text-blue-900"><%= number_to_currency(@estimate.total_amount, unit: "¥", precision: 0) %></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr class="my-4">
+
+        <div class="space-y-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">予算小計</span>
+            <span class="font-medium"><%= number_to_currency(@estimate.budget_total, unit: "¥", precision: 0) %></span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">粗利</span>
+            <span class="font-medium <%= @estimate.gross_profit >= 0 ? 'text-green-600' : 'text-red-600' %>">
+              <%= number_to_currency(@estimate.gross_profit, unit: "¥", precision: 0) %>
+              （<%= @estimate.profit_rate %>%）
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <%= f.label :status, "ステータス", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.select :status, [
+          ["下書き", "draft"],
+          ["提出済", "submitted"],
+          ["承認済", "approved"],
+          ["却下", "rejected"]
+        ], {}, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+    </div>
+  </div>
+</div>

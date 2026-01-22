@@ -1,171 +1,85 @@
-<%= form_with model: estimate, url: project_estimate_path(@project), method: (estimate.persisted? ? :patch : :post), class: "space-y-6", data: { controller: "estimate-form" } do |f| %>
-  <% if estimate.errors.any? %>
-    <div class="rounded-md bg-red-50 p-4">
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-red-800">入力エラーがあります</h3>
-          <ul class="mt-2 list-disc list-inside text-sm text-red-700">
-            <% estimate.errors.full_messages.each do |message| %>
-              <li><%= message %></li>
-            <% end %>
-          </ul>
-        </div>
-      </div>
-    </div>
-  <% end %>
-
-  <%# ステータス表示 %>
-  <% if estimate.persisted? %>
-    <div class="flex items-center justify-between bg-white shadow rounded-lg p-4">
-      <div class="flex items-center space-x-3">
-        <span class="text-sm font-medium text-gray-700">ステータス:</span>
-        <% case estimate.status %>
-        <% when "approved" %>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-            </svg>
-            承認済み
-          </span>
-        <% when "submitted" %>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-            提出済み
-          </span>
-        <% when "rejected" %>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-            差戻し
-          </span>
-        <% else %>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-            下書き
-          </span>
+<%= form_with model: [@project, @estimate], local: true, class: "space-y-6" do |f| %>
+  <% if @estimate.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+      <h3 class="text-red-800 font-medium">入力エラーがあります</h3>
+      <ul class="mt-2 text-red-700 text-sm list-disc list-inside">
+        <% @estimate.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
         <% end %>
-      </div>
-      <% if estimate.created_by %>
-        <span class="text-xs text-gray-500">作成者: <%= estimate.created_by.name %></span>
-      <% end %>
+      </ul>
     </div>
   <% end %>
 
-  <!-- 基本情報 -->
-  <div class="bg-white shadow rounded-lg p-6">
-    <h3 class="text-lg font-medium text-gray-900 mb-4">基本情報</h3>
-
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-      <div>
-        <%= f.label :estimate_number, "見積番号", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.text_field :estimate_number, placeholder: "例: EST-2026-001",
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      </div>
-
-      <div>
-        <%= f.label :estimate_date, "見積日", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.date_field :estimate_date,
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      </div>
-
-      <div>
-        <%= f.label :valid_until, "有効期限", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.date_field :valid_until,
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      </div>
-    </div>
+  <!-- タブナビゲーション -->
+  <div class="border-b border-gray-200">
+    <nav class="-mb-px flex space-x-8" id="estimate-tabs">
+      <a href="#" class="tab-link tab-active" data-tab="cover">表紙</a>
+      <a href="#" class="tab-link tab-inactive" data-tab="items">内訳明細</a>
+      <a href="#" class="tab-link tab-inactive" data-tab="confirmation">確認書</a>
+      <a href="#" class="tab-link tab-inactive" data-tab="conditions">条件書</a>
+    </nav>
   </div>
 
-  <!-- 原価内訳 -->
-  <div class="bg-white shadow rounded-lg p-6">
-    <h3 class="text-lg font-medium text-gray-900 mb-4">原価内訳</h3>
-
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
-      <div>
-        <%= f.label :material_cost, "材料費 (円)", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.number_field :material_cost, step: 1, placeholder: "0",
-            data: { action: "input->estimate-form#calculate", "estimate-form-target": "material" },
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      </div>
-      <div>
-        <%= f.label :outsourcing_cost, "外注費 (円)", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.number_field :outsourcing_cost, step: 1, placeholder: "0",
-            data: { action: "input->estimate-form#calculate", "estimate-form-target": "outsourcing" },
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      </div>
-      <div>
-        <%= f.label :labor_cost, "労務費 (円)", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.number_field :labor_cost, step: 1, placeholder: "0",
-            data: { action: "input->estimate-form#calculate", "estimate-form-target": "labor" },
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      </div>
-      <div>
-        <%= f.label :expense_cost, "経費 (円)", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.number_field :expense_cost, step: 1, placeholder: "0",
-            data: { action: "input->estimate-form#calculate", "estimate-form-target": "expense" },
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      </div>
-    </div>
+  <!-- タブ1: 表紙 -->
+  <div id="tab-cover" class="tab-content">
+    <%= render "estimates/form_cover", f: f %>
   </div>
 
-  <!-- 売価 -->
-  <div class="bg-white shadow rounded-lg p-6">
-    <h3 class="text-lg font-medium text-gray-900 mb-4">売価</h3>
-
-    <div class="max-w-xs">
-      <%= f.label :selling_price, "売価（税抜）(円)", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.number_field :selling_price, step: 1, placeholder: "0",
-          data: { action: "input->estimate-form#calculate", "estimate-form-target": "selling" },
-          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      <p class="mt-1 text-xs text-gray-500">利益率は原価合計と売価から自動計算されます</p>
-    </div>
+  <!-- タブ2: 内訳明細 -->
+  <div id="tab-items" class="tab-content hidden">
+    <%= render "estimates/form_items", f: f %>
   </div>
 
-  <%# 見積サマリー %>
-  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-    <h4 class="text-sm font-medium text-blue-900 mb-3">見積サマリー（自動計算）</h4>
-    <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-      <div class="bg-white p-3 rounded-md">
-        <dt class="text-xs text-gray-500">原価合計</dt>
-        <dd class="text-lg font-bold text-gray-900" data-estimate-form-target="totalCost">
-          <%= number_to_currency(estimate.total_cost || 0, unit: "¥", precision: 0) %>
-        </dd>
-      </div>
-      <div class="bg-white p-3 rounded-md">
-        <dt class="text-xs text-gray-500">売価</dt>
-        <dd class="text-lg font-bold text-gray-900" data-estimate-form-target="sellingDisplay">
-          <%= number_to_currency(estimate.selling_price || 0, unit: "¥", precision: 0) %>
-        </dd>
-      </div>
-      <div class="bg-white p-3 rounded-md">
-        <dt class="text-xs text-gray-500">粗利</dt>
-        <dd class="text-lg font-bold <%= ((estimate.selling_price || 0) - (estimate.total_cost || 0)) >= 0 ? 'text-green-600' : 'text-red-600' %>" data-estimate-form-target="grossProfit">
-          <%= number_to_currency((estimate.selling_price || 0) - (estimate.total_cost || 0), unit: "¥", precision: 0) %>
-        </dd>
-      </div>
-      <div class="bg-white p-3 rounded-md">
-        <dt class="text-xs text-gray-500">利益率</dt>
-        <dd class="text-lg font-bold <%= (estimate.profit_margin || 0) >= 0 ? 'text-green-600' : 'text-red-600' %>" data-estimate-form-target="profitMargin">
-          <%= number_with_precision(estimate.profit_margin || 0, precision: 1) %>%
-        </dd>
-      </div>
-    </dl>
+  <!-- タブ3: 確認書 -->
+  <div id="tab-confirmation" class="tab-content hidden">
+    <%= render "estimates/form_confirmation", f: f %>
   </div>
 
-  <!-- 備考 -->
-  <div class="bg-white shadow rounded-lg p-6">
-    <h3 class="text-lg font-medium text-gray-900 mb-4">備考</h3>
-
-    <%= f.label :notes, "備考", class: "sr-only" %>
-    <%= f.text_area :notes, rows: 4, placeholder: "見積に関する補足事項",
-        class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+  <!-- タブ4: 条件書 -->
+  <div id="tab-conditions" class="tab-content hidden">
+    <%= render "estimates/form_conditions", f: f %>
   </div>
 
-  <div class="flex justify-end space-x-3">
-    <%= link_to "キャンセル", estimate.persisted? ? project_estimate_path(@project) : project_path(@project),
-        class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-    <%= f.submit estimate.persisted? ? "更新" : "作成",
-        class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer" %>
+  <!-- 送信ボタン -->
+  <div class="flex justify-end gap-4 pt-4 border-t">
+    <%= link_to "キャンセル", @estimate.persisted? ? project_estimate_path(@project, @estimate) : project_estimates_path(@project),
+        class: "btn-secondary" %>
+    <%= f.submit @estimate.persisted? ? "更新" : "作成", class: "btn-primary" %>
   </div>
 <% end %>
+
+<style>
+  .tab-link { padding-bottom: 1rem; border-bottom-width: 2px; border-bottom-style: solid; font-weight: 500; font-size: 0.875rem; cursor: pointer; }
+  .tab-active { border-color: #3b82f6; color: #3b82f6; }
+  .tab-inactive { border-color: transparent; color: #6b7280; }
+  .tab-inactive:hover { border-color: #d1d5db; color: #374151; }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.tab-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const tabName = this.dataset.tab;
+
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.add('hidden');
+        });
+
+        // Deactivate all links
+        document.querySelectorAll('.tab-link').forEach(l => {
+          l.classList.remove('tab-active');
+          l.classList.add('tab-inactive');
+        });
+
+        // Show selected tab
+        document.getElementById('tab-' + tabName).classList.remove('hidden');
+
+        // Activate selected link
+        this.classList.remove('tab-inactive');
+        this.classList.add('tab-active');
+      });
+    });
+  });
+</script>

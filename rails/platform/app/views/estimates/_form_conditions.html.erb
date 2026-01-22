@@ -1,0 +1,43 @@
+<div class="bg-white shadow rounded-lg p-6">
+  <h3 class="text-lg font-medium text-gray-900 mb-4">工事条件書</h3>
+
+  <div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-2">テンプレート挿入</label>
+    <select id="condition-template-select" class="block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+      <option value="">テンプレートを選択...</option>
+      <% CONDITION_TEMPLATES.each do |name, _| %>
+        <option value="<%= name %>"><%= name %></option>
+      <% end %>
+    </select>
+  </div>
+
+  <div>
+    <%= f.label :conditions, "条件内容", class: "block text-sm font-medium text-gray-700 mb-2" %>
+    <%= f.text_area :conditions, rows: 15, id: "conditions-textarea",
+        class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm font-mono",
+        placeholder: "・産業廃棄物 運搬処分は別途\n・昼間施工 08:00～17:00\n..." %>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const templateSelect = document.getElementById('condition-template-select');
+  const textarea = document.getElementById('conditions-textarea');
+
+  const templates = {
+    <% CONDITION_TEMPLATES.each do |name, content| %>
+    "<%= name %>": `<%= j content %>`,
+    <% end %>
+  };
+
+  templateSelect.addEventListener('change', function() {
+    const templateName = this.value;
+    if (templateName && templates[templateName]) {
+      if (textarea.value.trim() === '' || confirm('現在の内容を上書きしますか？')) {
+        textarea.value = templates[templateName];
+      }
+    }
+    this.value = '';
+  });
+});
+</script>

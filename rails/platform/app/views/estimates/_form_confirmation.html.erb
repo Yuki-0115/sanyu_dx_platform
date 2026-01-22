@@ -1,0 +1,50 @@
+<div class="bg-white shadow rounded-lg p-6">
+  <h3 class="text-lg font-medium text-gray-900 mb-4">工事見積確認書</h3>
+  <p class="text-sm text-gray-600 mb-6">工事名: <%= @estimate.subject %></p>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">項目</th>
+          <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase w-20">貴社</th>
+          <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase w-20">当社</th>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">備考</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% current_category = nil %>
+        <%= f.fields_for :estimate_confirmations do |conf_f| %>
+          <% if conf_f.object.item_category != current_category %>
+            <% current_category = conf_f.object.item_category %>
+            <tr class="bg-gray-100">
+              <td colspan="4" class="px-4 py-2 text-sm font-medium text-gray-900">
+                【<%= current_category %>】
+              </td>
+            </tr>
+          <% end %>
+          <tr>
+            <%= conf_f.hidden_field :id %>
+            <%= conf_f.hidden_field :item_category %>
+            <%= conf_f.hidden_field :item_name %>
+            <%= conf_f.hidden_field :sort_order %>
+            <td class="px-4 py-2 text-sm text-gray-900">
+              <%= conf_f.object.item_name %>
+            </td>
+            <td class="px-4 py-2 text-center">
+              <%= conf_f.radio_button :responsibility, "client", class: "h-4 w-4 text-blue-600" %>
+            </td>
+            <td class="px-4 py-2 text-center">
+              <%= conf_f.radio_button :responsibility, "company", class: "h-4 w-4 text-blue-600" %>
+            </td>
+            <td class="px-4 py-2">
+              <%= conf_f.text_field :note, class: "block w-full rounded border-gray-300 text-sm", placeholder: "備考" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="mt-4 text-sm text-gray-500 text-right">○印は負担</p>
+</div>

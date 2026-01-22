@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_21_030000) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_22_075736) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -216,6 +216,58 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_030000) do
     t.index ["role"], name: "index_employees_on_role"
   end
 
+  create_table "estimate_confirmations", force: :cascade do |t|
+    t.bigint "estimate_id", null: false
+    t.string "item_category"
+    t.string "item_name"
+    t.string "responsibility"
+    t.text "note"
+    t.integer "sort_order", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["estimate_id", "sort_order"], name: "index_estimate_confirmations_on_estimate_id_and_sort_order"
+    t.index ["estimate_id"], name: "index_estimate_confirmations_on_estimate_id"
+  end
+
+  create_table "estimate_item_costs", force: :cascade do |t|
+    t.bigint "estimate_item_id", null: false
+    t.string "cost_name"
+    t.decimal "quantity", precision: 15, scale: 4
+    t.string "unit"
+    t.decimal "unit_price", precision: 15, scale: 2
+    t.decimal "amount", precision: 15, scale: 2
+    t.string "calculation_type"
+    t.jsonb "formula_params", default: {}
+    t.text "note"
+    t.integer "sort_order", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["estimate_item_id", "sort_order"], name: "index_estimate_item_costs_on_estimate_item_id_and_sort_order"
+    t.index ["estimate_item_id"], name: "index_estimate_item_costs_on_estimate_item_id"
+  end
+
+  create_table "estimate_items", force: :cascade do |t|
+    t.bigint "estimate_id", null: false
+    t.string "name"
+    t.string "specification"
+    t.decimal "quantity", precision: 15, scale: 4
+    t.string "unit"
+    t.decimal "unit_price", precision: 15, scale: 2
+    t.decimal "amount", precision: 15, scale: 2
+    t.text "note"
+    t.decimal "budget_quantity", precision: 15, scale: 4
+    t.string "budget_unit"
+    t.decimal "budget_unit_price", precision: 15, scale: 2
+    t.decimal "budget_amount", precision: 15, scale: 2
+    t.integer "construction_days"
+    t.integer "sort_order", default: 0
+    t.string "category"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["estimate_id", "sort_order"], name: "index_estimate_items_on_estimate_id_and_sort_order"
+    t.index ["estimate_id"], name: "index_estimate_items_on_estimate_id"
+  end
+
   create_table "estimates", force: :cascade do |t|
     t.bigint "project_id", null: false
     t.bigint "created_by_id"
@@ -233,6 +285,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_030000) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "recipient"
+    t.string "subject"
+    t.string "location"
+    t.date "period_start"
+    t.date "period_end"
+    t.string "validity_period", default: "3ヵ月"
+    t.text "payment_terms"
+    t.text "waste_disposal_note"
+    t.text "special_note"
+    t.string "person_in_charge"
+    t.decimal "overhead_rate", precision: 5, scale: 2, default: "4.0"
+    t.decimal "welfare_rate", precision: 5, scale: 2, default: "3.0"
+    t.integer "adjustment", default: 0
+    t.text "conditions"
     t.index ["created_by_id"], name: "index_estimates_on_created_by_id"
     t.index ["project_id"], name: "index_estimates_on_project_id"
   end
@@ -473,6 +539,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_030000) do
   add_foreign_key "daily_reports", "projects"
   add_foreign_key "daily_schedule_notes", "projects"
   add_foreign_key "employees", "partners"
+  add_foreign_key "estimate_confirmations", "estimates"
+  add_foreign_key "estimate_item_costs", "estimate_items"
+  add_foreign_key "estimate_items", "estimates"
   add_foreign_key "estimates", "employees", column: "created_by_id"
   add_foreign_key "estimates", "projects"
   add_foreign_key "expenses", "daily_reports"

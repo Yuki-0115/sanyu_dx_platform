@@ -25,7 +25,7 @@ class Project < ApplicationRecord
   belongs_to :construction_user, class_name: "Employee", optional: true
 
   has_one :budget, dependent: :destroy
-  has_one :estimate, dependent: :destroy
+  has_many :estimates, dependent: :destroy
   has_many :daily_reports, dependent: :restrict_with_error
   has_many :expenses, dependent: :restrict_with_error
   has_many :invoices, dependent: :restrict_with_error

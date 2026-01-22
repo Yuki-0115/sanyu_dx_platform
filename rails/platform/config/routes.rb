@@ -40,8 +40,11 @@ Rails.application.routes.draw do
       post :start_construction
     end
     resources :project_assignments, only: %i[create destroy], as: :assignments
-    resource :estimate, only: %i[show new create edit update] do
-      post :approve
+    resources :estimates do
+      member do
+        post :approve
+        get :pdf
+      end
     end
     resource :budget, only: %i[show new create edit update] do
       post :confirm
