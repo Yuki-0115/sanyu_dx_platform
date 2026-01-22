@@ -20,7 +20,7 @@ class EstimatesController < ApplicationController
       valid_until: Date.current + 90.days,
       recipient: @project.client&.name.to_s + " 御中",
       subject: @project.name,
-      location: @project.location,
+      location: @project.site_address,
       period_start: @project.scheduled_start_date,
       period_end: @project.scheduled_end_date,
       person_in_charge: current_employee&.name,
