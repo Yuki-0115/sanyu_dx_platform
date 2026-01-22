@@ -81,7 +81,7 @@
       <select name="estimate[estimate_items_attributes][NEW_INDEX][unit]"
               class="block w-full rounded border-gray-300 text-sm">
         <option value="">-</option>
-        <% ::UNIT_OPTIONS.each do |unit| %>
+        <% Estimate::UNIT_OPTIONS.each do |unit| %>
           <option value="<%= unit %>"><%= unit %></option>
         <% end %>
       </select>
@@ -103,7 +103,7 @@
       <select name="estimate[estimate_items_attributes][NEW_INDEX][budget_unit]"
               class="block w-full rounded border-gray-300 text-sm">
         <option value="">同上</option>
-        <% ::UNIT_OPTIONS.each do |unit| %>
+        <% Estimate::UNIT_OPTIONS.each do |unit| %>
           <option value="<%= unit %>"><%= unit %></option>
         <% end %>
       </select>

@@ -6,6 +6,63 @@ class Estimate < ApplicationRecord
   # Constants
   STATUSES = %w[draft submitted approved rejected].freeze
 
+  # 単位選択肢
+  UNIT_OPTIONS = %w[m2 m3 m 式 人工 t kg 台 日 本 枚 個 箇所].freeze
+
+  # 確認書の固定項目（カテゴリー => 項目名の配列）
+  CONFIRMATION_ITEMS = {
+    "材料費" => ["As合材", "RC-40 RM-25"],
+    "施工管理" => ["写真管理", "出来形管理", "品質管理"],
+    "安全費" => ["保安要員", "保安施設"],
+    "仮設経費（左）" => [
+      "看板・標識類", "保安関係費", "電気引込費", "土捨場代", "丁張材料"
+    ],
+    "仮設経費（右）" => [
+      "基本測量", "施工測量", "測量機器", "仮設道路", "工事用電気",
+      "工事用水道", "工事用借地料", "重機仮置場", "現場事務所",
+      "宿舎", "倉庫", "電気 水道 ガス", "借地料"
+    ],
+    "その他" => ["労災保険料", "建退協証紙代"]
+  }.freeze
+
+  # 確認書の特記事項項目
+  CONFIRMATION_SPECIAL_ITEMS = [
+    "職員", "家屋調査", "施工前調査", "工期延期", "回送費", "施工回数", "新規工種", "数量増減",
+    "工法・構造の変更", "軟弱路床", "軟弱路盤", "その他"
+  ].freeze
+
+  # 条件書テンプレート
+  CONDITION_TEMPLATES = {
+    "舗装工事_標準" => <<~TEXT.strip,
+      ・産業廃棄物 運搬処分は別途
+      ・昼間施工 08:00～17:00
+      ・舗装機械 小物機械 含む
+      ・重機 労務回送 1往復 含みます
+      ・路床 路盤 軟弱な場合は別途協議願います
+      ・勾配1.5％以上確保願います
+      ・舗装版切断 含みません
+      ・安全費 ガードマンは含みません
+      ・掘削残土運搬処分 含みません
+    TEXT
+    "地盤改良_標準" => <<~TEXT.strip
+      ・産業廃棄物 運搬処分は別途
+      ・昼間施工 08:00～17:00
+      ・地盤改良機械 含む
+      ・重機 労務回送 1往復 含みます
+      ・軟弱地盤の場合は別途協議願います
+    TEXT
+  }.freeze
+
+  # 原価項目のデフォルト（計算モーダル用）
+  DEFAULT_COST_ITEMS = [
+    { cost_name: "セメント", unit: "t", unit_price: 15000 },
+    { cost_name: "再密13", unit: "", unit_price: 11000 },
+    { cost_name: "PK-3", unit: "", unit_price: 130 },
+    { cost_name: "02BH", unit: "日", unit_price: 8000 },
+    { cost_name: "労務", unit: "人工", unit_price: 18000 },
+    { cost_name: "高速代", unit: "式", unit_price: 15000 }
+  ].freeze
+
   # Associations
   belongs_to :project
   belongs_to :created_by, class_name: "Employee", optional: true

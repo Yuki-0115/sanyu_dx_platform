@@ -11,7 +11,7 @@
     <%= f.number_field :quantity, step: 0.01, class: "block w-full rounded border-gray-300 text-sm text-right estimate-qty" %>
   </td>
   <td class="px-1 py-1">
-    <%= f.select :unit, options_for_select(::UNIT_OPTIONS.map { |u| [u, u] }, f.object.unit),
+    <%= f.select :unit, options_for_select(Estimate::UNIT_OPTIONS.map { |u| [u, u] }, f.object.unit),
         { include_blank: "-" },
         class: "block w-full rounded border-gray-300 text-sm" %>
   </td>
@@ -33,7 +33,7 @@
         class: "block w-full rounded border-gray-300 text-sm text-right budget-qty" %>
   </td>
   <td class="px-1 py-1 bg-green-50">
-    <%= f.select :budget_unit, options_for_select(::UNIT_OPTIONS.map { |u| [u, u] }, f.object.budget_unit),
+    <%= f.select :budget_unit, options_for_select(Estimate::UNIT_OPTIONS.map { |u| [u, u] }, f.object.budget_unit),
         { include_blank: "同上" },
         class: "block w-full rounded border-gray-300 text-sm" %>
   </td>
