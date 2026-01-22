@@ -120,7 +120,7 @@ class EstimatesController < ApplicationController
 
     sort_order = 0
 
-    CONFIRMATION_ITEMS.each do |category, items|
+    ::CONFIRMATION_ITEMS.each do |category, items|
       items.each do |item_name|
         @estimate.estimate_confirmations.build(
           item_category: category,
@@ -131,7 +131,7 @@ class EstimatesController < ApplicationController
       end
     end
 
-    CONFIRMATION_SPECIAL_ITEMS.each do |item_name|
+    ::CONFIRMATION_SPECIAL_ITEMS.each do |item_name|
       @estimate.estimate_confirmations.build(
         item_category: "特記事項",
         item_name: item_name,

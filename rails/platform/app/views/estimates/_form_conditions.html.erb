@@ -5,7 +5,7 @@
     <label class="block text-sm font-medium text-gray-700 mb-2">テンプレート挿入</label>
     <select id="condition-template-select" class="block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
       <option value="">テンプレートを選択...</option>
-      <% CONDITION_TEMPLATES.each do |name, _| %>
+      <% ::CONDITION_TEMPLATES.each do |name, _| %>
         <option value="<%= name %>"><%= name %></option>
       <% end %>
     </select>
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const textarea = document.getElementById('conditions-textarea');
 
   const templates = {
-    <% CONDITION_TEMPLATES.each do |name, content| %>
+    <% ::CONDITION_TEMPLATES.each do |name, content| %>
     "<%= name %>": `<%= j content %>`,
     <% end %>
   };
