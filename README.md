@@ -1,50 +1,10 @@
 # SanyuTech DX Platform
 
-**建設会社の数字を一本で繋ぎ、属人化を排除して粗利をリアルタイムで見える化するDXツール**
+建設会社の数字を一本で繋ぎ、属人化を排除して粗利をリアルタイムで見える化するDXツール
 
 [![Rails](https://img.shields.io/badge/Rails-8.0-red)](https://rubyonrails.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791)](https://www.postgresql.org/)
-[![n8n](https://img.shields.io/badge/n8n-2.1.1-6e1e78)](https://n8n.io/)
 [![License](https://img.shields.io/badge/License-Proprietary-yellow)](#ライセンス)
-
----
-
-## 📋 目次
-
-- [概要](#概要)
-- [主な特徴](#主な特徴)
-- [クイックスタート](#クイックスタート)
-- [プロジェクト構成](#プロジェクト構成)
-- [技術スタック](#技術スタック)
-- [ドキュメント](#ドキュメント)
-
----
-
-## 概要
-
-SanyuTech DX Platform は、建設会社の業務を一気通貫でデジタル化するプラットフォームです。
-
-### ビジョン
-
-> 「数字が見える、壊れない、代わりが効く、成長できる」会社を作る
-
-### 解決する課題
-
-- 売上・原価の数字が曖昧
-- 各領域が属人化し、ブラックボックス化
-- 担当者が休む・辞めると業務が止まる
-- 問題発覚時に原因追跡が困難
-
----
-
-## 主な特徴
-
-- 📊 **直列型プロセス管理**: 案件→見積→受注→予算→日報→請求→入金を一本で繋ぐ
-- 👷 **職長一括日報入力**: 3分で全員分の日報を入力完了
-- 💰 **リアルタイム粗利管理**: 案件別の粗利をダッシュボードで即確認
-- 🔄 **仮社員相殺自動化**: 給与＋社保を出来高から自動計算
-- 🔒 **監査ログ完備**: 誰が・いつ・何を変えたか全記録
-- 📱 **現場対応UI**: スマホで日報入力・多言語対応（JP/VN/MM）
 
 ---
 
@@ -52,134 +12,116 @@ SanyuTech DX Platform は、建設会社の業務を一気通貫でデジタル�
 
 ### 現在
 - **シングルテナント運用**（株式会社サンユウテック専用）
-- 社内ミニPCでローカル運用
-- 外部公開なし
+- 社内サーバー（ミニPC）+ Cloudflare Tunnel で外部公開
+- 現場からスマホでアクセス可能
 
 ### 将来構想
-- マルチテナント化の可能性あり（他社への展開時）
-- その際は tenant_id によるデータ分離を追加予定
-- 現在の設計はマルチテナント化を考慮した構造を維持
+- マルチテナント化の可能性あり（他社展開時）
+- freee会計との連携
 
 ---
 
-## クイックスタート
+## 主な機能
 
-### 必要な環境
+### 実装済み
+- 案件管理（登録・編集・4点チェック）
+- 日報入力（職長一括、3分で完了）
+- 原価管理（労務・材料・外注・経費）
+- 段取り表（週間スケジュール）
+- 月間カレンダー（休日・行事）
+- 請求管理
+- 仮社員相殺
+- 経営ダッシュボード（粗利一覧・赤字アラート）
+- 権限管理（RBAC）
+- 監査ログ
 
-- Docker 20.10+
-- Docker Compose 2.0+
-- Git 2.30+
-- Make
-
-### セットアップ手順
-
-```bash
-# 1. リポジトリクローン
-git clone https://github.com/sanyu-tech/sanyu_dx_platform.git
-cd sanyu_dx_platform
-
-# 2. 初期セットアップ
-make setup
-
-# 3. 環境変数設定
-cp .env.local.example .env.local
-# .env.local を編集
-
-# 4. Railsアプリ作成（初回のみ）
-make platform-new
-
-# 5. サービス起動
-make up
-```
-
-### アクセスURL
-
-| サービス | URL | 用途 |
-|----------|-----|------|
-| Platform | http://localhost:3001 | 基幹アプリ（経営/営業/工務/経理） |
-| Worker Web | http://localhost:3002 | 作業員向け（日報入力） |
-| n8n | http://localhost:5678 | ワークフロー自動化 |
-
-### よく使うコマンド
-
-```bash
-# サービス管理
-make up                  # 全サービス起動
-make down                # 全サービス停止
-make logs                # ログ表示
-make status              # 状態確認
-
-# Platform
-make platform-console    # Railsコンソール
-make platform-migrate    # マイグレーション
-make platform-shell      # シェル接続
-
-# データベース
-make postgres-shell      # PostgreSQL接続
-make postgres-backup     # バックアップ作成
-```
+### 開発予定
+- **Phase 1**: 見積OCR取込 → 実行予算連携
+- **Phase 2**: 案件登録強化（事務連絡メモ + LINE通知）
+- **Phase 3**: 現場台帳（3層構造）+ 労務単価編集
+- **Phase 4**: 経費申請（承認フロー → 原価自動反映）
+- **Phase 5**: 経理強化（請求書OCR + Google Drive連携）
+- **Phase 6**: 外注請負（出来高精算）
+- **Phase 7**: 月次帳票（損益計算書 → 工事部門 → 現場台帳）
+- **Phase 8**: freee連携（将来）
 
 ---
 
-## プロジェクト構成
+## 帳票構造（3層）
 
 ```
-sanyu_dx_platform/
-├── config/                    # 設定ファイル
-├── docs/
-│   ├── adr/                   # Architecture Decision Records
-│   └── guides/                # セットアップガイド
-├── n8n/
-│   └── workflows/             # n8nワークフローテンプレート
-├── rails/
-│   ├── platform/              # 基幹アプリ（経営/営業/工務/経理）
-│   ├── worker_web/            # 作業員向けWeb（日報入力）
-│   └── Dockerfile             # Rails用Dockerfile
-├── .env                       # 環境変数（公開可）
-├── .env.local.example         # 機密情報テンプレート
-├── compose.yaml               # Docker Compose定義
-├── Makefile                   # 開発コマンド
-├── README.md                  # このファイル
-├── CLAUDE.md                  # Claude Code向けガイド
-├── CONTRIBUTING.md            # 開発規約
-└── ARCHITECTURE.md            # 技術設計詳細
+【第1層】月次損益計算書
+・会計フォーマット
+・正の数字（実際給与）
+・freee連携を見据えた構造
+│
+▼
+【第2層】工事部門損益
+・総現場売上 - 総工事原価 - 現場固定費
+・案件別内訳
+│
+▼
+【第3層】個別現場台帳
+・労務費は人工計算（¥18,000基準）
+・経費は生の数字
+・第2層とは差異あり（当然）
 ```
 
 ---
 
 ## 技術スタック
 
-| レイヤー | 技術 | バージョン |
-|----------|------|------------|
-| インフラ | Docker Compose | 2.0+ |
-| DB | PostgreSQL | 16-alpine |
-| バックエンド | Ruby on Rails | 8.0 |
-| フロントエンド | Hotwire (Turbo + Stimulus) | - |
-| CSS | Tailwind CSS | 3.0 |
-| 認証 | Devise | 4.9+ |
-| 自動化 | n8n | 2.1.1 |
-| 通知 | LINE WORKS Webhook | - |
-| ストレージ | Google Drive API | - |
+| レイヤー | 技術 |
+|----------|------|
+| インフラ | Docker Compose |
+| DB | PostgreSQL 16 |
+| バックエンド | Ruby on Rails 8 |
+| フロントエンド | Hotwire (Turbo + Stimulus) |
+| CSS | Tailwind CSS 3 |
+| 認証 | Devise |
+| 自動化 | n8n |
+| 通知 | LINE WORKS |
+| ストレージ | Google Drive |
+| OCR | Claude Vision API |
+
+---
+
+## クイックスタート
+
+```bash
+# クローン
+git clone https://github.com/Yuki-0115/sanyu_dx_platform.git
+cd sanyu_dx_platform
+
+# 環境変数設定
+cp .env.local.example .env.local
+
+# 起動
+make up
+```
+
+### アクセスURL
+
+| サービス | URL |
+|----------|-----|
+| Platform | http://localhost:3001 |
+| Worker Web | http://localhost:3002 |
+| n8n | http://localhost:5678 |
 
 ---
 
 ## ドキュメント
 
-| ドキュメント | 内容 |
-|--------------|------|
-| [README.md](./README.md) | プロジェクト概要（このファイル） |
-| [CLAUDE.md](./CLAUDE.md) | Claude Code向けクイックリファレンス |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | 開発規約・コミットルール |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | 技術設計・DB設計・API設計 |
-| [docs/adr/](./docs/adr/) | 設計判断記録 |
+| ファイル | 内容 |
+|----------|------|
+| README.md | プロジェクト概要（このファイル） |
+| CLAUDE.md | Claude Code向けガイド |
+| ARCHITECTURE.md | 技術設計・DB設計 |
+| CONTRIBUTING.md | 開発規約 |
+| CHANGELOG.md | 変更履歴 |
 
 ---
 
 ## ライセンス
 
-All rights reserved. © 株式会社サンユウテック
-
----
-
-**Last Updated**: 2025-01-15
-**Version**: 0.1.0
+All rights reserved. (C) 株式会社サンユウテック
