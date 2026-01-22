@@ -38,10 +38,88 @@
     </table>
   </div>
 
-  <!-- サマリー -->
-  <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+  <!-- 諸経費・法定福利費 -->
+  <div class="mt-6 bg-gray-50 rounded-lg p-4">
+    <table class="w-full text-sm">
+      <tbody>
+        <tr class="border-b">
+          <td class="py-2 w-1/3">1. 直接工事費（税抜）</td>
+          <td class="py-2 text-right w-1/3 font-medium" id="direct-cost-display">
+            <%= number_to_currency(@estimate.direct_cost, unit: "¥", precision: 0) %>
+          </td>
+          <td class="py-2 w-1/3"></td>
+        </tr>
+        <tr class="border-b">
+          <td class="py-2">
+            2. 諸経費
+            <span class="ml-2">
+              <%= f.number_field :overhead_rate, id: "overhead-rate", step: 0.1, min: 0, max: 100,
+                  class: "w-16 rounded border-gray-300 text-sm text-right inline-block" %>
+              <span class="text-gray-500">%</span>
+            </span>
+          </td>
+          <td class="py-2 text-right font-medium" id="overhead-cost-display">
+            <%= number_to_currency(@estimate.overhead_cost, unit: "¥", precision: 0) %>
+          </td>
+          <td class="py-2"></td>
+        </tr>
+        <tr class="border-b">
+          <td class="py-2">
+            3. 法定福利費
+            <span class="ml-2">
+              <%= f.number_field :welfare_rate, id: "welfare-rate", step: 0.1, min: 0, max: 100,
+                  class: "w-16 rounded border-gray-300 text-sm text-right inline-block" %>
+              <span class="text-gray-500">%</span>
+            </span>
+          </td>
+          <td class="py-2 text-right font-medium" id="welfare-cost-display">
+            <%= number_to_currency(@estimate.welfare_cost, unit: "¥", precision: 0) %>
+          </td>
+          <td class="py-2"></td>
+        </tr>
+        <tr class="border-b">
+          <td class="py-2">
+            4. 端数調整
+            <span class="ml-2">
+              <%= f.number_field :adjustment, id: "adjustment-input", step: 1,
+                  class: "w-24 rounded border-gray-300 text-sm text-right inline-block" %>
+              <span class="text-gray-500">円</span>
+            </span>
+          </td>
+          <td class="py-2 text-right font-medium" id="adjustment-display">
+            <%= number_to_currency(@estimate.adjustment || 0, unit: "¥", precision: 0) %>
+          </td>
+          <td class="py-2"></td>
+        </tr>
+        <tr class="border-t-2 border-gray-400">
+          <td class="py-3 font-medium">合計（税抜）</td>
+          <td class="py-3 text-right font-bold text-lg" id="subtotal-display">
+            <%= number_to_currency(@estimate.subtotal, unit: "¥", precision: 0) %>
+          </td>
+          <td class="py-3"></td>
+        </tr>
+        <tr class="border-b">
+          <td class="py-2 text-gray-600">消費税（10%）</td>
+          <td class="py-2 text-right font-medium" id="tax-display">
+            <%= number_to_currency(@estimate.tax_amount, unit: "¥", precision: 0) %>
+          </td>
+          <td class="py-2"></td>
+        </tr>
+        <tr class="bg-blue-50">
+          <td class="py-3 font-bold text-blue-900">合計（税込）</td>
+          <td class="py-3 text-right font-bold text-xl text-blue-900" id="total-display">
+            <%= number_to_currency(@estimate.total_amount, unit: "¥", precision: 0) %>
+          </td>
+          <td class="py-3"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 予算・粗利サマリー -->
+  <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-green-50 rounded-lg">
     <div class="text-center">
-      <p class="text-sm text-gray-600">見積小計</p>
+      <p class="text-sm text-gray-600">直接工事費</p>
       <p class="text-xl font-bold text-gray-900" id="estimate-subtotal">
         <%= number_to_currency(@estimate.direct_cost, unit: "¥", precision: 0) %>
       </p>
@@ -53,7 +131,7 @@
       </p>
     </div>
     <div class="text-center">
-      <p class="text-sm text-gray-600">粗利</p>
+      <p class="text-sm text-gray-600">粗利（税抜ベース）</p>
       <p class="text-xl font-bold <%= @estimate.gross_profit >= 0 ? 'text-green-600' : 'text-red-600' %>" id="gross-profit">
         <%= number_to_currency(@estimate.gross_profit, unit: "¥", precision: 0) %>
         （<%= @estimate.profit_rate %>%）
@@ -146,6 +224,15 @@
     attachRowEvents();
   });
 
+  // 諸経費・法定福利費・端数調整の変更イベント
+  const overheadRate = document.getElementById('overhead-rate');
+  const welfareRate = document.getElementById('welfare-rate');
+  const adjustmentInput = document.getElementById('adjustment-input');
+
+  if (overheadRate) overheadRate.addEventListener('input', calculateTotals);
+  if (welfareRate) welfareRate.addEventListener('input', calculateTotals);
+  if (adjustmentInput) adjustmentInput.addEventListener('input', calculateTotals);
+
   // 行削除・計算イベント
   function attachRowEvents() {
     document.querySelectorAll('.remove-item-btn').forEach(btn => {
@@ -199,15 +286,19 @@
     }
   }
 
+  function formatCurrency(amount) {
+    return '¥' + Math.round(amount).toLocaleString();
+  }
+
   function calculateTotals() {
-    let estimateTotal = 0;
+    let directCost = 0;
     let budgetTotal = 0;
 
     document.querySelectorAll('.item-row').forEach(row => {
       if (row.style.display !== 'none') {
         const qty = parseFloat(row.querySelector('.estimate-qty')?.value) || 0;
         const price = parseFloat(row.querySelector('.estimate-price')?.value) || 0;
-        estimateTotal += Math.round(qty * price);
+        directCost += Math.round(qty * price);
 
         const budgetQty = parseFloat(row.querySelector('.budget-qty')?.value) || qty;
         const budgetPrice = parseFloat(row.querySelector('.budget-price')?.value) || 0;
@@ -215,16 +306,56 @@
       }
     });
 
-    document.getElementById('estimate-subtotal').textContent = '¥' + estimateTotal.toLocaleString();
-    document.getElementById('budget-subtotal').textContent = '¥' + budgetTotal.toLocaleString();
+    // 諸経費・法定福利費・端数調整
+    const overheadRateVal = parseFloat(document.getElementById('overhead-rate')?.value) || 0;
+    const welfareRateVal = parseFloat(document.getElementById('welfare-rate')?.value) || 0;
+    const adjustmentVal = parseInt(document.getElementById('adjustment-input')?.value) || 0;
 
-    const grossProfit = estimateTotal - budgetTotal;
-    const profitRate = estimateTotal > 0 ? (grossProfit / estimateTotal * 100).toFixed(1) : 0;
+    const overheadCost = Math.round(directCost * overheadRateVal / 100);
+    const welfareCost = Math.round(directCost * welfareRateVal / 100);
+    const subtotal = directCost + overheadCost + welfareCost + adjustmentVal;
+    const taxAmount = Math.round(subtotal * 0.1);
+    const totalAmount = subtotal + taxAmount;
+
+    // 表示更新
+    document.getElementById('direct-cost-display').textContent = formatCurrency(directCost);
+    document.getElementById('overhead-cost-display').textContent = formatCurrency(overheadCost);
+    document.getElementById('welfare-cost-display').textContent = formatCurrency(welfareCost);
+    document.getElementById('adjustment-display').textContent = formatCurrency(adjustmentVal);
+    document.getElementById('subtotal-display').textContent = formatCurrency(subtotal);
+    document.getElementById('tax-display').textContent = formatCurrency(taxAmount);
+    document.getElementById('total-display').textContent = formatCurrency(totalAmount);
+
+    document.getElementById('estimate-subtotal').textContent = formatCurrency(directCost);
+    document.getElementById('budget-subtotal').textContent = formatCurrency(budgetTotal);
+
+    const grossProfit = subtotal - budgetTotal;
+    const profitRate = subtotal > 0 ? (grossProfit / subtotal * 100).toFixed(1) : 0;
     const profitEl = document.getElementById('gross-profit');
-    profitEl.textContent = '¥' + grossProfit.toLocaleString() + '（' + profitRate + '%）';
+    profitEl.textContent = formatCurrency(grossProfit) + '（' + profitRate + '%）';
     profitEl.className = 'text-xl font-bold ' + (grossProfit >= 0 ? 'text-green-600' : 'text-red-600');
+
+    // 表紙タブの金額も更新
+    const coverDirectCost = document.getElementById('cover-direct-cost');
+    if (coverDirectCost) {
+      document.getElementById('cover-direct-cost').textContent = formatCurrency(directCost);
+      document.getElementById('cover-overhead-rate').textContent = overheadRateVal;
+      document.getElementById('cover-overhead-cost').textContent = formatCurrency(overheadCost);
+      document.getElementById('cover-welfare-rate').textContent = welfareRateVal;
+      document.getElementById('cover-welfare-cost').textContent = formatCurrency(welfareCost);
+      document.getElementById('cover-adjustment').textContent = formatCurrency(adjustmentVal);
+      document.getElementById('cover-subtotal').textContent = formatCurrency(subtotal);
+      document.getElementById('cover-tax').textContent = formatCurrency(taxAmount);
+      document.getElementById('cover-total').textContent = formatCurrency(totalAmount);
+      document.getElementById('cover-budget-total').textContent = formatCurrency(budgetTotal);
+      const coverGrossProfit = document.getElementById('cover-gross-profit');
+      coverGrossProfit.textContent = formatCurrency(grossProfit) + '（' + profitRate + '%）';
+      coverGrossProfit.className = 'font-medium ' + (grossProfit >= 0 ? 'text-green-600' : 'text-red-600');
+    }
   }
 
   attachRowEvents();
+  // 初期計算
+  calculateTotals();
 })();
 </script>

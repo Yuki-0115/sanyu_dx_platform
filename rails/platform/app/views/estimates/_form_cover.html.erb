@@ -83,60 +83,40 @@
     <!-- 右列: 金額サマリー -->
     <div>
       <div class="bg-gray-50 rounded-lg p-4">
-        <h4 class="text-sm font-medium text-gray-700 mb-4">金額サマリー</h4>
-
-        <div class="space-y-3">
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <%= f.label :overhead_rate, "諸経費率（%）", class: "block text-sm font-medium text-gray-700" %>
-              <%= f.number_field :overhead_rate, step: 0.1, min: 0, max: 100,
-                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-            </div>
-            <div>
-              <%= f.label :welfare_rate, "法定福利費率（%）", class: "block text-sm font-medium text-gray-700" %>
-              <%= f.number_field :welfare_rate, step: 0.1, min: 0, max: 100,
-                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-            </div>
-          </div>
-
-          <div>
-            <%= f.label :adjustment, "端数調整（円）", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.number_field :adjustment, step: 1,
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-          </div>
+        <div class="flex justify-between items-center mb-4">
+          <h4 class="text-sm font-medium text-gray-700">金額サマリー</h4>
+          <span class="text-xs text-gray-500">※ 金額は「内訳明細」タブで入力</span>
         </div>
 
-        <hr class="my-4">
-
-        <table class="w-full text-sm">
+        <table class="w-full text-sm" id="cover-amount-table">
           <tbody>
             <tr>
               <td class="py-2 text-gray-600">1. 直接工事費</td>
-              <td class="py-2 text-right font-medium"><%= number_to_currency(@estimate.direct_cost, unit: "¥", precision: 0) %></td>
+              <td class="py-2 text-right font-medium" id="cover-direct-cost"><%= number_to_currency(@estimate.direct_cost, unit: "¥", precision: 0) %></td>
             </tr>
             <tr>
-              <td class="py-2 text-gray-600">2. 諸経費（<%= @estimate.overhead_rate %>%）</td>
-              <td class="py-2 text-right font-medium"><%= number_to_currency(@estimate.overhead_cost, unit: "¥", precision: 0) %></td>
+              <td class="py-2 text-gray-600">2. 諸経費（<span id="cover-overhead-rate"><%= @estimate.overhead_rate %></span>%）</td>
+              <td class="py-2 text-right font-medium" id="cover-overhead-cost"><%= number_to_currency(@estimate.overhead_cost, unit: "¥", precision: 0) %></td>
             </tr>
             <tr>
-              <td class="py-2 text-gray-600">3. 法定福利費（<%= @estimate.welfare_rate %>%）</td>
-              <td class="py-2 text-right font-medium"><%= number_to_currency(@estimate.welfare_cost, unit: "¥", precision: 0) %></td>
+              <td class="py-2 text-gray-600">3. 法定福利費（<span id="cover-welfare-rate"><%= @estimate.welfare_rate %></span>%）</td>
+              <td class="py-2 text-right font-medium" id="cover-welfare-cost"><%= number_to_currency(@estimate.welfare_cost, unit: "¥", precision: 0) %></td>
             </tr>
             <tr>
               <td class="py-2 text-gray-600">4. 端数調整</td>
-              <td class="py-2 text-right font-medium"><%= number_to_currency(@estimate.adjustment || 0, unit: "¥", precision: 0) %></td>
+              <td class="py-2 text-right font-medium" id="cover-adjustment"><%= number_to_currency(@estimate.adjustment || 0, unit: "¥", precision: 0) %></td>
             </tr>
             <tr class="border-t">
               <td class="py-2 font-medium">合計（税抜）</td>
-              <td class="py-2 text-right font-bold text-lg"><%= number_to_currency(@estimate.subtotal, unit: "¥", precision: 0) %></td>
+              <td class="py-2 text-right font-bold text-lg" id="cover-subtotal"><%= number_to_currency(@estimate.subtotal, unit: "¥", precision: 0) %></td>
             </tr>
             <tr>
               <td class="py-2 text-gray-600">消費税（10%）</td>
-              <td class="py-2 text-right font-medium"><%= number_to_currency(@estimate.tax_amount, unit: "¥", precision: 0) %></td>
+              <td class="py-2 text-right font-medium" id="cover-tax"><%= number_to_currency(@estimate.tax_amount, unit: "¥", precision: 0) %></td>
             </tr>
             <tr class="border-t bg-blue-50">
               <td class="py-3 font-bold text-blue-900">合計（税込）</td>
-              <td class="py-3 text-right font-bold text-xl text-blue-900"><%= number_to_currency(@estimate.total_amount, unit: "¥", precision: 0) %></td>
+              <td class="py-3 text-right font-bold text-xl text-blue-900" id="cover-total"><%= number_to_currency(@estimate.total_amount, unit: "¥", precision: 0) %></td>
             </tr>
           </tbody>
         </table>
@@ -146,11 +126,11 @@
         <div class="space-y-2">
           <div class="flex justify-between text-sm">
             <span class="text-gray-600">予算小計</span>
-            <span class="font-medium"><%= number_to_currency(@estimate.budget_total, unit: "¥", precision: 0) %></span>
+            <span class="font-medium" id="cover-budget-total"><%= number_to_currency(@estimate.budget_total, unit: "¥", precision: 0) %></span>
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-gray-600">粗利</span>
-            <span class="font-medium <%= @estimate.gross_profit >= 0 ? 'text-green-600' : 'text-red-600' %>">
+            <span class="font-medium <%= @estimate.gross_profit >= 0 ? 'text-green-600' : 'text-red-600' %>" id="cover-gross-profit">
               <%= number_to_currency(@estimate.gross_profit, unit: "¥", precision: 0) %>
               （<%= @estimate.profit_rate %>%）
             </span>
