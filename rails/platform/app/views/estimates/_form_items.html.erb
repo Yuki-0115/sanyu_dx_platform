@@ -129,11 +129,13 @@
 </template>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+(function() {
   let itemIndex = <%= @estimate.estimate_items.size %>;
   const tbody = document.getElementById('estimate-items-body');
   const template = document.getElementById('item-row-template');
   const addBtn = document.getElementById('add-item-btn');
+
+  if (!addBtn) return;
 
   // 行追加
   addBtn.addEventListener('click', function() {
@@ -224,5 +226,5 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   attachRowEvents();
-});
+})();
 </script>

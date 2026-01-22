@@ -20,9 +20,11 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+(function() {
   const templateSelect = document.getElementById('condition-template-select');
   const textarea = document.getElementById('conditions-textarea');
+
+  if (!templateSelect || !textarea) return;
 
   const templates = {
     <% Estimate::CONDITION_TEMPLATES.each do |name, content| %>
@@ -39,5 +41,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     this.value = '';
   });
-});
+})();
 </script>
