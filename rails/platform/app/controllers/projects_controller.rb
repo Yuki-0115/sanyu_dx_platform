@@ -91,7 +91,7 @@ class ProjectsController < ApplicationController
       :safety_docs_checked, :delivery_checked,
       :scheduled_start_date, :scheduled_end_date, :actual_start_date, :actual_end_date,
       :order_flow, :oral_order_amount, :oral_order_received_at, :oral_order_note,
-      :order_document_received_at, :description
+      :order_document_received_at, :description, :estimate_memo
     )
   end
 end

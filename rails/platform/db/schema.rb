@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_22_075736) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_23_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -483,6 +483,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_22_075736) do
     t.datetime "order_document_received_at"
     t.decimal "oral_order_amount", precision: 15, scale: 2
     t.text "oral_order_note"
+    t.text "estimate_memo"
     t.index ["client_id"], name: "index_projects_on_client_id"
     t.index ["construction_user_id"], name: "index_projects_on_construction_user_id"
     t.index ["engineering_user_id"], name: "index_projects_on_engineering_user_id"
