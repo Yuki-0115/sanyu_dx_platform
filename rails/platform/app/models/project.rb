@@ -35,11 +35,14 @@ class Project < ApplicationRecord
   has_many :project_documents, dependent: :destroy
 
   # Validations
-  validates :code, presence: true, uniqueness: true
+  validates :code, uniqueness: true
   validates :name, presence: true
   validates :status, inclusion: { in: STATUSES }
   validates :project_type, inclusion: { in: PROJECT_TYPES }
   validates :order_flow, inclusion: { in: ORDER_FLOWS }
+
+  # Callbacks
+  before_validation :generate_code, on: :create
 
   # Defaults
   attribute :status, :string, default: "draft"
@@ -152,5 +155,16 @@ class Project < ApplicationRecord
     return nil unless order_amount
 
     order_amount - (actual_cost || 0)
+  end
+
+  private
+
+  def generate_code
+    return if code.present?
+
+    prefix = "PJ"
+    date_part = Date.current.strftime("%Y%m")
+    seq = Project.where("code LIKE ?", "#{prefix}#{date_part}%").count + 1
+    self.code = "#{prefix}#{date_part}#{seq.to_s.rjust(3, '0')}"
   end
 end

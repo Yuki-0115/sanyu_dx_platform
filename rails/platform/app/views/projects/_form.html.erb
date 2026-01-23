@@ -22,7 +22,14 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
     <div>
       <%= f.label :code, "案件コード", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.text_field :code, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", required: true %>
+      <% if project.persisted? %>
+        <%= f.text_field :code, readonly: true,
+            class: "mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm sm:text-sm" %>
+      <% else %>
+        <%= f.text_field :code, placeholder: "自動採番（空欄でOK）",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        <p class="mt-1 text-xs text-gray-500">空欄の場合、自動で「PJ202601001」形式のコードが付与されます</p>
+      <% end %>
     </div>
 
     <div>

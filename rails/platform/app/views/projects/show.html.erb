@@ -10,6 +10,9 @@
         <div class="flex space-x-2">
           <%= link_to "編集", edit_project_path(@project),
               class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+          <%= button_to "削除", project_path(@project), method: :delete,
+              data: { turbo_confirm: "本当に「#{@project.name}」を削除してよろしいですか？\n\nこの操作は取り消せません。" },
+              class: "inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50" %>
           <%= link_to "一覧", projects_path,
               class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
         </div>
