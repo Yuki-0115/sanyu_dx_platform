@@ -19,7 +19,7 @@ class Project < ApplicationRecord
   }.freeze
 
   # Associations
-  belongs_to :client
+  belongs_to :client, optional: true
   belongs_to :sales_user, class_name: "Employee", optional: true
   belongs_to :engineering_user, class_name: "Employee", optional: true
   belongs_to :construction_user, class_name: "Employee", optional: true
