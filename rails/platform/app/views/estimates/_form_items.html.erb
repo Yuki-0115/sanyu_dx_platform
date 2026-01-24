@@ -1,77 +1,165 @@
 <div class="bg-white shadow rounded-lg p-6">
   <div class="flex justify-between items-center mb-4">
     <h3 class="text-lg font-medium text-gray-900">内訳明細</h3>
-    <button type="button" id="add-item-btn" class="btn-secondary text-sm">
-      + 行追加
+    <button type="button" id="add-category-btn" class="btn-primary text-sm">
+      + 工種追加
     </button>
   </div>
 
-  <div class="overflow-x-auto">
-    <table class="min-w-full divide-y divide-gray-200" id="estimate-items-table">
-      <thead class="bg-gray-50">
-        <tr>
-          <th colspan="7" class="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase bg-blue-50 border-r">見積金額</th>
-          <th colspan="5" class="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase bg-green-50">予算明細</th>
-          <th class="px-2 py-2 w-10"></th>
-        </tr>
-        <tr>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-500">名称</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 w-24">規格</th>
-          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-20">数量</th>
-          <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 w-16">単位</th>
-          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-24">単価</th>
-          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-28">金額</th>
-          <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 w-24 border-r">備考</th>
-          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-20 bg-green-50">数量</th>
-          <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 w-16 bg-green-50">単位</th>
-          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-24 bg-green-50">単価</th>
-          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-28 bg-green-50">金額</th>
-          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-16 bg-green-50">日数</th>
-          <th class="px-2 py-2 w-10"></th>
-        </tr>
-      </thead>
-      <tbody id="estimate-items-body" class="bg-white divide-y divide-gray-200">
-        <%= f.fields_for :estimate_items do |item_f| %>
-          <%= render "estimates/item_fields", f: item_f %>
-        <% end %>
-      </tbody>
-    </table>
+  <div id="categories-container">
+    <% if @estimate.estimate_categories.any? %>
+      <%= f.fields_for :estimate_categories do |cat_f| %>
+        <%= render "estimates/category_form_section", f: f, cat_f: cat_f, category_index: cat_f.index %>
+      <% end %>
+    <% elsif @estimate.estimate_items.any? %>
+      <!-- 旧データ: 工種なしの項目がある場合 -->
+      <div class="category-section mb-6 border border-gray-200 rounded-lg" data-category-index="0">
+        <div class="bg-blue-50 px-4 py-3 rounded-t-lg">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <span class="text-blue-700 font-medium category-number">1</span>.
+              <input type="hidden" name="estimate[estimate_categories_attributes][0][id]" value="">
+              <input type="hidden" name="estimate[estimate_categories_attributes][0][sort_order]" value="0">
+              <input type="text" name="estimate[estimate_categories_attributes][0][name]"
+                     class="category-name-input font-medium text-blue-900 bg-transparent border-b border-blue-300 focus:border-blue-500 focus:outline-none px-1 w-48"
+                     placeholder="工種名を入力" value="工事">
+              <span class="text-blue-700">一式</span>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="text-blue-700 font-medium category-subtotal"><%= number_to_currency(@estimate.subtotal, unit: "¥", precision: 0) %></span>
+              <button type="button" class="text-green-600 hover:text-green-800 text-sm font-medium go-to-budget-btn"
+                      onclick="window.switchEstimateTab('budget')">
+                予算作成 →
+              </button>
+            </div>
+          </div>
+          <div class="mt-2 flex gap-6 text-sm">
+            <div class="flex items-center gap-1">
+              <span class="text-gray-600">諸経費</span>
+              <input type="number" name="estimate[estimate_categories_attributes][0][overhead_rate]"
+                     step="0.1" min="0" max="100" value="<%= @estimate.overhead_rate || 4.0 %>"
+                     class="w-16 rounded border-gray-300 text-sm text-right category-overhead-rate">
+              <span class="text-gray-500">%</span>
+              <span class="text-gray-600 ml-2 category-overhead-cost"><%= number_to_currency(@estimate.overhead_cost, unit: "¥", precision: 0) %></span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-gray-600">法定福利費</span>
+              <input type="number" name="estimate[estimate_categories_attributes][0][welfare_rate]"
+                     step="0.1" min="0" max="100" value="<%= @estimate.welfare_rate || 3.0 %>"
+                     class="w-16 rounded border-gray-300 text-sm text-right category-welfare-rate">
+              <span class="text-gray-500">%</span>
+              <span class="text-gray-600 ml-2 category-welfare-cost"><%= number_to_currency(@estimate.welfare_cost, unit: "¥", precision: 0) %></span>
+            </div>
+            <div class="flex items-center gap-1 ml-auto">
+              <span class="text-gray-600">直接工事費</span>
+              <span class="font-medium category-direct-cost"><%= number_to_currency(@estimate.direct_cost, unit: "¥", precision: 0) %></span>
+            </div>
+          </div>
+        </div>
+        <div class="p-4">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500">名称</th>
+                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 w-32">規格</th>
+                <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-24">数量</th>
+                <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 w-20">単位</th>
+                <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-28">単価</th>
+                <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-32">金額</th>
+                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 w-32">備考</th>
+                <th class="px-2 py-2 w-10"></th>
+              </tr>
+            </thead>
+            <tbody class="category-items-body bg-white divide-y divide-gray-200">
+              <% @estimate.estimate_items.each_with_index do |item, idx| %>
+                <tr class="item-row">
+                  <td class="px-1 py-1">
+                    <%= hidden_field_tag "estimate[estimate_items_attributes][#{idx}][id]", item.id if item.persisted? %>
+                    <%= hidden_field_tag "estimate[estimate_items_attributes][#{idx}][_destroy]", "0", class: "destroy-field" %>
+                    <input type="text" name="estimate[estimate_items_attributes][<%= idx %>][name]"
+                           value="<%= item.name %>"
+                           class="block w-full rounded border-gray-300 text-sm" placeholder="項目名">
+                  </td>
+                  <td class="px-1 py-1">
+                    <input type="text" name="estimate[estimate_items_attributes][<%= idx %>][specification]"
+                           value="<%= item.specification %>"
+                           class="block w-full rounded border-gray-300 text-sm" placeholder="規格">
+                  </td>
+                  <td class="px-1 py-1">
+                    <input type="number" name="estimate[estimate_items_attributes][<%= idx %>][quantity]"
+                           value="<%= item.quantity %>"
+                           step="0.01" class="block w-full rounded border-gray-300 text-sm text-right estimate-qty">
+                  </td>
+                  <td class="px-1 py-1">
+                    <select name="estimate[estimate_items_attributes][<%= idx %>][unit]"
+                            class="block w-full rounded border-gray-300 text-sm">
+                      <option value="">-</option>
+                      <% Estimate::UNIT_OPTIONS.each do |unit| %>
+                        <option value="<%= unit %>" <%= 'selected' if item.unit == unit %>><%= unit %></option>
+                      <% end %>
+                    </select>
+                  </td>
+                  <td class="px-1 py-1">
+                    <input type="number" name="estimate[estimate_items_attributes][<%= idx %>][unit_price]"
+                           value="<%= item.unit_price %>"
+                           step="1" class="block w-full rounded border-gray-300 text-sm text-right estimate-price">
+                  </td>
+                  <td class="px-1 py-1 text-right font-medium estimate-amount">
+                    <% if item.amount.to_i > 0 %>
+                      <%= number_to_currency(item.amount, unit: "¥", precision: 0) %>
+                    <% else %>
+                      -
+                    <% end %>
+                  </td>
+                  <td class="px-1 py-1">
+                    <input type="text" name="estimate[estimate_items_attributes][<%= idx %>][note]"
+                           value="<%= item.note %>"
+                           class="block w-full rounded border-gray-300 text-sm">
+                  </td>
+                  <td class="px-1 py-1">
+                    <input type="hidden" name="estimate[estimate_items_attributes][<%= idx %>][sort_order]" value="<%= item.sort_order || idx %>">
+                    <button type="button" class="text-red-500 hover:text-red-700 remove-item-btn">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+          <button type="button" class="add-item-btn mt-2 text-sm text-blue-600 hover:text-blue-800">
+            + 項目追加
+          </button>
+        </div>
+      </div>
+    <% else %>
+      <p class="text-gray-500 text-center py-8" id="no-categories-message">
+        「+ 工種追加」ボタンから工種を追加してください
+      </p>
+    <% end %>
   </div>
 
-  <!-- 諸経費・法定福利費 -->
+  <!-- 全体サマリー -->
   <div class="mt-6 bg-gray-50 rounded-lg p-4">
     <table class="w-full text-sm">
       <tbody>
         <tr class="border-b">
-          <td class="py-2 w-1/3">1. 直接工事費（税抜）</td>
+          <td class="py-2 w-1/3">直接工事費（税抜）</td>
           <td class="py-2 text-right w-1/3 font-medium" id="direct-cost-display">
             <%= number_to_currency(@estimate.direct_cost, unit: "¥", precision: 0) %>
           </td>
           <td class="py-2 w-1/3"></td>
         </tr>
         <tr class="border-b">
-          <td class="py-2">
-            2. 諸経費
-            <span class="ml-2">
-              <%= f.number_field :overhead_rate, id: "overhead-rate", step: 0.1, min: 0, max: 100,
-                  class: "w-16 rounded border-gray-300 text-sm text-right inline-block" %>
-              <span class="text-gray-500">%</span>
-            </span>
-          </td>
+          <td class="py-2">諸経費 合計</td>
           <td class="py-2 text-right font-medium" id="overhead-cost-display">
             <%= number_to_currency(@estimate.overhead_cost, unit: "¥", precision: 0) %>
           </td>
           <td class="py-2"></td>
         </tr>
         <tr class="border-b">
-          <td class="py-2">
-            3. 法定福利費
-            <span class="ml-2">
-              <%= f.number_field :welfare_rate, id: "welfare-rate", step: 0.1, min: 0, max: 100,
-                  class: "w-16 rounded border-gray-300 text-sm text-right inline-block" %>
-              <span class="text-gray-500">%</span>
-            </span>
-          </td>
+          <td class="py-2">法定福利費 合計</td>
           <td class="py-2 text-right font-medium" id="welfare-cost-display">
             <%= number_to_currency(@estimate.welfare_cost, unit: "¥", precision: 0) %>
           </td>
@@ -79,7 +167,7 @@
         </tr>
         <tr class="border-b">
           <td class="py-2">
-            4. 端数調整
+            端数調整
             <span class="ml-2">
               <%= f.number_field :adjustment, id: "adjustment-input", step: 1,
                   class: "w-24 rounded border-gray-300 text-sm text-right inline-block" %>
@@ -115,41 +203,94 @@
       </tbody>
     </table>
   </div>
-
-  <!-- 予算・粗利サマリー -->
-  <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-green-50 rounded-lg">
-    <div class="text-center">
-      <p class="text-sm text-gray-600">直接工事費</p>
-      <p class="text-xl font-bold text-gray-900" id="estimate-subtotal">
-        <%= number_to_currency(@estimate.direct_cost, unit: "¥", precision: 0) %>
-      </p>
-    </div>
-    <div class="text-center">
-      <p class="text-sm text-gray-600">予算小計</p>
-      <p class="text-xl font-bold text-gray-900" id="budget-subtotal">
-        <%= number_to_currency(@estimate.budget_total, unit: "¥", precision: 0) %>
-      </p>
-    </div>
-    <div class="text-center">
-      <p class="text-sm text-gray-600">粗利（税抜ベース）</p>
-      <p class="text-xl font-bold <%= @estimate.gross_profit >= 0 ? 'text-green-600' : 'text-red-600' %>" id="gross-profit">
-        <%= number_to_currency(@estimate.gross_profit, unit: "¥", precision: 0) %>
-        （<%= @estimate.profit_rate %>%）
-      </p>
-    </div>
-  </div>
 </div>
 
-<!-- 行追加用テンプレート -->
+<!-- 工種セクションテンプレート -->
+<template id="category-section-template">
+  <div class="category-section mb-6 border border-gray-200 rounded-lg" data-category-index="NEW_CAT_INDEX">
+    <div class="bg-blue-50 px-4 py-3 rounded-t-lg">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="text-blue-700 font-medium category-number">1</span>.
+          <input type="hidden" name="estimate[estimate_categories_attributes][NEW_CAT_INDEX][id]" value="">
+          <input type="hidden" name="estimate[estimate_categories_attributes][NEW_CAT_INDEX][sort_order]" value="NEW_CAT_INDEX" class="category-sort-order">
+          <input type="text" name="estimate[estimate_categories_attributes][NEW_CAT_INDEX][name]"
+                 class="category-name-input font-medium text-blue-900 bg-transparent border-b border-blue-300 focus:border-blue-500 focus:outline-none px-1 w-48"
+                 placeholder="工種名を入力" value="">
+          <span class="text-blue-700">一式</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-blue-700 font-medium category-subtotal">¥0</span>
+          <button type="button" class="text-green-600 hover:text-green-800 text-sm font-medium go-to-budget-btn"
+                  onclick="window.switchEstimateTab('budget')">
+            予算作成 →
+          </button>
+          <button type="button" class="text-red-500 hover:text-red-700 remove-category-btn">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- 諸経費・法定福利費 -->
+      <div class="mt-2 flex gap-6 text-sm">
+        <div class="flex items-center gap-1">
+          <span class="text-gray-600">諸経費</span>
+          <input type="number" name="estimate[estimate_categories_attributes][NEW_CAT_INDEX][overhead_rate]"
+                 step="0.1" min="0" max="100" value="<%= @estimate.overhead_rate || 4.0 %>"
+                 class="w-16 rounded border-gray-300 text-sm text-right category-overhead-rate">
+          <span class="text-gray-500">%</span>
+          <span class="text-gray-600 ml-2 category-overhead-cost">¥0</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="text-gray-600">法定福利費</span>
+          <input type="number" name="estimate[estimate_categories_attributes][NEW_CAT_INDEX][welfare_rate]"
+                 step="0.1" min="0" max="100" value="<%= @estimate.welfare_rate || 3.0 %>"
+                 class="w-16 rounded border-gray-300 text-sm text-right category-welfare-rate">
+          <span class="text-gray-500">%</span>
+          <span class="text-gray-600 ml-2 category-welfare-cost">¥0</span>
+        </div>
+        <div class="flex items-center gap-1 ml-auto">
+          <span class="text-gray-600">直接工事費</span>
+          <span class="font-medium category-direct-cost">¥0</span>
+        </div>
+      </div>
+    </div>
+    <div class="p-4">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-2 py-2 text-left text-xs font-medium text-gray-500">名称</th>
+            <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 w-32">規格</th>
+            <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-24">数量</th>
+            <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 w-20">単位</th>
+            <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-28">単価</th>
+            <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-32">金額</th>
+            <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 w-32">備考</th>
+            <th class="px-2 py-2 w-10"></th>
+          </tr>
+        </thead>
+        <tbody class="category-items-body bg-white divide-y divide-gray-200">
+        </tbody>
+      </table>
+      <button type="button" class="add-item-btn mt-2 text-sm text-blue-600 hover:text-blue-800">
+        + 項目追加
+      </button>
+    </div>
+  </div>
+</template>
+
+<!-- 項目行テンプレート -->
 <template id="item-row-template">
   <tr class="item-row">
     <td class="px-1 py-1">
+      <input type="hidden" name="estimate[estimate_items_attributes][NEW_INDEX][estimate_category_id]" value="CAT_ID" class="item-category-id">
       <input type="text" name="estimate[estimate_items_attributes][NEW_INDEX][name]"
-             class="block w-full rounded border-gray-300 text-sm" placeholder="工種名">
+             class="block w-full rounded border-gray-300 text-sm" placeholder="項目名">
     </td>
     <td class="px-1 py-1">
       <input type="text" name="estimate[estimate_items_attributes][NEW_INDEX][specification]"
-             class="block w-full rounded border-gray-300 text-sm" placeholder="t=800等">
+             class="block w-full rounded border-gray-300 text-sm" placeholder="規格">
     </td>
     <td class="px-1 py-1">
       <input type="number" name="estimate[estimate_items_attributes][NEW_INDEX][quantity]"
@@ -169,31 +310,9 @@
              step="1" class="block w-full rounded border-gray-300 text-sm text-right estimate-price">
     </td>
     <td class="px-1 py-1 text-right font-medium estimate-amount">-</td>
-    <td class="px-1 py-1 border-r">
+    <td class="px-1 py-1">
       <input type="text" name="estimate[estimate_items_attributes][NEW_INDEX][note]"
              class="block w-full rounded border-gray-300 text-sm">
-    </td>
-    <td class="px-1 py-1 bg-green-50">
-      <input type="number" name="estimate[estimate_items_attributes][NEW_INDEX][budget_quantity]"
-             step="0.01" class="block w-full rounded border-gray-300 text-sm text-right budget-qty" placeholder="同上">
-    </td>
-    <td class="px-1 py-1 bg-green-50">
-      <select name="estimate[estimate_items_attributes][NEW_INDEX][budget_unit]"
-              class="block w-full rounded border-gray-300 text-sm">
-        <option value="">同上</option>
-        <% Estimate::UNIT_OPTIONS.each do |unit| %>
-          <option value="<%= unit %>"><%= unit %></option>
-        <% end %>
-      </select>
-    </td>
-    <td class="px-1 py-1 bg-green-50">
-      <input type="number" name="estimate[estimate_items_attributes][NEW_INDEX][budget_unit_price]"
-             step="1" class="block w-full rounded border-gray-300 text-sm text-right budget-price">
-    </td>
-    <td class="px-1 py-1 text-right font-medium bg-green-50 budget-amount">-</td>
-    <td class="px-1 py-1 bg-green-50">
-      <input type="number" name="estimate[estimate_items_attributes][NEW_INDEX][construction_days]"
-             step="1" class="block w-full rounded border-gray-300 text-sm text-right">
     </td>
     <td class="px-1 py-1">
       <input type="hidden" name="estimate[estimate_items_attributes][NEW_INDEX][sort_order]" value="0">
@@ -209,43 +328,108 @@
 <script>
 (function() {
   let itemIndex = <%= @estimate.estimate_items.size %>;
-  const tbody = document.getElementById('estimate-items-body');
-  const template = document.getElementById('item-row-template');
-  const addBtn = document.getElementById('add-item-btn');
+  let categoryIndex = <%= @estimate.estimate_categories.size %>;
 
-  if (!addBtn) return;
+  const container = document.getElementById('categories-container');
+  const categoryTemplate = document.getElementById('category-section-template');
+  const itemTemplate = document.getElementById('item-row-template');
+  const addCategoryBtn = document.getElementById('add-category-btn');
+  const noMessage = document.getElementById('no-categories-message');
 
-  // 行追加
-  addBtn.addEventListener('click', function() {
-    const newRow = template.content.cloneNode(true);
-    const html = newRow.querySelector('tr').outerHTML.replace(/NEW_INDEX/g, itemIndex);
-    tbody.insertAdjacentHTML('beforeend', html);
-    itemIndex++;
-    attachRowEvents();
+  // 工種追加
+  addCategoryBtn.addEventListener('click', function() {
+    if (noMessage) noMessage.remove();
+
+    const newSection = categoryTemplate.content.cloneNode(true);
+    let html = newSection.querySelector('.category-section').outerHTML;
+    html = html.replace(/NEW_CAT_INDEX/g, categoryIndex);
+
+    container.insertAdjacentHTML('beforeend', html);
+    categoryIndex++;
+
+    attachCategoryEvents();
+    updateCategoryNumbers();
+    calculateAllTotals();
   });
 
-  // 諸経費・法定福利費・端数調整の変更イベント
-  const overheadRate = document.getElementById('overhead-rate');
-  const welfareRate = document.getElementById('welfare-rate');
-  const adjustmentInput = document.getElementById('adjustment-input');
+  // カテゴリイベント設定
+  function attachCategoryEvents() {
+    // 工種削除
+    document.querySelectorAll('.remove-category-btn').forEach(btn => {
+      btn.onclick = function() {
+        const section = this.closest('.category-section');
+        const idInput = section.querySelector('input[name*="[id]"]');
 
-  if (overheadRate) overheadRate.addEventListener('input', calculateTotals);
-  if (welfareRate) welfareRate.addEventListener('input', calculateTotals);
-  if (adjustmentInput) adjustmentInput.addEventListener('input', calculateTotals);
+        if (idInput && idInput.value) {
+          // 既存データの場合はdestroy
+          const destroyInput = document.createElement('input');
+          destroyInput.type = 'hidden';
+          destroyInput.name = idInput.name.replace('[id]', '[_destroy]');
+          destroyInput.value = '1';
+          section.appendChild(destroyInput);
+          section.style.display = 'none';
+        } else {
+          section.remove();
+        }
 
-  // 行削除・計算イベント
-  function attachRowEvents() {
+        updateCategoryNumbers();
+        calculateAllTotals();
+      };
+    });
+
+    // 項目追加
+    document.querySelectorAll('.add-item-btn').forEach(btn => {
+      btn.onclick = function() {
+        const section = this.closest('.category-section');
+        const tbody = section.querySelector('.category-items-body');
+        const catIndex = section.dataset.categoryIndex;
+        const catIdInput = section.querySelector('input[name*="[id]"]');
+        const catId = catIdInput ? catIdInput.value : '';
+
+        const newRow = itemTemplate.content.cloneNode(true);
+        let html = newRow.querySelector('tr').outerHTML;
+        html = html.replace(/NEW_INDEX/g, itemIndex);
+        html = html.replace(/CAT_ID/g, catId);
+
+        tbody.insertAdjacentHTML('beforeend', html);
+        itemIndex++;
+        attachItemEvents();
+      };
+    });
+
+    // 諸経費・法定福利費変更
+    document.querySelectorAll('.category-overhead-rate, .category-welfare-rate').forEach(input => {
+      input.oninput = function() {
+        calculateAllTotals();
+      };
+    });
+
+    // 工種名変更
+    document.querySelectorAll('.category-name-input').forEach(input => {
+      input.oninput = function() {
+        updateCoverCategoryList();
+      };
+    });
+  }
+
+  // 項目イベント設定
+  function attachItemEvents() {
     document.querySelectorAll('.remove-item-btn').forEach(btn => {
       btn.onclick = function() {
         const row = this.closest('tr');
-        const destroyInput = row.querySelector('input[name*="_destroy"]');
-        if (destroyInput) {
+        const idInput = row.querySelector('input[name*="[id]"]');
+
+        if (idInput && idInput.value) {
+          const destroyInput = document.createElement('input');
+          destroyInput.type = 'hidden';
+          destroyInput.name = idInput.name.replace('[id]', '[_destroy]');
           destroyInput.value = '1';
+          row.appendChild(destroyInput);
           row.style.display = 'none';
         } else {
           row.remove();
         }
-        calculateTotals();
+        calculateAllTotals();
       };
     });
 
@@ -253,15 +437,7 @@
       input.oninput = function() {
         const row = this.closest('tr');
         calculateRowAmount(row);
-        calculateTotals();
-      };
-    });
-
-    document.querySelectorAll('.budget-qty, .budget-price').forEach(input => {
-      input.oninput = function() {
-        const row = this.closest('tr');
-        calculateBudgetAmount(row);
-        calculateTotals();
+        calculateAllTotals();
       };
     });
   }
@@ -272,90 +448,166 @@
     const amount = Math.round(qty * price);
     const amountCell = row.querySelector('.estimate-amount');
     if (amountCell) {
-      amountCell.textContent = amount > 0 ? '¥' + amount.toLocaleString() : '-';
+      amountCell.textContent = amount > 0 ? formatCurrency(amount) : '-';
     }
   }
 
-  function calculateBudgetAmount(row) {
-    const budgetQty = parseFloat(row.querySelector('.budget-qty')?.value) || parseFloat(row.querySelector('.estimate-qty')?.value) || 0;
-    const budgetPrice = parseFloat(row.querySelector('.budget-price')?.value) || 0;
-    const amount = Math.round(budgetQty * budgetPrice);
-    const amountCell = row.querySelector('.budget-amount');
-    if (amountCell) {
-      amountCell.textContent = amount > 0 ? '¥' + amount.toLocaleString() : '-';
-    }
+  function updateCategoryNumbers() {
+    let visibleIndex = 0;
+    document.querySelectorAll('.category-section').forEach((section) => {
+      if (section.style.display !== 'none') {
+        visibleIndex++;
+        const numEl = section.querySelector('.category-number');
+        if (numEl) numEl.textContent = visibleIndex;
+      }
+    });
   }
 
   function formatCurrency(amount) {
     return '¥' + Math.round(amount).toLocaleString();
   }
 
-  function calculateTotals() {
-    let directCost = 0;
-    let budgetTotal = 0;
+  function calculateAllTotals() {
+    let totalDirectCost = 0;
+    let totalOverheadCost = 0;
+    let totalWelfareCost = 0;
 
-    document.querySelectorAll('.item-row').forEach(row => {
-      if (row.style.display !== 'none') {
-        const qty = parseFloat(row.querySelector('.estimate-qty')?.value) || 0;
-        const price = parseFloat(row.querySelector('.estimate-price')?.value) || 0;
-        directCost += Math.round(qty * price);
+    // 各カテゴリの計算
+    document.querySelectorAll('.category-section').forEach(section => {
+      if (section.style.display === 'none') return;
 
-        const budgetQty = parseFloat(row.querySelector('.budget-qty')?.value) || qty;
-        const budgetPrice = parseFloat(row.querySelector('.budget-price')?.value) || 0;
-        budgetTotal += Math.round(budgetQty * budgetPrice);
-      }
+      let categoryDirectCost = 0;
+      section.querySelectorAll('.item-row').forEach(row => {
+        if (row.style.display !== 'none') {
+          const qty = parseFloat(row.querySelector('.estimate-qty')?.value) || 0;
+          const price = parseFloat(row.querySelector('.estimate-price')?.value) || 0;
+          categoryDirectCost += Math.round(qty * price);
+        }
+      });
+
+      const overheadRate = parseFloat(section.querySelector('.category-overhead-rate')?.value) || 0;
+      const welfareRate = parseFloat(section.querySelector('.category-welfare-rate')?.value) || 0;
+
+      const categoryOverheadCost = Math.round(categoryDirectCost * overheadRate / 100);
+      const categoryWelfareCost = Math.round(categoryDirectCost * welfareRate / 100);
+      const categorySubtotal = categoryDirectCost + categoryOverheadCost + categoryWelfareCost;
+
+      // カテゴリ内表示更新（null check）
+      const directCostEl = section.querySelector('.category-direct-cost');
+      const overheadCostEl = section.querySelector('.category-overhead-cost');
+      const welfareCostEl = section.querySelector('.category-welfare-cost');
+      const subtotalEl = section.querySelector('.category-subtotal');
+
+      if (directCostEl) directCostEl.textContent = formatCurrency(categoryDirectCost);
+      if (overheadCostEl) overheadCostEl.textContent = formatCurrency(categoryOverheadCost);
+      if (welfareCostEl) welfareCostEl.textContent = formatCurrency(categoryWelfareCost);
+      if (subtotalEl) subtotalEl.textContent = formatCurrency(categorySubtotal);
+
+      totalDirectCost += categoryDirectCost;
+      totalOverheadCost += categoryOverheadCost;
+      totalWelfareCost += categoryWelfareCost;
     });
 
-    // 諸経費・法定福利費・端数調整
-    const overheadRateVal = parseFloat(document.getElementById('overhead-rate')?.value) || 0;
-    const welfareRateVal = parseFloat(document.getElementById('welfare-rate')?.value) || 0;
     const adjustmentVal = parseInt(document.getElementById('adjustment-input')?.value) || 0;
-
-    const overheadCost = Math.round(directCost * overheadRateVal / 100);
-    const welfareCost = Math.round(directCost * welfareRateVal / 100);
-    const subtotal = directCost + overheadCost + welfareCost + adjustmentVal;
+    const subtotal = totalDirectCost + totalOverheadCost + totalWelfareCost + adjustmentVal;
     const taxAmount = Math.round(subtotal * 0.1);
     const totalAmount = subtotal + taxAmount;
 
-    // 表示更新
-    document.getElementById('direct-cost-display').textContent = formatCurrency(directCost);
-    document.getElementById('overhead-cost-display').textContent = formatCurrency(overheadCost);
-    document.getElementById('welfare-cost-display').textContent = formatCurrency(welfareCost);
-    document.getElementById('adjustment-display').textContent = formatCurrency(adjustmentVal);
-    document.getElementById('subtotal-display').textContent = formatCurrency(subtotal);
-    document.getElementById('tax-display').textContent = formatCurrency(taxAmount);
-    document.getElementById('total-display').textContent = formatCurrency(totalAmount);
+    // 全体表示更新（null check）
+    const directCostDisplay = document.getElementById('direct-cost-display');
+    const overheadCostDisplay = document.getElementById('overhead-cost-display');
+    const welfareCostDisplay = document.getElementById('welfare-cost-display');
+    const adjustmentDisplay = document.getElementById('adjustment-display');
+    const subtotalDisplay = document.getElementById('subtotal-display');
+    const taxDisplay = document.getElementById('tax-display');
+    const totalDisplay = document.getElementById('total-display');
 
-    document.getElementById('estimate-subtotal').textContent = formatCurrency(directCost);
-    document.getElementById('budget-subtotal').textContent = formatCurrency(budgetTotal);
+    if (directCostDisplay) directCostDisplay.textContent = formatCurrency(totalDirectCost);
+    if (overheadCostDisplay) overheadCostDisplay.textContent = formatCurrency(totalOverheadCost);
+    if (welfareCostDisplay) welfareCostDisplay.textContent = formatCurrency(totalWelfareCost);
+    if (adjustmentDisplay) adjustmentDisplay.textContent = formatCurrency(adjustmentVal);
+    if (subtotalDisplay) subtotalDisplay.textContent = formatCurrency(subtotal);
+    if (taxDisplay) taxDisplay.textContent = formatCurrency(taxAmount);
+    if (totalDisplay) totalDisplay.textContent = formatCurrency(totalAmount);
 
-    const grossProfit = subtotal - budgetTotal;
-    const profitRate = subtotal > 0 ? (grossProfit / subtotal * 100).toFixed(1) : 0;
-    const profitEl = document.getElementById('gross-profit');
-    profitEl.textContent = formatCurrency(grossProfit) + '（' + profitRate + '%）';
-    profitEl.className = 'text-xl font-bold ' + (grossProfit >= 0 ? 'text-green-600' : 'text-red-600');
+    // 表紙タブ更新
+    updateCoverTab(totalDirectCost, totalOverheadCost, totalWelfareCost, adjustmentVal, subtotal, taxAmount, totalAmount);
 
-    // 表紙タブの金額も更新
+    // 予算タブへの連携
+    window.dispatchEvent(new CustomEvent('estimateUpdated', {
+      detail: { directCost: totalDirectCost, subtotal }
+    }));
+  }
+
+  function updateCoverTab(directCost, overheadCost, welfareCost, adjustment, subtotal, taxAmount, totalAmount) {
+    // 表紙タブの金額要素を更新（null check）
     const coverDirectCost = document.getElementById('cover-direct-cost');
-    if (coverDirectCost) {
-      document.getElementById('cover-direct-cost').textContent = formatCurrency(directCost);
-      document.getElementById('cover-overhead-rate').textContent = overheadRateVal;
-      document.getElementById('cover-overhead-cost').textContent = formatCurrency(overheadCost);
-      document.getElementById('cover-welfare-rate').textContent = welfareRateVal;
-      document.getElementById('cover-welfare-cost').textContent = formatCurrency(welfareCost);
-      document.getElementById('cover-adjustment').textContent = formatCurrency(adjustmentVal);
-      document.getElementById('cover-subtotal').textContent = formatCurrency(subtotal);
-      document.getElementById('cover-tax').textContent = formatCurrency(taxAmount);
-      document.getElementById('cover-total').textContent = formatCurrency(totalAmount);
-      document.getElementById('cover-budget-total').textContent = formatCurrency(budgetTotal);
-      const coverGrossProfit = document.getElementById('cover-gross-profit');
-      coverGrossProfit.textContent = formatCurrency(grossProfit) + '（' + profitRate + '%）';
-      coverGrossProfit.className = 'font-medium ' + (grossProfit >= 0 ? 'text-green-600' : 'text-red-600');
+    const coverOverheadCost = document.getElementById('cover-overhead-cost');
+    const coverWelfareCost = document.getElementById('cover-welfare-cost');
+    const coverAdjustment = document.getElementById('cover-adjustment');
+    const coverSubtotal = document.getElementById('cover-subtotal');
+    const coverTax = document.getElementById('cover-tax');
+    const coverTotal = document.getElementById('cover-total');
+
+    if (coverDirectCost) coverDirectCost.textContent = formatCurrency(directCost);
+    if (coverOverheadCost) coverOverheadCost.textContent = formatCurrency(overheadCost);
+    if (coverWelfareCost) coverWelfareCost.textContent = formatCurrency(welfareCost);
+    if (coverAdjustment) coverAdjustment.textContent = formatCurrency(adjustment);
+    if (coverSubtotal) coverSubtotal.textContent = formatCurrency(subtotal);
+    if (coverTax) coverTax.textContent = formatCurrency(taxAmount);
+    if (coverTotal) coverTotal.textContent = formatCurrency(totalAmount);
+
+    updateCoverCategoryList();
+  }
+
+  function updateCoverCategoryList() {
+    const coverCategoriesBody = document.getElementById('cover-categories-body');
+    if (!coverCategoriesBody) return;
+
+    const sections = document.querySelectorAll('.category-section');
+    let visibleSections = [];
+
+    sections.forEach(section => {
+      if (section.style.display !== 'none') {
+        visibleSections.push(section);
+      }
+    });
+
+    if (visibleSections.length === 0) {
+      coverCategoriesBody.innerHTML = '<tr id="cover-no-categories-row"><td class="py-2 text-gray-500" colspan="2">※ 内訳明細タブで工種を追加</td></tr>';
+      return;
+    }
+
+    let html = '';
+    visibleSections.forEach((section, idx) => {
+      const categoryName = section.querySelector('.category-name-input')?.value || '';
+      const categorySubtotal = section.querySelector('.category-subtotal')?.textContent || '¥0';
+
+      if (categoryName) {
+        html += '<tr class="cover-category-row">';
+        html += '<td class="py-2 text-gray-600">' + (idx + 1) + '、' + categoryName + '一式</td>';
+        html += '<td class="py-2 text-right font-medium">' + categorySubtotal + '</td>';
+        html += '</tr>';
+      }
+    });
+
+    if (html) {
+      coverCategoriesBody.innerHTML = html;
+    } else {
+      coverCategoriesBody.innerHTML = '<tr id="cover-no-categories-row"><td class="py-2 text-gray-500" colspan="2">※ 工種名を入力してください</td></tr>';
     }
   }
 
-  attachRowEvents();
-  // 初期計算
-  calculateTotals();
+  // 端数調整の変更イベント
+  const adjustmentInput = document.getElementById('adjustment-input');
+  if (adjustmentInput) adjustmentInput.addEventListener('input', calculateAllTotals);
+
+  // グローバルに公開（タブ切り替え時に再計算できるように）
+  window.recalculateEstimateTotals = calculateAllTotals;
+
+  // 初期化
+  attachCategoryEvents();
+  attachItemEvents();
+  calculateAllTotals();
 })();
 </script>

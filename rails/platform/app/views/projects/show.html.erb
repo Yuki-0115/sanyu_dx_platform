@@ -45,7 +45,7 @@
                 <dd class="mt-1 text-sm text-gray-900"><%= @project.client&.name || "未設定" %></dd>
               </div>
               <div>
-                <dt class="text-sm font-medium text-gray-500">見積金額</dt>
+                <dt class="text-sm font-medium text-gray-500">概算見積金額</dt>
                 <dd class="mt-1 text-sm text-gray-900">
                   <%= @project.estimated_amount ? number_to_currency(@project.estimated_amount, unit: "¥", precision: 0) : "未設定" %>
                 </dd>
@@ -166,13 +166,13 @@
                       Employee.order(:employment_type, :name),
                       :id,
                       ->(e) { "#{e.name}（#{employment_type_label(e.employment_type)}）" },
-                      { include_blank: "選択..." },
+                      { include_blank: "未定" },
                       { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" } %>
                 </div>
                 <div>
                   <label class="block text-xs font-medium text-gray-700">役割</label>
                   <%= f.select :role, [["職長", "foreman"], ["作業員", "worker"], ["応援", "support"]],
-                      { include_blank: "選択..." },
+                      { include_blank: "未定" },
                       { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" } %>
                 </div>
                 <div>

@@ -89,21 +89,35 @@
         </div>
 
         <table class="w-full text-sm" id="cover-amount-table">
+          <tbody id="cover-categories-body">
+            <% if @estimate.estimate_categories.any? %>
+              <% @estimate.estimate_categories.each_with_index do |cat, idx| %>
+                <tr class="cover-category-row">
+                  <td class="py-2 text-gray-600"><%= idx + 1 %>、<%= cat.name %>一式</td>
+                  <td class="py-2 text-right font-medium"><%= number_to_currency(cat.subtotal, unit: "¥", precision: 0) %></td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr id="cover-no-categories-row">
+                <td class="py-2 text-gray-500" colspan="2">※ 内訳明細タブで工種を追加</td>
+              </tr>
+            <% end %>
+          </tbody>
           <tbody>
-            <tr>
-              <td class="py-2 text-gray-600">1. 直接工事費</td>
+            <tr class="border-t">
+              <td class="py-2 text-gray-600">直接工事費 計</td>
               <td class="py-2 text-right font-medium" id="cover-direct-cost"><%= number_to_currency(@estimate.direct_cost, unit: "¥", precision: 0) %></td>
             </tr>
             <tr>
-              <td class="py-2 text-gray-600">2. 諸経費（<span id="cover-overhead-rate"><%= @estimate.overhead_rate %></span>%）</td>
+              <td class="py-2 text-gray-600">諸経費 計</td>
               <td class="py-2 text-right font-medium" id="cover-overhead-cost"><%= number_to_currency(@estimate.overhead_cost, unit: "¥", precision: 0) %></td>
             </tr>
             <tr>
-              <td class="py-2 text-gray-600">3. 法定福利費（<span id="cover-welfare-rate"><%= @estimate.welfare_rate %></span>%）</td>
+              <td class="py-2 text-gray-600">法定福利費 計</td>
               <td class="py-2 text-right font-medium" id="cover-welfare-cost"><%= number_to_currency(@estimate.welfare_cost, unit: "¥", precision: 0) %></td>
             </tr>
             <tr>
-              <td class="py-2 text-gray-600">4. 端数調整</td>
+              <td class="py-2 text-gray-600">端数調整</td>
               <td class="py-2 text-right font-medium" id="cover-adjustment"><%= number_to_currency(@estimate.adjustment || 0, unit: "¥", precision: 0) %></td>
             </tr>
             <tr class="border-t">

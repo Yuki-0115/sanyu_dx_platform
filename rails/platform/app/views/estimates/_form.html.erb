@@ -13,10 +13,11 @@
   <!-- タブナビゲーション -->
   <div class="border-b border-gray-200">
     <nav class="-mb-px flex space-x-8" id="estimate-tabs">
-      <a href="#" class="tab-link tab-active" data-tab="cover">表紙</a>
-      <a href="#" class="tab-link tab-inactive" data-tab="items">内訳明細</a>
-      <a href="#" class="tab-link tab-inactive" data-tab="confirmation">確認書</a>
-      <a href="#" class="tab-link tab-inactive" data-tab="conditions">条件書</a>
+      <button type="button" class="tab-link tab-active" onclick="switchEstimateTab('cover', this)">表紙</button>
+      <button type="button" class="tab-link tab-inactive" onclick="switchEstimateTab('items', this)">内訳明細</button>
+      <button type="button" class="tab-link tab-inactive" onclick="switchEstimateTab('budget', this)">予算明細</button>
+      <button type="button" class="tab-link tab-inactive" onclick="switchEstimateTab('confirmation', this)">確認書</button>
+      <button type="button" class="tab-link tab-inactive" onclick="switchEstimateTab('conditions', this)">条件書</button>
     </nav>
   </div>
 
@@ -30,12 +31,17 @@
     <%= render "estimates/form_items", f: f %>
   </div>
 
-  <!-- タブ3: 確認書 -->
+  <!-- タブ3: 予算明細 -->
+  <div id="tab-budget" class="tab-content hidden">
+    <%= render "estimates/form_budget", f: f %>
+  </div>
+
+  <!-- タブ4: 確認書 -->
   <div id="tab-confirmation" class="tab-content hidden">
     <%= render "estimates/form_confirmation", f: f %>
   </div>
 
-  <!-- タブ4: 条件書 -->
+  <!-- タブ5: 条件書 -->
   <div id="tab-conditions" class="tab-content hidden">
     <%= render "estimates/form_conditions", f: f %>
   </div>
@@ -56,30 +62,49 @@
 </style>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.tab-link').forEach(link => {
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-        const tabName = this.dataset.tab;
-
-        // Hide all tabs
-        document.querySelectorAll('.tab-content').forEach(content => {
-          content.classList.add('hidden');
-        });
-
-        // Deactivate all links
-        document.querySelectorAll('.tab-link').forEach(l => {
-          l.classList.remove('tab-active');
-          l.classList.add('tab-inactive');
-        });
-
-        // Show selected tab
-        document.getElementById('tab-' + tabName).classList.remove('hidden');
-
-        // Activate selected link
-        this.classList.remove('tab-inactive');
-        this.classList.add('tab-active');
-      });
+  // グローバル関数として定義
+  window.switchEstimateTab = function(tabName, clickedElement) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(function(content) {
+      content.classList.add('hidden');
     });
-  });
+
+    // Deactivate all links
+    document.querySelectorAll('.tab-link').forEach(function(link) {
+      link.classList.remove('tab-active');
+      link.classList.add('tab-inactive');
+    });
+
+    // Show selected tab
+    var tabElement = document.getElementById('tab-' + tabName);
+    if (tabElement) {
+      tabElement.classList.remove('hidden');
+    }
+
+    // Activate clicked link or find the tab button
+    if (clickedElement) {
+      clickedElement.classList.remove('tab-inactive');
+      clickedElement.classList.add('tab-active');
+    } else {
+      // タブボタンを探してアクティブにする
+      var tabButtons = document.querySelectorAll('.tab-link');
+      tabButtons.forEach(function(btn) {
+        if (btn.textContent.includes(tabName === 'cover' ? '表紙' :
+            tabName === 'items' ? '内訳明細' :
+            tabName === 'budget' ? '予算明細' :
+            tabName === 'confirmation' ? '確認書' : '条件書')) {
+          btn.classList.remove('tab-inactive');
+          btn.classList.add('tab-active');
+        }
+      });
+    }
+
+    // タブ切り替え時に金額を再計算（表紙・予算タブへの反映を確実にする）
+    if (window.recalculateEstimateTotals) {
+      window.recalculateEstimateTotals();
+    }
+    if (window.recalculateBudgetTotals) {
+      window.recalculateBudgetTotals();
+    }
+  };
 </script>

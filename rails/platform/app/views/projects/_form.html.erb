@@ -40,7 +40,7 @@
     <div>
       <%= f.label :client_id, "顧客", class: "block text-sm font-medium text-gray-700" %>
       <%= f.collection_select :client_id, Client.all, :id, :name,
-          { include_blank: "選択してください" },
+          { include_blank: "未定・不明" },
           { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
     </div>
 
@@ -69,7 +69,7 @@
     </div>
 
     <div>
-      <%= f.label :estimated_amount, "見積金額", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.label :estimated_amount, "概算見積金額", class: "block text-sm font-medium text-gray-700" %>
       <%= f.number_field :estimated_amount, step: 1, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
     </div>
 
@@ -118,21 +118,21 @@
       <div>
         <%= f.label :sales_user_id, "営業担当", class: "block text-sm font-medium text-gray-700" %>
         <%= f.collection_select :sales_user_id, Employee.where(role: %w[admin management sales]), :id, :name,
-            { include_blank: "選択してください" },
+            { include_blank: "未定" },
             { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
       </div>
 
       <div>
         <%= f.label :engineering_user_id, "技術担当", class: "block text-sm font-medium text-gray-700" %>
         <%= f.collection_select :engineering_user_id, Employee.where(role: %w[admin management engineering]), :id, :name,
-            { include_blank: "選択してください" },
+            { include_blank: "未定" },
             { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
       </div>
 
       <div>
         <%= f.label :construction_user_id, "施工担当", class: "block text-sm font-medium text-gray-700" %>
         <%= f.collection_select :construction_user_id, Employee.where(role: %w[admin management construction]), :id, :name,
-            { include_blank: "選択してください" },
+            { include_blank: "未定" },
             { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
       </div>
     </div>

@@ -67,20 +67,21 @@ class EstimatesController < ApplicationController
   def approve
     if @estimate.status == "submitted"
       @estimate.update!(status: "approved")
-      redirect_to project_estimate_path(@project, @estimate), notice: "見積書を承認しました"
+      redirect_to project_estimate_path(@project, @estimate),
+                  notice: "見積書を承認しました。案件の見積金額を#{helpers.number_to_currency(@estimate.total_amount, unit: '¥', precision: 0)}に更新しました。"
     else
       redirect_to project_estimate_path(@project, @estimate), alert: "提出済みの見積書のみ承認できます"
     end
   end
 
   def pdf
-    # PDF出力（後で実装）
-    respond_to do |format|
-      format.pdf do
-        # render pdf: "estimate_#{@estimate.estimate_number}"
-        redirect_to project_estimate_path(@project, @estimate), alert: "PDF出力は準備中です"
-      end
-    end
+    pdf_data = EstimatePdfGenerator.new(@estimate).generate
+    filename = "見積書_#{@estimate.estimate_number}_#{Date.current.strftime('%Y%m%d')}.pdf"
+
+    send_data pdf_data,
+              filename: filename,
+              type: "application/pdf",
+              disposition: "inline"
   end
 
   private
@@ -100,8 +101,11 @@ class EstimatesController < ApplicationController
       :payment_terms, :waste_disposal_note, :special_note,
       :person_in_charge, :overhead_rate, :welfare_rate,
       :adjustment, :conditions, :status, :notes,
+      estimate_categories_attributes: [
+        :id, :name, :overhead_rate, :welfare_rate, :sort_order, :_destroy
+      ],
       estimate_items_attributes: [
-        :id, :name, :specification, :quantity, :unit, :unit_price, :note,
+        :id, :estimate_category_id, :name, :specification, :quantity, :unit, :unit_price, :note,
         :budget_quantity, :budget_unit, :budget_unit_price, :construction_days,
         :sort_order, :category, :_destroy,
         estimate_item_costs_attributes: [

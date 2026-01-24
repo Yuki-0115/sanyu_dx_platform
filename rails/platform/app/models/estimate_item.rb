@@ -3,6 +3,7 @@
 class EstimateItem < ApplicationRecord
   # Associations
   belongs_to :estimate
+  belongs_to :estimate_category, optional: true
   has_many :estimate_item_costs, dependent: :destroy
 
   accepts_nested_attributes_for :estimate_item_costs, allow_destroy: true,

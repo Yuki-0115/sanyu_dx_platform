@@ -25,30 +25,8 @@
       -
     <% end %>
   </td>
-  <td class="px-1 py-1 border-r">
+  <td class="px-1 py-1">
     <%= f.text_field :note, class: "block w-full rounded border-gray-300 text-sm" %>
-  </td>
-  <td class="px-1 py-1 bg-green-50">
-    <%= f.number_field :budget_quantity, step: 0.01, placeholder: "同上",
-        class: "block w-full rounded border-gray-300 text-sm text-right budget-qty" %>
-  </td>
-  <td class="px-1 py-1 bg-green-50">
-    <%= f.select :budget_unit, options_for_select(Estimate::UNIT_OPTIONS.map { |u| [u, u] }, f.object.budget_unit),
-        { include_blank: "同上" },
-        class: "block w-full rounded border-gray-300 text-sm" %>
-  </td>
-  <td class="px-1 py-1 bg-green-50">
-    <%= f.number_field :budget_unit_price, step: 1, class: "block w-full rounded border-gray-300 text-sm text-right budget-price" %>
-  </td>
-  <td class="px-1 py-1 text-right font-medium bg-green-50 budget-amount">
-    <% if f.object.budget_amount.to_i > 0 %>
-      <%= number_to_currency(f.object.budget_amount, unit: "¥", precision: 0) %>
-    <% else %>
-      -
-    <% end %>
-  </td>
-  <td class="px-1 py-1 bg-green-50">
-    <%= f.number_field :construction_days, step: 1, class: "block w-full rounded border-gray-300 text-sm text-right" %>
   </td>
   <td class="px-1 py-1">
     <%= f.hidden_field :sort_order %>

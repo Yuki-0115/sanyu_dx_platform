@@ -1,0 +1,32 @@
+<tr class="budget-item-row" data-estimate-qty="<%= f.object.quantity %>">
+  <td class="px-1 py-1 text-sm text-gray-700">
+    <%= f.object.name.presence || "-" %>
+    <%= f.hidden_field :id %>
+  </td>
+  <td class="px-1 py-1 text-sm text-gray-500">
+    <%= f.object.specification.presence || "-" %>
+  </td>
+  <td class="px-1 py-1">
+    <%= f.number_field :budget_quantity, step: 0.01,
+        placeholder: f.object.quantity.present? ? f.object.quantity : "数量",
+        class: "block w-full rounded border-gray-300 text-sm text-right budget-qty" %>
+  </td>
+  <td class="px-1 py-1">
+    <%= f.select :budget_unit, options_for_select(Estimate::UNIT_OPTIONS.map { |u| [u, u] }, f.object.budget_unit),
+        { include_blank: f.object.unit.presence || "-" },
+        class: "block w-full rounded border-gray-300 text-sm" %>
+  </td>
+  <td class="px-1 py-1">
+    <%= f.number_field :budget_unit_price, step: 1, class: "block w-full rounded border-gray-300 text-sm text-right budget-price" %>
+  </td>
+  <td class="px-1 py-1 text-right font-medium budget-amount">
+    <% if f.object.budget_amount.to_i > 0 %>
+      <%= number_to_currency(f.object.budget_amount, unit: "¥", precision: 0) %>
+    <% else %>
+      -
+    <% end %>
+  </td>
+  <td class="px-1 py-1">
+    <%= f.number_field :construction_days, step: 1, class: "block w-full rounded border-gray-300 text-sm text-right" %>
+  </td>
+</tr>

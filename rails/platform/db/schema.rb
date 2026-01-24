@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_23_100001) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_24_100001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -216,6 +216,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_23_100001) do
     t.index ["role"], name: "index_employees_on_role"
   end
 
+  create_table "estimate_categories", force: :cascade do |t|
+    t.bigint "estimate_id", null: false
+    t.string "name", null: false
+    t.decimal "overhead_rate", precision: 5, scale: 2, default: "0.0"
+    t.decimal "welfare_rate", precision: 5, scale: 2, default: "0.0"
+    t.integer "sort_order", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["estimate_id", "sort_order"], name: "index_estimate_categories_on_estimate_id_and_sort_order"
+    t.index ["estimate_id"], name: "index_estimate_categories_on_estimate_id"
+  end
+
   create_table "estimate_confirmations", force: :cascade do |t|
     t.bigint "estimate_id", null: false
     t.string "item_category"
@@ -261,9 +273,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_23_100001) do
     t.decimal "budget_amount", precision: 15, scale: 2
     t.integer "construction_days"
     t.integer "sort_order", default: 0
-    t.string "category"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "estimate_category_id"
+    t.index ["estimate_category_id"], name: "index_estimate_items_on_estimate_category_id"
     t.index ["estimate_id", "sort_order"], name: "index_estimate_items_on_estimate_id_and_sort_order"
     t.index ["estimate_id"], name: "index_estimate_items_on_estimate_id"
   end
@@ -443,7 +456,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_23_100001) do
   end
 
   create_table "projects", force: :cascade do |t|
-    t.bigint "client_id", null: false
+    t.bigint "client_id"
     t.string "code", null: false
     t.string "name", null: false
     t.text "site_address"
@@ -541,8 +554,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_23_100001) do
   add_foreign_key "daily_reports", "projects"
   add_foreign_key "daily_schedule_notes", "projects"
   add_foreign_key "employees", "partners"
+  add_foreign_key "estimate_categories", "estimates"
   add_foreign_key "estimate_confirmations", "estimates"
   add_foreign_key "estimate_item_costs", "estimate_items"
+  add_foreign_key "estimate_items", "estimate_categories"
   add_foreign_key "estimate_items", "estimates"
   add_foreign_key "estimates", "employees", column: "created_by_id"
   add_foreign_key "estimates", "projects"

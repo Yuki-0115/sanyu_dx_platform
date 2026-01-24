@@ -67,9 +67,12 @@ class Estimate < ApplicationRecord
   belongs_to :project
   belongs_to :created_by, class_name: "Employee", optional: true
 
+  has_many :estimate_categories, dependent: :destroy
   has_many :estimate_items, dependent: :destroy
   has_many :estimate_confirmations, dependent: :destroy
 
+  accepts_nested_attributes_for :estimate_categories, allow_destroy: true,
+                                reject_if: ->(attrs) { attrs["name"].blank? }
   accepts_nested_attributes_for :estimate_items, allow_destroy: true,
                                 reject_if: ->(attrs) { attrs["name"].blank? }
   accepts_nested_attributes_for :estimate_confirmations, allow_destroy: true
@@ -88,28 +91,46 @@ class Estimate < ApplicationRecord
 
   # Callbacks
   before_create :generate_estimate_number
+  after_save :update_project_estimated_amount, if: :saved_change_to_status?
 
   # Scopes
   scope :approved, -> { where(status: "approved") }
 
   # 見積金額の小計（内訳明細の合計）
   def direct_cost
-    estimate_items.sum(:amount) || 0
+    if estimate_categories.any?
+      estimate_categories.sum(&:direct_cost)
+    else
+      estimate_items.sum(:amount) || 0
+    end
   end
 
-  # 諸経費
+  # 諸経費（工種別の合計）
   def overhead_cost
-    (direct_cost * (overhead_rate || 0) / 100).round(0)
+    if estimate_categories.any?
+      estimate_categories.sum(&:overhead_cost)
+    else
+      (direct_cost * (overhead_rate || 0) / 100).round(0)
+    end
   end
 
-  # 法定福利費
+  # 法定福利費（工種別の合計）
   def welfare_cost
-    (direct_cost * (welfare_rate || 0) / 100).round(0)
+    if estimate_categories.any?
+      estimate_categories.sum(&:welfare_cost)
+    else
+      (direct_cost * (welfare_rate || 0) / 100).round(0)
+    end
   end
 
   # 見積合計（税抜）
   def subtotal
     direct_cost + overhead_cost + welfare_cost + (adjustment || 0)
+  end
+
+  # 工種ごとの小計合計（直接工事費+諸経費+法定福利費）
+  def categories_subtotal
+    estimate_categories.sum(&:subtotal)
   end
 
   # 消費税
@@ -122,9 +143,13 @@ class Estimate < ApplicationRecord
     subtotal + tax_amount
   end
 
-  # 予算小計
+  # 予算小計（工種がある場合は工種に紐付いた項目のみ）
   def budget_total
-    estimate_items.sum(:budget_amount) || 0
+    if estimate_categories.any?
+      estimate_items.where.not(estimate_category_id: nil).sum(:budget_amount) || 0
+    else
+      estimate_items.sum(:budget_amount) || 0
+    end
   end
 
   # 粗利
@@ -155,5 +180,12 @@ class Estimate < ApplicationRecord
     date_part = Date.current.strftime("%Y%m")
     seq = Estimate.where("estimate_number LIKE ?", "#{prefix}#{date_part}%").count + 1
     self.estimate_number = "#{prefix}#{date_part}#{seq.to_s.rjust(3, '0')}"
+  end
+
+  # 承認時に案件の見積金額を更新
+  def update_project_estimated_amount
+    return unless status == "approved"
+
+    project.update!(estimated_amount: total_amount)
   end
 end

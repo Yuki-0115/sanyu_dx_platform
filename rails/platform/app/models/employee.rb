@@ -23,11 +23,14 @@ class Employee < ApplicationRecord
                                dependent: :restrict_with_error, inverse_of: :payer
 
   # Validations
-  validates :code, presence: true, uniqueness: true
+  validates :code, uniqueness: true
   validates :name, presence: true
   validates :employment_type, presence: true, inclusion: { in: EMPLOYMENT_TYPES }
   validates :role, presence: true, inclusion: { in: ROLES }
   validates :email, presence: true, uniqueness: true
+
+  # Callbacks
+  before_validation :generate_code, on: :create
 
   # Scopes
   scope :regular, -> { where(employment_type: "regular") }
@@ -71,5 +74,16 @@ class Employee < ApplicationRecord
     return true if allowed == :all
 
     allowed&.include?(feature.to_sym)
+  end
+
+  private
+
+  def generate_code
+    return if code.present?
+
+    prefix = "EMP"
+    date_part = Date.current.strftime("%Y%m")
+    seq = Employee.where("code LIKE ?", "#{prefix}#{date_part}%").count + 1
+    self.code = "#{prefix}#{date_part}#{seq.to_s.rjust(3, '0')}"
   end
 end

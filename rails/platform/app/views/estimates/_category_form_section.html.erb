@@ -1,0 +1,135 @@
+<% category = cat_f.object %>
+<div class="category-section mb-6 border border-gray-200 rounded-lg" data-category-index="<%= category_index %>">
+  <div class="bg-blue-50 px-4 py-3 rounded-t-lg">
+    <div class="flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="text-blue-700 font-medium category-number"><%= category_index + 1 %></span>.
+        <%= cat_f.hidden_field :id %>
+        <%= cat_f.hidden_field :sort_order, class: "category-sort-order" %>
+        <%= cat_f.text_field :name,
+            class: "category-name-input font-medium text-blue-900 bg-transparent border-b border-blue-300 focus:border-blue-500 focus:outline-none px-1 w-48",
+            placeholder: "工種名を入力" %>
+        <span class="text-blue-700">一式</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="text-blue-700 font-medium category-subtotal">
+          <%= number_to_currency(category.subtotal, unit: "¥", precision: 0) %>
+        </span>
+        <button type="button" class="text-green-600 hover:text-green-800 text-sm font-medium go-to-budget-btn"
+                onclick="window.switchEstimateTab('budget')">
+          予算作成 →
+        </button>
+        <button type="button" class="text-red-500 hover:text-red-700 remove-category-btn">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <!-- 諸経費・法定福利費 -->
+    <div class="mt-2 flex gap-6 text-sm">
+      <div class="flex items-center gap-1">
+        <span class="text-gray-600">諸経費</span>
+        <%= cat_f.number_field :overhead_rate, step: 0.1, min: 0, max: 100,
+            class: "w-16 rounded border-gray-300 text-sm text-right category-overhead-rate" %>
+        <span class="text-gray-500">%</span>
+        <span class="text-gray-600 ml-2 category-overhead-cost">
+          <%= number_to_currency(category.overhead_cost, unit: "¥", precision: 0) %>
+        </span>
+      </div>
+      <div class="flex items-center gap-1">
+        <span class="text-gray-600">法定福利費</span>
+        <%= cat_f.number_field :welfare_rate, step: 0.1, min: 0, max: 100,
+            class: "w-16 rounded border-gray-300 text-sm text-right category-welfare-rate" %>
+        <span class="text-gray-500">%</span>
+        <span class="text-gray-600 ml-2 category-welfare-cost">
+          <%= number_to_currency(category.welfare_cost, unit: "¥", precision: 0) %>
+        </span>
+      </div>
+      <div class="flex items-center gap-1 ml-auto">
+        <span class="text-gray-600">直接工事費</span>
+        <span class="font-medium category-direct-cost">
+          <%= number_to_currency(category.direct_cost, unit: "¥", precision: 0) %>
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="p-4">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-2 py-2 text-left text-xs font-medium text-gray-500">名称</th>
+          <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 w-32">規格</th>
+          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-24">数量</th>
+          <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 w-20">単位</th>
+          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-28">単価</th>
+          <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 w-32">金額</th>
+          <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 w-32">備考</th>
+          <th class="px-2 py-2 w-10"></th>
+        </tr>
+      </thead>
+      <tbody class="category-items-body bg-white divide-y divide-gray-200">
+        <% category.estimate_items.each_with_index do |item, item_idx| %>
+          <% global_item_index = @estimate.estimate_items.index(item) || (@item_counter ||= @estimate.estimate_items.size; @item_counter += 1; @item_counter - 1) %>
+          <tr class="item-row">
+            <td class="px-1 py-1">
+              <%= hidden_field_tag "estimate[estimate_items_attributes][#{global_item_index}][id]", item.id if item.persisted? %>
+              <%= hidden_field_tag "estimate[estimate_items_attributes][#{global_item_index}][_destroy]", "0", class: "destroy-field" %>
+              <%= hidden_field_tag "estimate[estimate_items_attributes][#{global_item_index}][estimate_category_id]", category.id, class: "item-category-id" %>
+              <input type="text" name="estimate[estimate_items_attributes][<%= global_item_index %>][name]"
+                     value="<%= item.name %>"
+                     class="block w-full rounded border-gray-300 text-sm" placeholder="項目名">
+            </td>
+            <td class="px-1 py-1">
+              <input type="text" name="estimate[estimate_items_attributes][<%= global_item_index %>][specification]"
+                     value="<%= item.specification %>"
+                     class="block w-full rounded border-gray-300 text-sm" placeholder="規格">
+            </td>
+            <td class="px-1 py-1">
+              <input type="number" name="estimate[estimate_items_attributes][<%= global_item_index %>][quantity]"
+                     value="<%= item.quantity %>"
+                     step="0.01" class="block w-full rounded border-gray-300 text-sm text-right estimate-qty">
+            </td>
+            <td class="px-1 py-1">
+              <select name="estimate[estimate_items_attributes][<%= global_item_index %>][unit]"
+                      class="block w-full rounded border-gray-300 text-sm">
+                <option value="">-</option>
+                <% Estimate::UNIT_OPTIONS.each do |unit| %>
+                  <option value="<%= unit %>" <%= 'selected' if item.unit == unit %>><%= unit %></option>
+                <% end %>
+              </select>
+            </td>
+            <td class="px-1 py-1">
+              <input type="number" name="estimate[estimate_items_attributes][<%= global_item_index %>][unit_price]"
+                     value="<%= item.unit_price %>"
+                     step="1" class="block w-full rounded border-gray-300 text-sm text-right estimate-price">
+            </td>
+            <td class="px-1 py-1 text-right font-medium estimate-amount">
+              <% if item.amount.to_i > 0 %>
+                <%= number_to_currency(item.amount, unit: "¥", precision: 0) %>
+              <% else %>
+                -
+              <% end %>
+            </td>
+            <td class="px-1 py-1">
+              <input type="text" name="estimate[estimate_items_attributes][<%= global_item_index %>][note]"
+                     value="<%= item.note %>"
+                     class="block w-full rounded border-gray-300 text-sm">
+            </td>
+            <td class="px-1 py-1">
+              <input type="hidden" name="estimate[estimate_items_attributes][<%= global_item_index %>][sort_order]" value="<%= item.sort_order || item_idx %>">
+              <button type="button" class="text-red-500 hover:text-red-700 remove-item-btn">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <button type="button" class="add-item-btn mt-2 text-sm text-blue-600 hover:text-blue-800">
+      + 項目追加
+    </button>
+  </div>
+</div>

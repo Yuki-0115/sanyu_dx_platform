@@ -69,3 +69,8 @@ gem "factory_bot_rails", "~> 6.5", :groups => [:development, :test]
 
 # Japanese holidays
 gem "holiday_jp"
+
+# PDF generation
+gem "prawn"
+gem "prawn-table"
+gem "matrix"  # Required for prawn on Ruby 3.1+

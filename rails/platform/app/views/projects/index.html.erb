@@ -48,7 +48,7 @@
                         <% if project.order_amount %>
                           <p>受注金額: <%= number_to_currency(project.order_amount, unit: "¥", precision: 0) %></p>
                         <% elsif project.estimated_amount %>
-                          <p>見積金額: <%= number_to_currency(project.estimated_amount, unit: "¥", precision: 0) %></p>
+                          <p>概算見積金額: <%= number_to_currency(project.estimated_amount, unit: "¥", precision: 0) %></p>
                         <% end %>
                       </div>
                     </div>

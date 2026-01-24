@@ -19,6 +19,13 @@
         <%= button_to "承認", approve_project_estimate_path(@project, @estimate), method: :post,
             class: "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
       <% end %>
+      <%= link_to pdf_project_estimate_path(@project, @estimate), target: "_blank",
+          class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700" do %>
+        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+        </svg>
+        PDF出力
+      <% end %>
       <%= link_to "編集", edit_project_estimate_path(@project, @estimate), class: "btn-secondary" %>
       <%= link_to "一覧へ戻る", project_estimates_path(@project), class: "btn-secondary" %>
     </div>
