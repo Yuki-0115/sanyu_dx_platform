@@ -417,8 +417,8 @@
               </div>
               <dl class="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <dt class="text-gray-500">人工数</dt>
-                  <dd class="font-medium"><%= number_with_precision(@project.site_ledger_total_man_days, precision: 1) %> 人工</dd>
+                  <dt class="text-gray-500">正社員人工</dt>
+                  <dd class="font-medium"><%= number_with_precision(@project.site_ledger_regular_man_days, precision: 1) %> 人工</dd>
                 </div>
                 <div>
                   <dt class="text-gray-500">原価合計</dt>
