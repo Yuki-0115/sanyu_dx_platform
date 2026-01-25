@@ -19,33 +19,6 @@
     </div>
   <% end %>
 
-  <%# ステータス表示 %>
-  <% if budget.persisted? %>
-    <div class="flex items-center justify-between bg-white shadow rounded-lg p-4">
-      <div class="flex items-center space-x-3">
-        <span class="text-sm font-medium text-gray-700">ステータス:</span>
-        <% if budget.status == "confirmed" %>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-            </svg>
-            確定済み
-          </span>
-          <% if budget.confirmed_at %>
-            <span class="text-xs text-gray-500">
-              (<%= budget.confirmed_at.strftime("%Y/%m/%d %H:%M") %>
-              <% if budget.confirmed_by %>- <%= budget.confirmed_by.name %><% end %>)
-            </span>
-          <% end %>
-        <% else %>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-            下書き
-          </span>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
-
   <div class="bg-gray-50 rounded-lg p-4 mb-6">
     <h4 class="text-sm font-medium text-gray-700 mb-2">案件情報</h4>
     <dl class="grid grid-cols-2 gap-4 text-sm">
@@ -62,173 +35,61 @@
     </dl>
   </div>
 
-  <% if @project.estimate&.can_import_to_budget? %>
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h4 class="text-sm font-medium text-blue-800">見積転用</h4>
-          <p class="text-xs text-blue-600 mt-1">
-            見積書の原価（材料費・外注費・労務費・経費）を実行予算に転用します。
-            転用後も編集可能です。
-          </p>
-        </div>
-        <%= link_to "見積を転用", import_from_estimate_project_budget_path(@project),
-            class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700",
-            data: { turbo_method: :post, turbo_confirm: "見積書の原価を転用します。現在の入力値は上書きされます。よろしいですか？" } %>
-      </div>
-    </div>
-  <% elsif @project.estimate.nil? && current_employee.can_access?(:estimates) %>
-    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h4 class="text-sm font-medium text-gray-700">見積書がありません</h4>
-          <p class="text-xs text-gray-500 mt-1">見積書を作成すると、原価を転用できます。</p>
-        </div>
-        <%= link_to "見積書を作成", new_project_estimate_path(@project),
-            class: "inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-      </div>
-    </div>
-  <% end %>
+  <%# 人工単価設定 %>
+  <div class="bg-white border border-gray-200 rounded-lg p-6">
+    <h4 class="text-lg font-medium text-gray-900 mb-2">人工単価</h4>
+    <p class="text-sm text-gray-500 mb-6">現場台帳で原価を計算する際に使用する1人工あたりの単価です。</p>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-    <div>
-      <%= f.label :material_cost, "材料費", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.number_field :material_cost, step: 1,
-          data: { action: "input->budget-form#calculate", "budget-form-target": "material" },
-          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-          disabled: budget.status == "confirmed" %>
-    </div>
-
-    <div>
-      <%= f.label :outsourcing_cost, "外注費", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.number_field :outsourcing_cost, step: 1,
-          data: { action: "input->budget-form#calculate", "budget-form-target": "outsourcing" },
-          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-          disabled: budget.status == "confirmed" %>
-    </div>
-
-    <div>
-      <%= f.label :labor_cost, "労務費", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.number_field :labor_cost, step: 1,
-          data: { action: "input->budget-form#calculate", "budget-form-target": "labor" },
-          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-          disabled: budget.status == "confirmed" %>
-    </div>
-
-    <div>
-      <%= f.label :expense_cost, "経費", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.number_field :expense_cost, step: 1,
-          data: { action: "input->budget-form#calculate", "budget-form-target": "expense" },
-          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-          disabled: budget.status == "confirmed" %>
-    </div>
-
-    <div>
-      <%= f.label :target_profit_rate, "目標利益率 (%)", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.number_field :target_profit_rate, step: 0.1,
-          data: { "budget-form-target": "targetRate" },
-          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-          disabled: budget.status == "confirmed" %>
-    </div>
-
-  </div>
-
-  <%# 人工単価（社員区分別） %>
-  <div class="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-    <h4 class="text-sm font-medium text-gray-900 mb-3">人工単価（現場台帳用）</h4>
-    <p class="text-xs text-gray-500 mb-4">現場台帳で労務費を「人工単価 × 人工数」で計算する際の単価（社員区分別）</p>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
       <div>
-        <%= f.label :regular_labor_unit_price, "正社員", class: "block text-sm font-medium text-gray-700" %>
-        <div class="mt-1 relative rounded-md shadow-sm">
+        <%= f.label :regular_labor_unit_price, "正社員単価", class: "block text-sm font-medium text-gray-700" %>
+        <p class="text-xs text-gray-500 mb-2">正社員の1人工あたりの原価</p>
+        <div class="relative rounded-md shadow-sm">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <span class="text-gray-500 sm:text-sm">¥</span>
           </div>
           <%= f.number_field :regular_labor_unit_price, step: 1000,
-              class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-              disabled: budget.status == "confirmed",
+              class: "block w-full pl-8 pr-12 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
               placeholder: "18000" %>
-        </div>
-      </div>
-      <div>
-        <%= f.label :temporary_labor_unit_price, "仮社員", class: "block text-sm font-medium text-gray-700" %>
-        <div class="mt-1 relative rounded-md shadow-sm">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span class="text-gray-500 sm:text-sm">¥</span>
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">/人工</span>
           </div>
-          <%= f.number_field :temporary_labor_unit_price, step: 1000,
-              class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-              disabled: budget.status == "confirmed",
-              placeholder: "18000" %>
         </div>
       </div>
+
       <div>
-        <%= f.label :outsourcing_unit_price, "外注", class: "block text-sm font-medium text-gray-700" %>
-        <div class="mt-1 relative rounded-md shadow-sm">
+        <%= f.label :outsourcing_unit_price, "外注単価（人工）", class: "block text-sm font-medium text-gray-700" %>
+        <p class="text-xs text-gray-500 mb-2">外注の人工計算時の単価（請負は日報で金額入力）</p>
+        <div class="relative rounded-md shadow-sm">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <span class="text-gray-500 sm:text-sm">¥</span>
           </div>
           <%= f.number_field :outsourcing_unit_price, step: 1000,
-              class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-              disabled: budget.status == "confirmed",
+              class: "block w-full pl-8 pr-12 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
               placeholder: "18000" %>
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">/人工</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <%# 原価合計と利益率計算 %>
-  <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg" data-budget-form-target="summary">
-    <h4 class="text-sm font-medium text-blue-900 mb-3">予算サマリー（自動計算）</h4>
-    <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-      <div class="bg-white p-3 rounded-md">
-        <dt class="text-xs text-gray-500">原価合計</dt>
-        <dd class="text-lg font-bold text-gray-900" data-budget-form-target="totalCost">
-          <%= number_to_currency(budget.total_cost || 0, unit: "¥", precision: 0) %>
-        </dd>
-      </div>
-      <div class="bg-white p-3 rounded-md">
-        <dt class="text-xs text-gray-500">受注金額</dt>
-        <dd class="text-lg font-bold text-gray-900" data-budget-form-target="orderAmount">
-          <%= number_to_currency(@project.order_amount || 0, unit: "¥", precision: 0) %>
-        </dd>
-      </div>
-      <div class="bg-white p-3 rounded-md">
-        <dt class="text-xs text-gray-500">粗利</dt>
-        <dd class="text-lg font-bold <%= ((@project.order_amount || 0) - (budget.total_cost || 0)) >= 0 ? 'text-green-600' : 'text-red-600' %>" data-budget-form-target="grossProfit">
-          <%= number_to_currency((@project.order_amount || 0) - (budget.total_cost || 0), unit: "¥", precision: 0) %>
-        </dd>
-      </div>
-      <div class="bg-white p-3 rounded-md">
-        <dt class="text-xs text-gray-500">利益率</dt>
-        <% profit_rate = @project.order_amount.to_d > 0 ? ((@project.order_amount.to_d - budget.total_cost.to_d) / @project.order_amount.to_d * 100) : 0 %>
-        <dd class="text-lg font-bold <%= profit_rate >= (budget.target_profit_rate || 0) ? 'text-green-600' : 'text-red-600' %>" data-budget-form-target="profitRate">
-          <%= number_with_precision(profit_rate, precision: 1) %>%
-        </dd>
-        <% if budget.target_profit_rate %>
-          <p class="text-xs text-gray-400 mt-1">目標: <%= budget.target_profit_rate %>%</p>
-        <% end %>
-      </div>
-    </dl>
+  <%# 計算例 %>
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <h4 class="text-sm font-medium text-blue-800 mb-2">現場台帳での計算方法</h4>
+    <div class="text-sm text-blue-700 space-y-1">
+      <p><strong>労務費</strong> = 正社員単価 × 正社員の人工数（日報から集計）</p>
+      <p><strong>外注費（人工）</strong> = 外注単価 × 外注の人工数（日報から集計）</p>
+      <p><strong>外注費（請負）</strong> = 日報で入力した請負金額の合計</p>
+    </div>
   </div>
-
-  <div>
-    <%= f.label :notes, "備考", class: "block text-sm font-medium text-gray-700" %>
-    <%= f.text_area :notes, rows: 4, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-        disabled: budget.status == "confirmed" %>
-  </div>
-
-  <%# 受注金額を隠しフィールドで渡す %>
-  <input type="hidden" data-budget-form-target="orderAmountValue" value="<%= @project.order_amount || 0 %>"
-         data-target-rate="<%= budget.target_profit_rate || 0 %>" />
 
   <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
     <%= link_to "キャンセル", project_budget_path(@project),
         class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-    <% if budget.status != "confirmed" %>
-      <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer">
-        <%= budget.persisted? ? "更新" : "作成" %>
-      </button>
-    <% end %>
+    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer">
+      <%= budget.persisted? ? "更新" : "保存" %>
+    </button>
   </div>
 <% end %>
