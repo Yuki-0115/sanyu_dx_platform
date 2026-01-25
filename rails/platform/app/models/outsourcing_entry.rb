@@ -9,13 +9,24 @@ class OutsourcingEntry < ApplicationRecord
     "half" => "半日"
   }.freeze
 
+  BILLING_TYPES = %w[man_days contract].freeze
+  BILLING_TYPE_LABELS = {
+    "man_days" => "人工",
+    "contract" => "請負"
+  }.freeze
+
   # Associations
   belongs_to :daily_report
   belongs_to :partner, optional: true  # マスタから選択（任意）
 
+  # Defaults
+  attribute :billing_type, :string, default: "man_days"
+
   # Validations
-  validates :headcount, presence: true, numericality: { greater_than: 0, only_integer: true }
-  validates :attendance_type, presence: true, inclusion: { in: ATTENDANCE_TYPES }
+  validates :billing_type, presence: true, inclusion: { in: BILLING_TYPES }
+  validates :headcount, presence: true, numericality: { greater_than: 0, only_integer: true }, if: :man_days_billing?
+  validates :attendance_type, presence: true, inclusion: { in: ATTENDANCE_TYPES }, if: :man_days_billing?
+  validates :contract_amount, presence: true, numericality: { greater_than: 0 }, if: :contract_billing?
   validate :partner_or_partner_name_present
 
   # Callbacks
@@ -45,6 +56,19 @@ class OutsourcingEntry < ApplicationRecord
   # 表示用ラベル
   def attendance_label
     ATTENDANCE_LABELS[attendance_type] || attendance_type
+  end
+
+  def billing_type_label
+    BILLING_TYPE_LABELS[billing_type] || billing_type
+  end
+
+  # 請求種別判定
+  def man_days_billing?
+    billing_type == "man_days"
+  end
+
+  def contract_billing?
+    billing_type == "contract"
   end
 
   private

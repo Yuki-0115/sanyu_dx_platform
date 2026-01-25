@@ -201,7 +201,56 @@ class Project < ApplicationRecord
       ").to_d
   end
 
-  # 仮社員の人工数
+  # ========================================
+  # 労務費（正社員のみ）
+  # ========================================
+
+  # 現場台帳：労務費（正社員のみ）
+  def site_ledger_labor_cost
+    (regular_labor_unit_price * site_ledger_regular_man_days).round(0)
+  end
+
+  # ========================================
+  # 外注費（人工・請負）
+  # ========================================
+
+  # 外注エントリの人工数（billing_type = 'man_days' のみ）
+  def site_ledger_outsourcing_man_days
+    confirmed_daily_reports
+      .joins(:outsourcing_entries)
+      .where(outsourcing_entries: { billing_type: "man_days" })
+      .sum("
+        CASE outsourcing_entries.attendance_type
+          WHEN 'full' THEN outsourcing_entries.headcount
+          WHEN 'half' THEN outsourcing_entries.headcount * 0.5
+          ELSE 0
+        END
+      ").to_d
+  end
+
+  # 現場台帳：外注費（人工）= 人工数 × 単価
+  def site_ledger_outsourcing_man_days_cost
+    (outsourcing_unit_price * site_ledger_outsourcing_man_days).round(0)
+  end
+
+  # 現場台帳：外注費（請負）= 請負金額の合計
+  def site_ledger_outsourcing_contract_cost
+    confirmed_daily_reports
+      .joins(:outsourcing_entries)
+      .where(outsourcing_entries: { billing_type: "contract" })
+      .sum("outsourcing_entries.contract_amount").to_i
+  end
+
+  # 現場台帳：外注費合計
+  def site_ledger_outsourcing_cost
+    site_ledger_outsourcing_man_days_cost + site_ledger_outsourcing_contract_cost
+  end
+
+  # ========================================
+  # 勤怠管理用（原価計算には含めない）
+  # ========================================
+
+  # 仮社員の人工数（勤怠管理・相殺用）
   def site_ledger_temporary_man_days
     confirmed_daily_reports
       .joins(attendances: :employee)
@@ -213,76 +262,6 @@ class Project < ApplicationRecord
           ELSE 0
         END
       ").to_d
-  end
-
-  # 外部（協力会社）の人工数（出面でemployeeがnilまたはexternal）
-  def site_ledger_external_man_days
-    # employee_idがnilの出面（外部要員として入力されたもの）
-    nil_employee_days = confirmed_daily_reports
-      .joins(:attendances)
-      .where(attendances: { employee_id: nil })
-      .sum("
-        CASE attendances.attendance_type
-          WHEN 'full' THEN 1
-          WHEN 'half' THEN 0.5
-          ELSE 0
-        END
-      ").to_d
-
-    # externalタイプの社員の出面
-    external_days = confirmed_daily_reports
-      .joins(attendances: :employee)
-      .where(employees: { employment_type: "external" })
-      .sum("
-        CASE attendances.attendance_type
-          WHEN 'full' THEN 1
-          WHEN 'half' THEN 0.5
-          ELSE 0
-        END
-      ").to_d
-
-    nil_employee_days + external_days
-  end
-
-  # 外注エントリの人工数（OutsourcingEntry）
-  def site_ledger_outsourcing_man_days
-    confirmed_daily_reports.joins(:outsourcing_entries).sum("
-      CASE outsourcing_entries.attendance_type
-        WHEN 'full' THEN outsourcing_entries.headcount
-        WHEN 'half' THEN outsourcing_entries.headcount * 0.5
-        ELSE 0
-      END
-    ").to_d
-  end
-
-  # 総人工数（全区分合計）
-  def site_ledger_total_man_days
-    site_ledger_regular_man_days + site_ledger_temporary_man_days + site_ledger_external_man_days
-  end
-
-  # 現場台帳：正社員労務費
-  def site_ledger_regular_labor_cost
-    (regular_labor_unit_price * site_ledger_regular_man_days).round(0)
-  end
-
-  # 現場台帳：仮社員労務費
-  def site_ledger_temporary_labor_cost
-    (temporary_labor_unit_price * site_ledger_temporary_man_days).round(0)
-  end
-
-  # 現場台帳：外部労務費
-  def site_ledger_external_labor_cost
-    (outsourcing_unit_price * site_ledger_external_man_days).round(0)
-  end
-
-  # 現場台帳：労務費合計
-  def site_ledger_labor_cost
-    site_ledger_regular_labor_cost + site_ledger_temporary_labor_cost + site_ledger_external_labor_cost
-  end
-
-  # 現場台帳：外注費（外注エントリ × 外注単価）
-  def site_ledger_outsourcing_cost
-    (outsourcing_unit_price * site_ledger_outsourcing_man_days).round(0)
   end
 
   # 現場台帳：材料費（経費の material カテゴリ合計）

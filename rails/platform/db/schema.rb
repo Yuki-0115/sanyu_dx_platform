@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_25_100002) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_25_110001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -406,6 +406,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_25_100002) do
     t.string "attendance_type", default: "full", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "billing_type", default: "man_days", null: false
+    t.decimal "contract_amount", precision: 15, default: "0"
+    t.index ["billing_type"], name: "index_outsourcing_entries_on_billing_type"
     t.index ["daily_report_id"], name: "index_outsourcing_entries_on_daily_report_id"
     t.index ["partner_id"], name: "index_outsourcing_entries_on_partner_id"
   end

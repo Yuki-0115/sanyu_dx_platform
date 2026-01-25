@@ -30,17 +30,13 @@
             class: "text-sm text-blue-600 hover:text-blue-800 font-medium" %>
       <% end %>
     </div>
-    <div class="grid grid-cols-3 gap-4 text-sm">
+    <div class="grid grid-cols-2 gap-4 text-sm">
       <div class="bg-white rounded p-2">
         <span class="text-gray-500">正社員:</span>
         <strong class="ml-1"><%= number_to_currency(@project.regular_labor_unit_price, unit: "¥", precision: 0) %></strong>
       </div>
       <div class="bg-white rounded p-2">
-        <span class="text-gray-500">仮社員:</span>
-        <strong class="ml-1"><%= number_to_currency(@project.temporary_labor_unit_price, unit: "¥", precision: 0) %></strong>
-      </div>
-      <div class="bg-white rounded p-2">
-        <span class="text-gray-500">外注:</span>
+        <span class="text-gray-500">外注（人工）:</span>
         <strong class="ml-1"><%= number_to_currency(@project.outsourcing_unit_price, unit: "¥", precision: 0) %></strong>
       </div>
     </div>
@@ -110,7 +106,7 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <%# 正社員労務費 %>
+          <%# 労務費（正社員のみ） %>
           <tr>
             <td class="px-4 py-3 text-sm font-medium text-gray-900">
               <span class="inline-flex items-center">
@@ -125,62 +121,6 @@
               <%= number_to_currency(@project.regular_labor_unit_price, unit: "¥", precision: 0) %>
             </td>
             <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">
-              <%= number_to_currency(@project.site_ledger_regular_labor_cost, unit: "¥", precision: 0) %>
-            </td>
-            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
-            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
-          </tr>
-
-          <%# 仮社員労務費 %>
-          <tr>
-            <td class="px-4 py-3 text-sm font-medium text-gray-900">
-              <span class="inline-flex items-center">
-                <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-                労務費（仮社員）
-              </span>
-            </td>
-            <td class="px-4 py-3 text-sm text-right text-gray-700">
-              <%= number_with_precision(@project.site_ledger_temporary_man_days, precision: 1) %> 人工
-            </td>
-            <td class="px-4 py-3 text-sm text-right text-gray-700">
-              <%= number_to_currency(@project.temporary_labor_unit_price, unit: "¥", precision: 0) %>
-            </td>
-            <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">
-              <%= number_to_currency(@project.site_ledger_temporary_labor_cost, unit: "¥", precision: 0) %>
-            </td>
-            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
-            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
-          </tr>
-
-          <%# 外部労務費 %>
-          <tr>
-            <td class="px-4 py-3 text-sm font-medium text-gray-900">
-              <span class="inline-flex items-center">
-                <span class="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
-                労務費（外部）
-              </span>
-            </td>
-            <td class="px-4 py-3 text-sm text-right text-gray-700">
-              <%= number_with_precision(@project.site_ledger_external_man_days, precision: 1) %> 人工
-            </td>
-            <td class="px-4 py-3 text-sm text-right text-gray-700">
-              <%= number_to_currency(@project.outsourcing_unit_price, unit: "¥", precision: 0) %>
-            </td>
-            <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">
-              <%= number_to_currency(@project.site_ledger_external_labor_cost, unit: "¥", precision: 0) %>
-            </td>
-            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
-            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
-          </tr>
-
-          <%# 労務費小計 %>
-          <tr class="bg-blue-50">
-            <td class="px-4 py-3 text-sm font-bold text-gray-900">労務費 小計</td>
-            <td class="px-4 py-3 text-sm text-right font-medium text-gray-700">
-              <%= number_with_precision(@project.site_ledger_total_man_days, precision: 1) %> 人工
-            </td>
-            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
-            <td class="px-4 py-3 text-sm text-right font-bold text-gray-900">
               <%= number_to_currency(@project.site_ledger_labor_cost, unit: "¥", precision: 0) %>
             </td>
             <td class="px-4 py-3 text-sm text-right text-gray-700">
@@ -196,9 +136,14 @@
             <% end %>
           </tr>
 
-          <%# 外注費 %>
+          <%# 外注費（人工） %>
           <tr>
-            <td class="px-4 py-3 text-sm font-medium text-gray-900">外注費</td>
+            <td class="px-4 py-3 text-sm font-medium text-gray-900">
+              <span class="inline-flex items-center">
+                <span class="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
+                外注費（人工）
+              </span>
+            </td>
             <td class="px-4 py-3 text-sm text-right text-gray-700">
               <%= number_with_precision(@project.site_ledger_outsourcing_man_days, precision: 1) %> 人工
             </td>
@@ -206,6 +151,35 @@
               <%= number_to_currency(@project.outsourcing_unit_price, unit: "¥", precision: 0) %>
             </td>
             <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">
+              <%= number_to_currency(@project.site_ledger_outsourcing_man_days_cost, unit: "¥", precision: 0) %>
+            </td>
+            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
+            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
+          </tr>
+
+          <%# 外注費（請負） %>
+          <tr>
+            <td class="px-4 py-3 text-sm font-medium text-gray-900">
+              <span class="inline-flex items-center">
+                <span class="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>
+                外注費（請負）
+              </span>
+            </td>
+            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
+            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
+            <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">
+              <%= number_to_currency(@project.site_ledger_outsourcing_contract_cost, unit: "¥", precision: 0) %>
+            </td>
+            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
+            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
+          </tr>
+
+          <%# 外注費小計 %>
+          <tr class="bg-orange-50">
+            <td class="px-4 py-3 text-sm font-bold text-gray-900">外注費 小計</td>
+            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
+            <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
+            <td class="px-4 py-3 text-sm text-right font-bold text-gray-900">
               <%= number_to_currency(@project.site_ledger_outsourcing_cost, unit: "¥", precision: 0) %>
             </td>
             <td class="px-4 py-3 text-sm text-right text-gray-700">
@@ -288,6 +262,17 @@
     </div>
   </div>
 
+  <%# 仮社員の出勤状況（参考情報） %>
+  <% if @project.site_ledger_temporary_man_days > 0 %>
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+      <h4 class="text-sm font-medium text-yellow-800 mb-2">仮社員の出勤状況（参考）</h4>
+      <p class="text-sm text-yellow-700">
+        仮社員: <strong><%= number_with_precision(@project.site_ledger_temporary_man_days, precision: 1) %> 人工</strong>
+        <span class="text-xs text-yellow-600 ml-2">※原価計算には含まれません。勤怠管理・相殺処理用の情報です。</span>
+      </p>
+    </div>
+  <% end %>
+
   <%# 経費カテゴリ別内訳 %>
   <% expenses_by_cat = @project.site_ledger_expenses_by_category %>
   <% if expenses_by_cat.any? %>
@@ -333,10 +318,9 @@
             <tr>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">日付</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">正社員</th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">仮社員</th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">外部</th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">外注</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">外注(人工)</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">労務費</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">外注費</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">材料費</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">経費</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">小計</th>
@@ -354,16 +338,13 @@
                   <%= number_with_precision(day[:regular_days], precision: 1) %>
                 </td>
                 <td class="px-4 py-3 text-sm text-right text-gray-700">
-                  <%= number_with_precision(day[:temporary_days], precision: 1) %>
-                </td>
-                <td class="px-4 py-3 text-sm text-right text-gray-700">
-                  <%= number_with_precision(day[:external_days], precision: 1) %>
-                </td>
-                <td class="px-4 py-3 text-sm text-right text-gray-700">
-                  <%= number_with_precision(day[:outsourcing_days], precision: 1) %>
+                  <%= number_with_precision(day[:outsourcing_man_days], precision: 1) %>
                 </td>
                 <td class="px-4 py-3 text-sm text-right text-gray-700">
                   <%= number_to_currency(day[:labor_cost], unit: "¥", precision: 0) %>
+                </td>
+                <td class="px-4 py-3 text-sm text-right text-gray-700">
+                  <%= number_to_currency(day[:outsourcing_cost], unit: "¥", precision: 0) %>
                 </td>
                 <td class="px-4 py-3 text-sm text-right text-gray-700">
                   <%= number_to_currency(day[:material_cost], unit: "¥", precision: 0) %>
@@ -390,16 +371,13 @@
                 <%= number_with_precision(@daily_summary.sum { |d| d[:regular_days] }, precision: 1) %>
               </td>
               <td class="px-4 py-3 text-sm text-right text-gray-900">
-                <%= number_with_precision(@daily_summary.sum { |d| d[:temporary_days] }, precision: 1) %>
-              </td>
-              <td class="px-4 py-3 text-sm text-right text-gray-900">
-                <%= number_with_precision(@daily_summary.sum { |d| d[:external_days] }, precision: 1) %>
-              </td>
-              <td class="px-4 py-3 text-sm text-right text-gray-900">
-                <%= number_with_precision(@daily_summary.sum { |d| d[:outsourcing_days] }, precision: 1) %>
+                <%= number_with_precision(@daily_summary.sum { |d| d[:outsourcing_man_days] }, precision: 1) %>
               </td>
               <td class="px-4 py-3 text-sm text-right text-gray-900">
                 <%= number_to_currency(@daily_summary.sum { |d| d[:labor_cost] }, unit: "¥", precision: 0) %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right text-gray-900">
+                <%= number_to_currency(@daily_summary.sum { |d| d[:outsourcing_cost] }, unit: "¥", precision: 0) %>
               </td>
               <td class="px-4 py-3 text-sm text-right text-gray-900">
                 <%= number_to_currency(@daily_summary.sum { |d| d[:material_cost] }, unit: "¥", precision: 0) %>

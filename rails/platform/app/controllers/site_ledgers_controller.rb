@@ -22,53 +22,51 @@ class SiteLedgersController < ApplicationController
 
   def build_daily_summary
     @daily_reports.map do |report|
-      # 社員区分別の人工数を計算
+      # 正社員の人工数（労務費用）
       regular_days = 0.to_d
+      # 仮社員の人工数（勤怠管理用、原価には含めない）
       temporary_days = 0.to_d
-      external_days = 0.to_d
 
       report.attendances.includes(:employee).each do |attendance|
         days = attendance.man_days
-        if attendance.employee.nil?
-          external_days += days
-        else
-          case attendance.employee.employment_type
-          when "regular"
-            regular_days += days
-          when "temporary"
-            temporary_days += days
-          when "external"
-            external_days += days
-          end
+        next if attendance.employee.nil?
+
+        case attendance.employee.employment_type
+        when "regular"
+          regular_days += days
+        when "temporary"
+          temporary_days += days
         end
       end
 
-      outsourcing_days = report.outsourcing_entries.sum { |o| o.man_days }
+      # 外注（人工）
+      outsourcing_man_days_entries = report.outsourcing_entries.select(&:man_days_billing?)
+      outsourcing_man_days = outsourcing_man_days_entries.sum { |o| o.man_days }.to_d
+
+      # 外注（請負）
+      outsourcing_contract_entries = report.outsourcing_entries.select(&:contract_billing?)
+      outsourcing_contract_cost = outsourcing_contract_entries.sum { |o| o.contract_amount.to_i }
 
       # 単価を取得
       regular_unit = @project.regular_labor_unit_price
-      temporary_unit = @project.temporary_labor_unit_price
       outsourcing_unit = @project.outsourcing_unit_price
 
-      # 労務費を計算
-      regular_labor_cost = (regular_unit * regular_days).round(0)
-      temporary_labor_cost = (temporary_unit * temporary_days).round(0)
-      external_labor_cost = (outsourcing_unit * external_days).round(0)
-      total_labor_cost = regular_labor_cost + temporary_labor_cost + external_labor_cost
+      # 労務費（正社員のみ）
+      labor_cost = (regular_unit * regular_days).round(0)
+
+      # 外注費（人工）
+      outsourcing_man_days_cost = (outsourcing_unit * outsourcing_man_days).round(0)
 
       {
         report: report,
         date: report.report_date,
         regular_days: regular_days,
         temporary_days: temporary_days,
-        external_days: external_days,
-        outsourcing_days: outsourcing_days,
-        total_man_days: regular_days + temporary_days + external_days,
-        regular_labor_cost: regular_labor_cost,
-        temporary_labor_cost: temporary_labor_cost,
-        external_labor_cost: external_labor_cost,
-        labor_cost: total_labor_cost,
-        outsourcing_cost: (outsourcing_unit * outsourcing_days).round(0),
+        outsourcing_man_days: outsourcing_man_days,
+        labor_cost: labor_cost,
+        outsourcing_man_days_cost: outsourcing_man_days_cost,
+        outsourcing_contract_cost: outsourcing_contract_cost,
+        outsourcing_cost: outsourcing_man_days_cost + outsourcing_contract_cost,
         material_cost: report.expenses.where(category: "material", status: "approved").sum(:amount).to_i,
         expense_cost: report.expenses.where.not(category: "material").where(status: "approved").sum(:amount).to_i
       }
