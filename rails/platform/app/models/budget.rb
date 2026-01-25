@@ -21,7 +21,9 @@ class Budget < ApplicationRecord
   attribute :labor_cost, :decimal, default: 0
   attribute :expense_cost, :decimal, default: 0
   attribute :total_cost, :decimal, default: 0
-  attribute :labor_unit_price, :decimal, default: 18_000
+  attribute :regular_labor_unit_price, :decimal, default: 18_000
+  attribute :temporary_labor_unit_price, :decimal, default: 18_000
+  attribute :outsourcing_unit_price, :decimal, default: 18_000
 
   # Callbacks
   before_save :calculate_total_cost

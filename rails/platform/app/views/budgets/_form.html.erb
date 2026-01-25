@@ -132,18 +132,49 @@
           disabled: budget.status == "confirmed" %>
     </div>
 
-    <div>
-      <%= f.label :labor_unit_price, "人工単価（現場台帳用）", class: "block text-sm font-medium text-gray-700" %>
-      <div class="mt-1 relative rounded-md shadow-sm">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <span class="text-gray-500 sm:text-sm">¥</span>
+  </div>
+
+  <%# 人工単価（社員区分別） %>
+  <div class="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+    <h4 class="text-sm font-medium text-gray-900 mb-3">人工単価（現場台帳用）</h4>
+    <p class="text-xs text-gray-500 mb-4">現場台帳で労務費を「人工単価 × 人工数」で計算する際の単価（社員区分別）</p>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div>
+        <%= f.label :regular_labor_unit_price, "正社員", class: "block text-sm font-medium text-gray-700" %>
+        <div class="mt-1 relative rounded-md shadow-sm">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">¥</span>
+          </div>
+          <%= f.number_field :regular_labor_unit_price, step: 1000,
+              class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+              disabled: budget.status == "confirmed",
+              placeholder: "18000" %>
         </div>
-        <%= f.number_field :labor_unit_price, step: 1000,
-            class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-            disabled: budget.status == "confirmed",
-            placeholder: "18000" %>
       </div>
-      <p class="mt-1 text-xs text-gray-500">現場台帳で労務費を「人工単価 × 人工数」で計算する際の単価</p>
+      <div>
+        <%= f.label :temporary_labor_unit_price, "仮社員", class: "block text-sm font-medium text-gray-700" %>
+        <div class="mt-1 relative rounded-md shadow-sm">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">¥</span>
+          </div>
+          <%= f.number_field :temporary_labor_unit_price, step: 1000,
+              class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+              disabled: budget.status == "confirmed",
+              placeholder: "18000" %>
+        </div>
+      </div>
+      <div>
+        <%= f.label :outsourcing_unit_price, "外注", class: "block text-sm font-medium text-gray-700" %>
+        <div class="mt-1 relative rounded-md shadow-sm">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">¥</span>
+          </div>
+          <%= f.number_field :outsourcing_unit_price, step: 1000,
+              class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+              disabled: budget.status == "confirmed",
+              placeholder: "18000" %>
+        </div>
+      </div>
     </div>
   </div>
 
