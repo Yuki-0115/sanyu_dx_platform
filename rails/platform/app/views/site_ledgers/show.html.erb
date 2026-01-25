@@ -106,14 +106,12 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <%# 労務費（正社員のみ） %>
+          <%# === 労務費セクション === %>
+          <tr class="bg-blue-50">
+            <td colspan="6" class="px-4 py-2 text-xs font-bold text-blue-800 uppercase tracking-wider">労務費</td>
+          </tr>
           <tr>
-            <td class="px-4 py-3 text-sm font-medium text-gray-900">
-              <span class="inline-flex items-center">
-                <span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
-                労務費（正社員）
-              </span>
-            </td>
+            <td class="px-4 py-3 text-sm font-medium text-gray-900 pl-8">正社員</td>
             <td class="px-4 py-3 text-sm text-right text-gray-700">
               <%= number_with_precision(@project.site_ledger_regular_man_days, precision: 1) %> 人工
             </td>
@@ -136,14 +134,12 @@
             <% end %>
           </tr>
 
-          <%# 外注費（人工） %>
+          <%# === 外注費セクション === %>
+          <tr class="bg-orange-50">
+            <td colspan="6" class="px-4 py-2 text-xs font-bold text-orange-800 uppercase tracking-wider">外注費</td>
+          </tr>
           <tr>
-            <td class="px-4 py-3 text-sm font-medium text-gray-900">
-              <span class="inline-flex items-center">
-                <span class="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
-                外注費（人工）
-              </span>
-            </td>
+            <td class="px-4 py-3 text-sm font-medium text-gray-900 pl-8">人工</td>
             <td class="px-4 py-3 text-sm text-right text-gray-700">
               <%= number_with_precision(@project.site_ledger_outsourcing_man_days, precision: 1) %> 人工
             </td>
@@ -156,15 +152,8 @@
             <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
             <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
           </tr>
-
-          <%# 外注費（請負） %>
           <tr>
-            <td class="px-4 py-3 text-sm font-medium text-gray-900">
-              <span class="inline-flex items-center">
-                <span class="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>
-                外注費（請負）
-              </span>
-            </td>
+            <td class="px-4 py-3 text-sm font-medium text-gray-900 pl-8">請負</td>
             <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
             <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
             <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">
@@ -173,10 +162,8 @@
             <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
             <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
           </tr>
-
-          <%# 外注費小計 %>
-          <tr class="bg-orange-50">
-            <td class="px-4 py-3 text-sm font-bold text-gray-900">外注費 小計</td>
+          <tr class="bg-orange-100">
+            <td class="px-4 py-3 text-sm font-bold text-gray-900 pl-8">小計</td>
             <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
             <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
             <td class="px-4 py-3 text-sm text-right font-bold text-gray-900">
@@ -195,9 +182,13 @@
             <% end %>
           </tr>
 
+          <%# === その他原価 === %>
+          <tr class="bg-gray-100">
+            <td colspan="6" class="px-4 py-2 text-xs font-bold text-gray-700 uppercase tracking-wider">その他原価</td>
+          </tr>
           <%# 材料費 %>
           <tr>
-            <td class="px-4 py-3 text-sm font-medium text-gray-900">材料費</td>
+            <td class="px-4 py-3 text-sm font-medium text-gray-900 pl-8">材料費</td>
             <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
             <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
             <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">
@@ -218,7 +209,7 @@
 
           <%# 経費 %>
           <tr>
-            <td class="px-4 py-3 text-sm font-medium text-gray-900">経費</td>
+            <td class="px-4 py-3 text-sm font-medium text-gray-900 pl-8">経費</td>
             <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
             <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
             <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">
