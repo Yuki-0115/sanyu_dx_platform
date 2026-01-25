@@ -76,6 +76,14 @@ class Project < ApplicationRecord
     order_flow == "oral_first"
   end
 
+  # 主要な見積書を取得（承認済み→提出済み→最新の順で優先）
+  def estimate
+    estimates.order(
+      Arel.sql("CASE status WHEN 'approved' THEN 0 WHEN 'submitted' THEN 1 ELSE 2 END"),
+      created_at: :desc
+    ).first
+  end
+
   # 口頭受注を記録
   def record_oral_order!(amount:, note: nil)
     update!(
