@@ -81,7 +81,7 @@ class BudgetsController < ApplicationController
   def budget_params
     params.require(:budget).permit(
       :target_profit_rate, :material_cost, :outsourcing_cost,
-      :labor_cost, :expense_cost, :notes
+      :labor_cost, :expense_cost, :labor_unit_price, :notes
     )
   end
 end

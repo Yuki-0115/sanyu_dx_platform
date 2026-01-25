@@ -407,6 +407,48 @@
                     class: "mt-2 inline-block text-sm text-blue-600 hover:underline" %>
               <% end %>
             </div>
+
+            <!-- 現場台帳 -->
+            <div class="bg-white shadow rounded-lg p-6 mt-6">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">現場台帳</h3>
+                <%= link_to "詳細", project_site_ledger_path(@project),
+                    class: "text-sm text-blue-600 hover:underline" %>
+              </div>
+              <dl class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <dt class="text-gray-500">人工数</dt>
+                  <dd class="font-medium"><%= number_with_precision(@project.site_ledger_total_man_days, precision: 1) %> 人工</dd>
+                </div>
+                <div>
+                  <dt class="text-gray-500">原価合計</dt>
+                  <dd class="font-medium"><%= number_to_currency(@project.site_ledger_total_cost, unit: "¥", precision: 0) %></dd>
+                </div>
+                <% if @project.order_amount %>
+                  <div>
+                    <dt class="text-gray-500">粗利</dt>
+                    <% gross = @project.site_ledger_gross_profit %>
+                    <dd class="font-medium <%= gross && gross >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                      <%= number_to_currency(gross, unit: "¥", precision: 0) %>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-gray-500">利益率</dt>
+                    <% rate = @project.site_ledger_profit_rate %>
+                    <dd class="font-medium <%= rate && rate >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                      <%= rate ? "#{rate}%" : "-" %>
+                    </dd>
+                  </div>
+                <% end %>
+              </dl>
+              <%= link_to project_site_ledger_path(@project),
+                  class: "mt-3 inline-flex items-center px-3 py-1.5 border border-blue-600 text-sm font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50" do %>
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                現場台帳を開く
+              <% end %>
+            </div>
           <% end %>
 
           <% if current_employee.can_access?(:daily_reports) %>

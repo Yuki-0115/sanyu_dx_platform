@@ -157,6 +157,121 @@ class Project < ApplicationRecord
     order_amount - (actual_cost || 0)
   end
 
+  # ========================================
+  # 現場台帳（第3層）用の集計メソッド
+  # ========================================
+
+  # 人工単価（実行予算から取得、未設定時はデフォルト18,000円）
+  def labor_unit_price
+    budget&.labor_unit_price || 18_000
+  end
+
+  # 確定済み日報を取得
+  def confirmed_daily_reports
+    daily_reports.where(status: %w[confirmed revised])
+  end
+
+  # 総人工数（出面から集計）
+  def site_ledger_total_man_days
+    confirmed_daily_reports.joins(:attendances).sum("
+      CASE attendances.attendance_type
+        WHEN 'full' THEN 1
+        WHEN 'half' THEN 0.5
+        ELSE 0
+      END
+    ").to_d
+  end
+
+  # 外注人工数（外注エントリから集計）
+  def site_ledger_outsourcing_man_days
+    confirmed_daily_reports.joins(:outsourcing_entries).sum("
+      CASE outsourcing_entries.attendance_type
+        WHEN 'full' THEN outsourcing_entries.headcount
+        WHEN 'half' THEN outsourcing_entries.headcount * 0.5
+        ELSE 0
+      END
+    ").to_d
+  end
+
+  # 現場台帳：労務費（人工単価 × 人工数）
+  def site_ledger_labor_cost
+    (labor_unit_price * site_ledger_total_man_days).round(0)
+  end
+
+  # 現場台帳：外注費（人工単価 × 外注人工数）
+  def site_ledger_outsourcing_cost
+    (labor_unit_price * site_ledger_outsourcing_man_days).round(0)
+  end
+
+  # 現場台帳：材料費（経費の material カテゴリ合計）
+  def site_ledger_material_cost
+    site_ledger_expenses_by_category["material"] || 0
+  end
+
+  # 現場台帳：その他経費（material以外の経費合計）
+  def site_ledger_expense_cost
+    total = 0
+    site_ledger_expenses_by_category.each do |category, amount|
+      total += amount unless category == "material"
+    end
+    total
+  end
+
+  # 経費をカテゴリ別に集計
+  def site_ledger_expenses_by_category
+    @site_ledger_expenses_by_category ||= begin
+      result = Hash.new(0)
+
+      # 日報に紐づく経費（承認済み）
+      Expense.where(daily_report_id: confirmed_daily_reports.select(:id))
+             .where(status: "approved")
+             .group(:category)
+             .sum(:amount)
+             .each { |cat, amt| result[cat] += amt.to_i }
+
+      # 案件に直接紐づく経費（承認済み）
+      expenses.where(status: "approved")
+              .group(:category)
+              .sum(:amount)
+              .each { |cat, amt| result[cat] += amt.to_i }
+
+      result
+    end
+  end
+
+  # 現場台帳：原価合計
+  def site_ledger_total_cost
+    site_ledger_labor_cost + site_ledger_outsourcing_cost +
+      site_ledger_material_cost + site_ledger_expense_cost
+  end
+
+  # 現場台帳：粗利（受注金額 - 原価合計）
+  def site_ledger_gross_profit
+    return nil unless order_amount
+
+    order_amount - site_ledger_total_cost
+  end
+
+  # 現場台帳：利益率
+  def site_ledger_profit_rate
+    return nil unless order_amount && order_amount.positive?
+
+    ((site_ledger_gross_profit.to_d / order_amount) * 100).round(1)
+  end
+
+  # 現場台帳：予算との差異
+  def site_ledger_budget_variance
+    return {} unless budget
+
+    {
+      labor: (budget.labor_cost || 0) - site_ledger_labor_cost,
+      outsourcing: (budget.outsourcing_cost || 0) - site_ledger_outsourcing_cost,
+      material: (budget.material_cost || 0) - site_ledger_material_cost,
+      expense: (budget.expense_cost || 0) - site_ledger_expense_cost,
+      total: (budget.total_cost || 0) - site_ledger_total_cost
+    }
+  end
+
   private
 
   def generate_code

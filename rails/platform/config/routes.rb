@@ -50,6 +50,7 @@ Rails.application.routes.draw do
       post :confirm
       post :import_from_estimate
     end
+    resource :site_ledger, only: [:show]
     resources :daily_reports do
       member do
         post :confirm
