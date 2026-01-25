@@ -58,6 +58,90 @@
         </div>
       </div>
 
+      <%# 正社員の場合：確定給与入力セクション %>
+      <% if @employee.employment_type == "regular" %>
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="text-lg font-medium text-gray-900">確定給与</h4>
+            <% if @monthly_salary&.persisted? %>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                入力済み
+              </span>
+            <% else %>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                未入力
+              </span>
+            <% end %>
+          </div>
+
+          <%# 基本月給との比較表示 %>
+          <% if @employee.monthly_salary.present? && @employee.monthly_salary > 0 %>
+            <div class="grid grid-cols-3 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+              <div class="text-center">
+                <div class="text-xs text-gray-500">基本月給（マスタ）</div>
+                <div class="text-lg font-medium text-gray-700"><%= number_to_currency(@employee.monthly_salary, unit: "¥", precision: 0) %></div>
+              </div>
+              <div class="text-center">
+                <div class="text-xs text-gray-500">確定給与</div>
+                <div class="text-lg font-bold <%= @monthly_salary&.persisted? ? 'text-blue-600' : 'text-gray-400' %>">
+                  <%= @monthly_salary&.persisted? ? number_to_currency(@monthly_salary.total_amount, unit: "¥", precision: 0) : "未入力" %>
+                </div>
+              </div>
+              <div class="text-center">
+                <div class="text-xs text-gray-500">差額（残業・休出等）</div>
+                <% if @monthly_salary&.persisted? %>
+                  <% diff = @monthly_salary.total_amount.to_i - @employee.monthly_salary.to_i %>
+                  <div class="text-lg font-bold <%= diff >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <%= diff >= 0 ? '+' : '' %><%= number_to_currency(diff, unit: "¥", precision: 0) %>
+                  </div>
+                <% else %>
+                  <div class="text-lg text-gray-400">-</div>
+                <% end %>
+              </div>
+            </div>
+          <% elsif @employee.monthly_salary.blank? || @employee.monthly_salary == 0 %>
+            <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p class="text-sm text-yellow-800">
+                基本月給が未設定です。
+                <%= link_to "社員マスタで設定", edit_master_employee_path(@employee), class: "underline hover:text-yellow-900" %>
+              </p>
+            </div>
+          <% end %>
+
+          <%= form_with url: update_employee_salary_attendance_sheets_path(employee_id: @employee.id, month: @current_month.strftime("%Y-%m")),
+                        method: :patch, class: "space-y-4" do |f| %>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">確定給与（総支給額）</label>
+                <div class="relative rounded-md shadow-sm">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="text-gray-500 sm:text-sm">¥</span>
+                  </div>
+                  <%= text_field_tag :total_amount,
+                      @monthly_salary&.total_amount&.to_i.presence,
+                      class: "block w-full pl-8 pr-3 py-2 text-right rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+                      placeholder: "0",
+                      inputmode: "numeric" %>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">社労士計算後の給与を入力</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">備考</label>
+                <%= text_field_tag :note,
+                    @monthly_salary&.note,
+                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+                    placeholder: "備考（任意）" %>
+              </div>
+            </div>
+            <div class="flex justify-end">
+              <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer">
+                給与を保存
+              </button>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
       <!-- 月間集計サマリー -->
       <div class="bg-white shadow rounded-lg p-6 mb-6">
         <h4 class="text-lg font-medium text-gray-900 mb-4">月間集計</h4>

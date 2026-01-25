@@ -1,0 +1,10 @@
+<div id="total_summary" class="bg-white shadow rounded-lg p-4">
+  <div class="flex justify-between items-center">
+    <div>
+      <span class="text-sm text-gray-600">確定外注費合計:</span>
+      <span class="text-xl font-bold text-gray-900 ml-2"><%= number_to_currency(total, unit: "¥", precision: 0) %></span>
+    </div>
+    <%= link_to "月次損益に戻る", monthly_profit_loss_path(year: year, month: month),
+        class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+  </div>
+</div>

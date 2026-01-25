@@ -91,6 +91,47 @@ class AttendanceSheetsController < ApplicationController
   def employee_detail
     @employee = Employee.find(params[:employee_id])
     setup_employee_data
+
+    # 正社員の場合、確定給与データを取得
+    if @employee.employment_type == "regular"
+      @monthly_salary = MonthlySalary.find_or_initialize_by(
+        employee_id: @employee.id,
+        year: @current_month.year,
+        month: @current_month.month
+      )
+    end
+  end
+
+  def update_salary
+    @employee = Employee.find(params[:employee_id])
+    @current_month = params[:month].present? ? Date.parse("#{params[:month]}-01") : Date.current.beginning_of_month
+
+    @monthly_salary = MonthlySalary.find_or_initialize_by(
+      employee_id: @employee.id,
+      year: @current_month.year,
+      month: @current_month.month
+    )
+
+    amount = normalize_number(params[:total_amount])
+    if amount.zero? && params[:total_amount].blank?
+      @monthly_salary.destroy if @monthly_salary.persisted?
+      redirect_to employee_detail_attendance_sheets_path(employee_id: @employee.id, month: @current_month.strftime("%Y-%m")),
+                  notice: "給与をクリアしました"
+    elsif amount.zero?
+      @monthly_salary.destroy if @monthly_salary.persisted?
+      redirect_to employee_detail_attendance_sheets_path(employee_id: @employee.id, month: @current_month.strftime("%Y-%m")),
+                  notice: "給与をクリアしました"
+    else
+      @monthly_salary.total_amount = amount
+      @monthly_salary.note = params[:note]
+      if @monthly_salary.save
+        redirect_to employee_detail_attendance_sheets_path(employee_id: @employee.id, month: @current_month.strftime("%Y-%m")),
+                    notice: "確定給与を保存しました"
+      else
+        redirect_to employee_detail_attendance_sheets_path(employee_id: @employee.id, month: @current_month.strftime("%Y-%m")),
+                    alert: "保存に失敗しました: #{@monthly_salary.errors.full_messages.join(', ')}"
+      end
+    end
   end
 
   private

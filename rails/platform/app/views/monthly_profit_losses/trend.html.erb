@@ -1,0 +1,174 @@
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= @fiscal_year %>年度 推移表</h1>
+      <p class="text-sm text-gray-500"><%= @fiscal_year %>年10月〜<%= @fiscal_year + 1 %>年9月（9月決算）</p>
+    </div>
+    <div class="flex space-x-2">
+      <%= link_to "月次一覧", monthly_profit_losses_path,
+          class: "inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+      <%= link_to "年度別", yearly_profit_losses_path(fiscal_year: @fiscal_year),
+          class: "inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+      <%= link_to "対比表", comparison_profit_losses_path(fiscal_year: @fiscal_year),
+          class: "inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+    </div>
+  </div>
+
+  <%# 年度選択 %>
+  <div class="mb-6 flex items-center space-x-4">
+    <label class="text-sm font-medium text-gray-700">年度選択:</label>
+    <div class="flex space-x-2">
+      <% @fiscal_years.each do |fy| %>
+        <%= link_to "#{fy}年度",
+            fiscal_year_trend_profit_losses_path(fiscal_year: fy),
+            class: "px-3 py-1 rounded-md text-sm #{fy == @fiscal_year ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# 推移表（横スクロール） %>
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-4 py-3 border-b border-gray-200 bg-blue-50">
+      <h3 class="text-lg font-medium text-blue-900">月次推移表</h3>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky left-0 bg-gray-50 z-10 min-w-32">項目</th>
+            <% @months.each do |m| %>
+              <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase min-w-24"><%= m[:label] %></th>
+            <% end %>
+            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase bg-gray-100 min-w-28">年度計</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <%# 売上 %>
+          <tr class="bg-blue-50">
+            <td class="px-3 py-2 text-sm font-medium text-gray-900 sticky left-0 bg-blue-50 z-10">売上高</td>
+            <% @months.each do |m| %>
+              <td class="px-3 py-2 text-sm text-right text-gray-900"><%= number_to_currency(m[:revenue], unit: "", precision: 0, delimiter: ",") %></td>
+            <% end %>
+            <td class="px-3 py-2 text-sm text-right font-bold text-gray-900 bg-blue-100"><%= number_to_currency(@months.sum { |m| m[:revenue] }, unit: "", precision: 0, delimiter: ",") %></td>
+          </tr>
+
+          <%# 変動費 %>
+          <tr>
+            <td class="px-3 py-2 text-sm text-gray-700 sticky left-0 bg-white z-10">変動費</td>
+            <% @months.each do |m| %>
+              <td class="px-3 py-2 text-sm text-right text-gray-600"><%= number_to_currency(m[:variable_cost], unit: "", precision: 0, delimiter: ",") %></td>
+            <% end %>
+            <td class="px-3 py-2 text-sm text-right text-gray-900 bg-gray-100"><%= number_to_currency(@months.sum { |m| m[:variable_cost] }, unit: "", precision: 0, delimiter: ",") %></td>
+          </tr>
+
+          <%# 固定費 %>
+          <tr>
+            <td class="px-3 py-2 text-sm text-gray-700 sticky left-0 bg-white z-10">固定費</td>
+            <% @months.each do |m| %>
+              <td class="px-3 py-2 text-sm text-right text-gray-600"><%= number_to_currency(m[:fixed_cost], unit: "", precision: 0, delimiter: ",") %></td>
+            <% end %>
+            <td class="px-3 py-2 text-sm text-right text-gray-900 bg-gray-100"><%= number_to_currency(@months.sum { |m| m[:fixed_cost] }, unit: "", precision: 0, delimiter: ",") %></td>
+          </tr>
+
+          <%# 原価計 %>
+          <tr class="bg-orange-50">
+            <td class="px-3 py-2 text-sm font-medium text-gray-900 sticky left-0 bg-orange-50 z-10">原価計</td>
+            <% @months.each do |m| %>
+              <td class="px-3 py-2 text-sm text-right text-gray-900"><%= number_to_currency(m[:total_cost], unit: "", precision: 0, delimiter: ",") %></td>
+            <% end %>
+            <td class="px-3 py-2 text-sm text-right font-bold text-gray-900 bg-orange-100"><%= number_to_currency(@months.sum { |m| m[:total_cost] }, unit: "", precision: 0, delimiter: ",") %></td>
+          </tr>
+
+          <%# 粗利 %>
+          <tr class="bg-green-50">
+            <td class="px-3 py-2 text-sm font-medium text-gray-900 sticky left-0 bg-green-50 z-10">粗利</td>
+            <% @months.each do |m| %>
+              <td class="px-3 py-2 text-sm text-right font-medium <%= m[:gross_profit] >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                <%= number_to_currency(m[:gross_profit], unit: "", precision: 0, delimiter: ",") %>
+              </td>
+            <% end %>
+            <% yearly_profit = @months.sum { |m| m[:gross_profit] } %>
+            <td class="px-3 py-2 text-sm text-right font-bold <%= yearly_profit >= 0 ? 'text-green-700' : 'text-red-700' %> bg-green-100">
+              <%= number_to_currency(yearly_profit, unit: "", precision: 0, delimiter: ",") %>
+            </td>
+          </tr>
+
+          <%# 利益率 %>
+          <tr>
+            <td class="px-3 py-2 text-sm text-gray-700 sticky left-0 bg-white z-10">利益率</td>
+            <% @months.each do |m| %>
+              <td class="px-3 py-2 text-sm text-right <%= m[:profit_rate] >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                <%= m[:profit_rate] %>%
+              </td>
+            <% end %>
+            <%
+              yearly_revenue = @months.sum { |m| m[:revenue] }
+              yearly_profit_rate = yearly_revenue.positive? ? ((yearly_profit.to_d / yearly_revenue) * 100).round(1) : 0
+            %>
+            <td class="px-3 py-2 text-sm text-right font-bold <%= yearly_profit_rate >= 0 ? 'text-green-700' : 'text-red-700' %> bg-gray-100">
+              <%= yearly_profit_rate %>%
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <%# 累計推移 %>
+  <div class="bg-white shadow rounded-lg overflow-hidden mt-6">
+    <div class="px-4 py-3 border-b border-gray-200 bg-purple-50">
+      <h3 class="text-lg font-medium text-purple-900">累計推移</h3>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky left-0 bg-gray-50 z-10 min-w-32">項目</th>
+            <% @months.each do |m| %>
+              <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase min-w-24"><%= m[:label] %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <%
+            cumulative_revenue = 0
+            cumulative_cost = 0
+            cumulative_profit = 0
+          %>
+          <%# 累計売上 %>
+          <tr class="bg-blue-50">
+            <td class="px-3 py-2 text-sm font-medium text-gray-900 sticky left-0 bg-blue-50 z-10">累計売上</td>
+            <% @months.each do |m| %>
+              <% cumulative_revenue += m[:revenue] %>
+              <td class="px-3 py-2 text-sm text-right text-gray-900"><%= number_to_currency(cumulative_revenue, unit: "", precision: 0, delimiter: ",") %></td>
+            <% end %>
+          </tr>
+          <% cumulative_revenue = 0 %>
+
+          <%# 累計原価 %>
+          <tr>
+            <td class="px-3 py-2 text-sm text-gray-700 sticky left-0 bg-white z-10">累計原価</td>
+            <% @months.each do |m| %>
+              <% cumulative_cost += m[:total_cost] %>
+              <td class="px-3 py-2 text-sm text-right text-gray-600"><%= number_to_currency(cumulative_cost, unit: "", precision: 0, delimiter: ",") %></td>
+            <% end %>
+          </tr>
+          <% cumulative_cost = 0 %>
+
+          <%# 累計粗利 %>
+          <tr class="bg-green-50">
+            <td class="px-3 py-2 text-sm font-medium text-gray-900 sticky left-0 bg-green-50 z-10">累計粗利</td>
+            <% @months.each do |m| %>
+              <% cumulative_profit += m[:gross_profit] %>
+              <td class="px-3 py-2 text-sm text-right font-medium <%= cumulative_profit >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                <%= number_to_currency(cumulative_profit, unit: "", precision: 0, delimiter: ",") %>
+              </td>
+            <% end %>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="mt-4 text-xs text-gray-500">※ 金額は千円単位ではなく円単位で表示しています</p>
+</div>

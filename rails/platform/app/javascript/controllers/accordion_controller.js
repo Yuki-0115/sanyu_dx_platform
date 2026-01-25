@@ -5,8 +5,12 @@ export default class extends Controller {
   static targets = ["content", "icon"]
 
   connect() {
-    // 初期状態は開いた状態
-    this.isOpen = true
+    // 初期状態をDOMから判断（hiddenクラスがあれば閉じた状態）
+    if (this.hasContentTarget) {
+      this.isOpen = !this.contentTarget.classList.contains("hidden")
+    } else {
+      this.isOpen = true
+    }
   }
 
   toggle() {

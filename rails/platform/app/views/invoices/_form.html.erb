@@ -43,6 +43,24 @@
       </div>
     </div>
 
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+      <div>
+        <%= f.label :progress_year, "対象年月", class: "block text-sm font-medium text-gray-700" %>
+        <div class="mt-1 flex space-x-2">
+          <% current_year = Date.current.year %>
+          <%= f.select :progress_year,
+              (current_year - 1..current_year + 1).map { |y| ["#{y}年", y] },
+              { include_blank: "選択" },
+              { class: "block w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+          <%= f.select :progress_month,
+              (1..12).map { |m| ["#{m}月", m] },
+              { include_blank: "選択" },
+              { class: "block w-20 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+        </div>
+        <p class="mt-1 text-xs text-gray-500">この請求書が対応する出来高の年月</p>
+      </div>
+    </div>
+
     <div class="mt-4 p-3 bg-gray-50 rounded-lg">
       <dl class="grid grid-cols-2 gap-4 text-sm">
         <div>

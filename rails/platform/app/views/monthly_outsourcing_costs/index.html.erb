@@ -1,0 +1,146 @@
+<div class="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= @year %>年<%= @month %>月 確定外注費</h1>
+      <p class="text-sm text-gray-500">協力会社からの請求書ベースで確定した外注費を入力</p>
+    </div>
+    <div class="flex space-x-2">
+      <%= link_to "月次損益に戻る", monthly_profit_loss_path(year: @year, month: @month),
+          class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    </div>
+  </div>
+
+  <%# 月移動ナビゲーション %>
+  <div class="flex items-center justify-between mb-4 bg-gray-50 rounded-lg p-3">
+    <% prev_date = Date.new(@year, @month, 1).prev_month %>
+    <% next_date = Date.new(@year, @month, 1).next_month %>
+    <%= link_to monthly_outsourcing_costs_path(year: prev_date.year, month: prev_date.month),
+        class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      <%= prev_date.month %>月
+    <% end %>
+    <span class="font-medium text-gray-900"><%= @year %>年<%= @month %>月</span>
+    <%= link_to monthly_outsourcing_costs_path(year: next_date.year, month: next_date.month),
+        class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+      <%= next_date.month %>月
+      <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    <% end %>
+  </div>
+
+  <%# フラッシュメッセージ %>
+  <div id="flash_message">
+    <% if @is_confirmed %>
+      <div class="mb-4 bg-green-50 border border-green-200 rounded-lg p-3">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span class="text-sm text-green-800">確定外注費が入力済みです（合計: <%= number_to_currency(@total, unit: "¥", precision: 0) %>）</span>
+        </div>
+      </div>
+    <% else %>
+      <div class="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          <span class="text-sm text-yellow-800">確定外注費が未入力です。月次損益では日報ベースの概算値が使用されます。</span>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# 協力会社別合計サマリー %>
+  <% if @totals_by_partner.any? %>
+    <div class="mb-6 bg-white shadow rounded-lg p-4">
+      <h3 class="text-sm font-medium text-gray-700 mb-3">協力会社別合計（確定）</h3>
+      <div class="flex flex-wrap gap-3">
+        <% @totals_by_partner.each do |partner_name, amount| %>
+          <div class="px-3 py-2 bg-green-50 rounded-lg">
+            <span class="text-sm text-gray-700"><%= partner_name %>:</span>
+            <span class="text-sm font-semibold text-green-800"><%= number_to_currency(amount, unit: "¥", precision: 0) %></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# 協力会社ごとのリスト %>
+  <div class="space-y-6">
+    <% @partners.each do |partner| %>
+      <% partner_has_data = @active_projects.any? { |p| @outsourcing_costs[[partner.id, p.id]] || @estimated_costs[[partner.id, p.id]] } %>
+      <% next unless partner_has_data %>
+
+      <%# 協力会社の概算合計を計算 %>
+      <% partner_estimated_total = @estimated_costs.select { |k, _| k[0] == partner.id }.values.sum { |v| v[:total] } %>
+      <% partner_outsourcing_costs = @outsourcing_costs.select { |k, _| k[0] == partner.id }.values %>
+
+      <div class="bg-white shadow rounded-lg overflow-hidden" data-controller="accordion">
+        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 cursor-pointer flex justify-between items-center"
+             data-action="click->accordion#toggle">
+          <div class="flex items-center space-x-3">
+            <h3 class="text-lg font-medium text-gray-900"><%= partner.name %></h3>
+            <%= render partial: "partner_totals", locals: {
+              partner: partner,
+              outsourcing_costs: partner_outsourcing_costs,
+              estimated_costs: partner_estimated_total,
+              year: @year,
+              month: @month
+            } %>
+          </div>
+          <svg class="w-5 h-5 text-gray-500 transform transition-transform" data-accordion-target="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </div>
+
+        <div class="hidden" data-accordion-target="content">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">案件名</th>
+                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">概算（日報）</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">確定金額</th>
+                <th class="px-4 py-3 w-10"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <% @active_projects.each do |project| %>
+                <% cost = @outsourcing_costs[[partner.id, project.id]] %>
+                <% estimated = @estimated_costs[[partner.id, project.id]] %>
+                <% next unless cost || estimated %>
+                <%= render partial: "outsourcing_cost_row", locals: {
+                  partner: partner,
+                  project: project,
+                  cost: cost,
+                  estimated: estimated,
+                  year: @year,
+                  month: @month
+                } %>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# 合計サマリー %>
+  <div class="mt-6">
+    <%= render partial: "total_summary", locals: { total: @total, year: @year, month: @month } %>
+  </div>
+
+  <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <h4 class="text-sm font-medium text-blue-800 mb-2">入力について</h4>
+    <ul class="text-sm text-blue-700 space-y-1">
+      <li>協力会社からの請求書に基づいた確定金額を入力し、「確定」ボタンを押してください</li>
+      <li>「概算（日報）」は日報ベースの参考値です。実際の請求と異なる場合があります</li>
+      <li>確定済みの項目は緑色で表示されます。×ボタンで確定を解除できます</li>
+      <li>確定外注費が入力されると、月次損益の外注費に反映されます</li>
+      <li>未入力の場合は、日報ベースの概算値が使用されます</li>
+    </ul>
+  </div>
+</div>

@@ -1,0 +1,13 @@
+<span id="partner_<%= partner.id %>_totals" class="flex items-center space-x-3">
+  <% confirmed_total = outsourcing_costs.sum(&:amount).to_i %>
+  <% if confirmed_total > 0 %>
+    <span class="px-2 py-1 bg-green-100 text-green-800 text-sm rounded-full">
+      確定: <%= number_to_currency(confirmed_total, unit: "¥", precision: 0) %>
+    </span>
+  <% end %>
+  <% if estimated_costs > 0 %>
+    <span class="px-2 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
+      概算: <%= number_to_currency(estimated_costs, unit: "¥", precision: 0) %>
+    </span>
+  <% end %>
+</span>

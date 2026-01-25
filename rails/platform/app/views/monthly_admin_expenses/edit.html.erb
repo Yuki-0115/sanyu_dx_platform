@@ -1,0 +1,8 @@
+<div class="max-w-2xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">販管費を編集</h1>
+    <p class="text-sm text-gray-500"><%= @year %>年<%= @month %>月 - <%= @admin_expense.name %></p>
+  </div>
+
+  <%= render "form", admin_expense: @admin_expense %>
+</div>

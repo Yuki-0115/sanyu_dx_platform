@@ -62,11 +62,11 @@ class Employee < ApplicationRecord
   def can_access?(feature)
     permissions = {
       admin: :all,
-      management: %i[dashboard projects estimates budgets daily_reports invoices offsets accounting safety_documents master],
-      accounting: %i[dashboard invoices payments offsets expenses accounting master],
-      sales: %i[dashboard projects estimates clients master],
-      engineering: %i[dashboard projects budgets daily_reports safety_documents],
-      construction: %i[dashboard projects daily_reports attendances expenses safety_documents],
+      management: %i[dashboard management_dashboard projects estimates budgets daily_reports invoices offsets accounting safety_documents master schedule attendance_sheets],
+      accounting: %i[dashboard management_dashboard invoices payments offsets expenses accounting master],
+      sales: %i[dashboard projects estimates clients master schedule],
+      engineering: %i[dashboard projects budgets daily_reports safety_documents schedule attendance_sheets],
+      construction: %i[dashboard projects daily_reports attendances expenses safety_documents schedule],
       worker: %i[daily_reports attendances]
     }
 

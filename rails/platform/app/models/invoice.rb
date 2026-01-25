@@ -36,6 +36,8 @@ class Invoice < ApplicationRecord
   # Instance methods
   def issue!
     update!(status: "issued", issued_date: Time.current.to_date)
+    # 案件ステータスは変更しない（複数回請求があるため）
+    # 完工時に手動で status を変更する
   end
 
   def mark_as_paid!

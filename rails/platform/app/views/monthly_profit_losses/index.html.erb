@@ -1,0 +1,90 @@
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">月次損益</h1>
+      <p class="text-sm text-gray-500">全社の月別売上・原価・粗利を確認</p>
+    </div>
+    <div class="flex space-x-2">
+      <%= link_to "年度別", yearly_profit_losses_path(fiscal_year: @current_fiscal_year),
+          class: "inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+      <%= link_to "推移表", trend_profit_losses_path(fiscal_year: @current_fiscal_year),
+          class: "inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+      <%= link_to "対比表", comparison_profit_losses_path(fiscal_year: @current_fiscal_year),
+          class: "inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+    </div>
+  </div>
+
+  <%# 年度選択 %>
+  <div class="mb-4 flex items-center space-x-4">
+    <label class="text-sm font-medium text-gray-700">年度:</label>
+    <div class="flex space-x-2">
+      <% @fiscal_years.each do |fy| %>
+        <%= link_to "#{fy}年度",
+            fiscal_year_profit_losses_path(fiscal_year: fy),
+            class: "px-3 py-1 rounded-md text-sm bg-gray-100 text-gray-700 hover:bg-gray-200" %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">年月</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">売上</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">変動費</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">固定費</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">原価合計</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">粗利</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">利益率</th>
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @months.each do |month_data| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              <%= month_data[:label] %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+              <%= number_to_currency(month_data[:revenue], unit: "¥", precision: 0) %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-700">
+              <%= number_to_currency(month_data[:variable_cost], unit: "¥", precision: 0) %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-700">
+              <%= link_to number_to_currency(month_data[:fixed_cost], unit: "¥", precision: 0),
+                  monthly_fixed_costs_path(year: month_data[:year], month: month_data[:month]),
+                  class: "text-blue-600 hover:underline" %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900">
+              <%= number_to_currency(month_data[:total_cost], unit: "¥", precision: 0) %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold <%= month_data[:gross_profit] >= 0 ? 'text-green-600' : 'text-red-600' %>">
+              <%= number_to_currency(month_data[:gross_profit], unit: "¥", precision: 0) %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium <%= month_data[:profit_rate] >= 0 ? 'text-green-600' : 'text-red-600' %>">
+              <%= month_data[:profit_rate] %>%
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center space-x-2">
+              <%= link_to "詳細", monthly_profit_loss_path(year: month_data[:year], month: month_data[:month]),
+                  class: "text-blue-600 hover:text-blue-800 text-sm font-medium" %>
+              <%= link_to "P/L", monthly_income_statement_path(year: month_data[:year], month: month_data[:month]),
+                  class: "text-indigo-600 hover:text-indigo-800 text-sm font-medium" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <h4 class="text-sm font-medium text-blue-800 mb-2">用語説明</h4>
+    <ul class="text-sm text-blue-700 space-y-1">
+      <li><strong>売上</strong>: その月に日報がある案件の受注金額合計</li>
+      <li><strong>変動費</strong>: 労務費 + 外注費 + 材料費 + 経費（日報ベース）</li>
+      <li><strong>固定費</strong>: 減価償却、車両費、保険料など（毎月設定）</li>
+      <li><strong>粗利</strong>: 売上 - 原価合計</li>
+    </ul>
+  </div>
+</div>

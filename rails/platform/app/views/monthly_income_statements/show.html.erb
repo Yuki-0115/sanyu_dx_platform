@@ -1,0 +1,264 @@
+<div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= @year %>年<%= @month %>月 月次損益計算書</h1>
+      <p class="text-sm text-gray-500">管理会計形式（出来高ベースの売上 - 売上原価 - 販管費 = 営業利益）</p>
+    </div>
+    <div class="flex space-x-2">
+      <%= link_to "出来高入力", monthly_progresses_path(year: @year, month: @month),
+          class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+      <%= link_to "販管費を編集", monthly_admin_expenses_path(year: @year, month: @month),
+          class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+      <%= link_to "工事部門損益", monthly_profit_loss_path(year: @year, month: @month),
+          class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    </div>
+  </div>
+
+  <%# 月移動ナビゲーション %>
+  <div class="flex items-center justify-between mb-6 bg-gray-50 rounded-lg p-3">
+    <% prev_date = Date.new(@year, @month, 1).prev_month %>
+    <% next_date = Date.new(@year, @month, 1).next_month %>
+    <%= link_to monthly_income_statement_path(year: prev_date.year, month: prev_date.month),
+        class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      <%= prev_date.month %>月
+    <% end %>
+    <span class="font-medium text-gray-900"><%= @year %>年<%= @month %>月</span>
+    <%= link_to monthly_income_statement_path(year: next_date.year, month: next_date.month),
+        class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+      <%= next_date.month %>月
+      <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    <% end %>
+  </div>
+
+  <%# 損益計算書（会計形式） %>
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <table class="min-w-full">
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="px-6 py-3 text-left text-sm font-medium text-gray-700" colspan="2">勘定科目</th>
+          <th class="px-6 py-3 text-right text-sm font-medium text-gray-700">金額</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <%# 売上高（出来高ベース） %>
+        <tr class="bg-blue-50">
+          <td class="px-6 py-4 text-sm font-bold text-blue-900" colspan="2">
+            売上高（出来高）
+            <% unless @progress_entered %>
+              <span class="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs">出来高未入力・請求ベース</span>
+            <% end %>
+          </td>
+          <td class="px-6 py-4 text-right text-lg font-bold text-blue-900">
+            <%= number_to_currency(@revenue, unit: "¥", precision: 0) %>
+          </td>
+        </tr>
+        <% if @progress_entered %>
+          <tr>
+            <td class="px-6 py-2"></td>
+            <td class="px-6 py-2 text-sm text-gray-500">うち請求済（税抜）</td>
+            <td class="px-6 py-2 text-right text-sm text-gray-600">
+              <%= number_to_currency(@invoiced_amount, unit: "¥", precision: 0) %>
+            </td>
+          </tr>
+          <% if @unbilled_amount > 0 %>
+            <tr>
+              <td class="px-6 py-2"></td>
+              <td class="px-6 py-2 text-sm text-orange-600">未請求出来高</td>
+              <td class="px-6 py-2 text-right text-sm font-medium text-orange-600">
+                <%= number_to_currency(@unbilled_amount, unit: "¥", precision: 0) %>
+              </td>
+            </tr>
+          <% end %>
+        <% end %>
+
+        <%# 売上原価 %>
+        <tr class="bg-orange-50">
+          <td class="px-6 py-4 text-sm font-bold text-orange-900" colspan="2">売上原価</td>
+          <td class="px-6 py-4 text-right text-lg font-bold text-orange-900">
+            <%= number_to_currency(@cost_of_sales[:total], unit: "¥", precision: 0) %>
+          </td>
+        </tr>
+        <tr>
+          <td class="px-6 py-2"></td>
+          <td class="px-6 py-2 text-sm text-gray-600">
+            労務費
+            <% if @cost_of_sales_details[:labor_confirmed] %>
+              <span class="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs">確定</span>
+            <% end %>
+          </td>
+          <td class="px-6 py-2 text-right text-sm text-gray-900">
+            <%= number_to_currency(@cost_of_sales[:labor], unit: "¥", precision: 0) %>
+          </td>
+        </tr>
+        <tr>
+          <td class="px-6 py-2"></td>
+          <td class="px-6 py-2 text-sm text-gray-600">
+            外注費
+            <% if @cost_of_sales_details[:outsourcing_confirmed] %>
+              <span class="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs">確定</span>
+            <% end %>
+          </td>
+          <td class="px-6 py-2 text-right text-sm text-gray-900">
+            <%= number_to_currency(@cost_of_sales[:outsourcing], unit: "¥", precision: 0) %>
+          </td>
+        </tr>
+        <tr>
+          <td class="px-6 py-2"></td>
+          <td class="px-6 py-2 text-sm text-gray-600">
+            材料費
+            <% if @cost_of_sales_details[:material_confirmed] %>
+              <span class="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs">確認済</span>
+            <% end %>
+          </td>
+          <td class="px-6 py-2 text-right text-sm text-gray-900">
+            <%= number_to_currency(@cost_of_sales[:material], unit: "¥", precision: 0) %>
+          </td>
+        </tr>
+        <tr>
+          <td class="px-6 py-2"></td>
+          <td class="px-6 py-2 text-sm text-gray-600">
+            経費
+            <% if @cost_of_sales_details[:expense_confirmed] %>
+              <span class="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs">確認済</span>
+            <% end %>
+          </td>
+          <td class="px-6 py-2 text-right text-sm text-gray-900">
+            <%= number_to_currency(@cost_of_sales[:expense], unit: "¥", precision: 0) %>
+          </td>
+        </tr>
+        <tr>
+          <td class="px-6 py-2"></td>
+          <td class="px-6 py-2 text-sm text-gray-600">現場固定費</td>
+          <td class="px-6 py-2 text-right text-sm text-gray-900">
+            <%= number_to_currency(@cost_of_sales[:fixed], unit: "¥", precision: 0) %>
+          </td>
+        </tr>
+
+        <%# 売上総利益 %>
+        <tr class="bg-green-100 border-t-2 border-green-300">
+          <td class="px-6 py-4 text-sm font-bold text-green-900" colspan="2">売上総利益（粗利）</td>
+          <td class="px-6 py-4 text-right">
+            <span class="text-lg font-bold <%= @gross_profit >= 0 ? 'text-green-900' : 'text-red-600' %>">
+              <%= number_to_currency(@gross_profit, unit: "¥", precision: 0) %>
+            </span>
+            <span class="ml-2 text-sm <%= @gross_profit_rate >= 0 ? 'text-green-700' : 'text-red-500' %>">
+              (<%= @gross_profit_rate %>%)
+            </span>
+          </td>
+        </tr>
+
+        <%# 販売費及び一般管理費 %>
+        <tr class="bg-purple-50">
+          <td class="px-6 py-4 text-sm font-bold text-purple-900" colspan="2">
+            販売費及び一般管理費
+            <%= link_to "編集", monthly_admin_expenses_path(year: @year, month: @month),
+                class: "ml-2 text-xs text-purple-600 hover:underline" %>
+          </td>
+          <td class="px-6 py-4 text-right text-lg font-bold text-purple-900">
+            <%= number_to_currency(@admin_expenses_total, unit: "¥", precision: 0) %>
+          </td>
+        </tr>
+        <% all_categories = @admin_expenses.map(&:category).uniq %>
+        <% sorted_categories = MonthlyAdminExpense::CATEGORIES.keys.select { |k| all_categories.include?(k) } +
+                               (all_categories - MonthlyAdminExpense::CATEGORIES.keys) %>
+        <% sorted_categories.each do |category_key| %>
+          <% category_expenses = @admin_expenses.select { |e| e.category == category_key } %>
+          <% if category_expenses.any? %>
+            <% category_total = category_expenses.sum(&:amount) %>
+            <% category_name = MonthlyAdminExpense::CATEGORIES[category_key] || category_key %>
+            <tr class="bg-purple-50/50">
+              <td class="px-6 py-2"></td>
+              <td class="px-6 py-2 text-sm font-medium text-purple-800"><%= category_name %></td>
+              <td class="px-6 py-2 text-right text-sm font-medium text-purple-800">
+                <%= number_to_currency(category_total, unit: "¥", precision: 0) %>
+              </td>
+            </tr>
+            <% category_expenses.each do |expense| %>
+              <tr>
+                <td class="px-6 py-1"></td>
+                <td class="px-6 py-1 pl-10 text-sm text-gray-600">
+                  <%= expense.name %>
+                  <% if expense.description.present? %>
+                    <span class="text-xs text-gray-400 ml-1">(<%= expense.description %>)</span>
+                  <% end %>
+                </td>
+                <td class="px-6 py-1 text-right text-sm text-gray-900">
+                  <%= number_to_currency(expense.amount, unit: "¥", precision: 0) %>
+                </td>
+              </tr>
+            <% end %>
+          <% end %>
+        <% end %>
+
+        <%# 営業利益 %>
+        <tr class="border-t-4 border-gray-400 <%= @operating_profit >= 0 ? 'bg-green-200' : 'bg-red-100' %>">
+          <td class="px-6 py-5 text-base font-bold <%= @operating_profit >= 0 ? 'text-green-900' : 'text-red-900' %>" colspan="2">
+            営業利益
+          </td>
+          <td class="px-6 py-5 text-right">
+            <span class="text-2xl font-bold <%= @operating_profit >= 0 ? 'text-green-900' : 'text-red-600' %>">
+              <%= number_to_currency(@operating_profit, unit: "¥", precision: 0) %>
+            </span>
+            <span class="ml-2 text-sm <%= @operating_profit_rate >= 0 ? 'text-green-700' : 'text-red-500' %>">
+              (<%= @operating_profit_rate %>%)
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <%# 販管費未入力の警告 %>
+  <% if @admin_expenses_total == 0 %>
+    <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span class="text-sm text-yellow-800">
+          販管費が未入力です。
+          <%= link_to "販管費を入力する", monthly_admin_expenses_path(year: @year, month: @month),
+              class: "underline hover:text-yellow-900" %>
+          または
+          <%= button_to "前月からコピー", copy_from_previous_monthly_admin_expenses_path(year: @year, month: @month),
+              method: :post,
+              class: "underline hover:text-yellow-900 cursor-pointer" %>
+        </span>
+      </div>
+    </div>
+  <% end %>
+
+  <%# 出来高未入力の警告 %>
+  <% unless @progress_entered %>
+    <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span class="text-sm text-yellow-800">
+          出来高が未入力のため、請求ベースで売上を表示しています。
+          <%= link_to "出来高を入力する", monthly_progresses_path(year: @year, month: @month),
+              class: "underline hover:text-yellow-900" %>
+        </span>
+      </div>
+    </div>
+  <% end %>
+
+  <%# 説明 %>
+  <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <h4 class="text-sm font-medium text-blue-800 mb-2">この画面について</h4>
+    <ul class="text-sm text-blue-700 space-y-1">
+      <li><strong>売上高（出来高）</strong>: 当月の出来高金額（未請求分を含む）</li>
+      <li><strong>売上原価</strong>: 労務費・外注費・材料費・経費・現場固定費の合計</li>
+      <li><strong>売上総利益</strong>: 売上高 - 売上原価（粗利）</li>
+      <li><strong>販管費</strong>: 役員報酬・事務員給与・事務所家賃など本社経費</li>
+      <li><strong>営業利益</strong>: 売上総利益 - 販管費（会社全体の利益）</li>
+    </ul>
+    <p class="mt-2 text-xs text-blue-600">※ 出来高未入力時は請求ベースで表示されます</p>
+  </div>
+</div>

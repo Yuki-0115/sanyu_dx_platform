@@ -449,6 +449,127 @@
                 現場台帳を開く
               <% end %>
             </div>
+
+            <%# 出来高管理（施工中案件のみ表示） %>
+            <% if @project.wip_target? %>
+              <div class="bg-white shadow rounded-lg p-6 mt-6 border-l-4 border-yellow-400">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">出来高管理</h3>
+
+                <%# サマリー表示 %>
+                <dl class="grid grid-cols-2 gap-3 text-sm mb-4">
+                  <div class="bg-gray-50 rounded p-2">
+                    <dt class="text-xs text-gray-500">受注金額</dt>
+                    <dd class="font-medium"><%= number_to_currency(@project.order_amount || 0, unit: "¥", precision: 0) %></dd>
+                  </div>
+                  <div class="bg-blue-50 rounded p-2">
+                    <dt class="text-xs text-blue-600">累計出来高</dt>
+                    <dd class="font-bold text-blue-700"><%= number_to_currency(@project.cumulative_progress_amount, unit: "¥", precision: 0) %></dd>
+                  </div>
+                  <div class="bg-green-50 rounded p-2">
+                    <dt class="text-xs text-green-600">累計請求額</dt>
+                    <dd class="font-medium text-green-700"><%= number_to_currency(@project.cumulative_invoiced_amount, unit: "¥", precision: 0) %></dd>
+                  </div>
+                  <div class="bg-yellow-50 rounded p-2">
+                    <dt class="text-xs text-yellow-700">仕掛かり</dt>
+                    <dd class="font-bold text-yellow-800"><%= number_to_currency(@project.wip_amount, unit: "¥", precision: 0) %></dd>
+                  </div>
+                </dl>
+
+                <%# 進捗バー %>
+                <% if @project.order_amount && @project.order_amount > 0 %>
+                  <div class="mb-4">
+                    <div class="flex justify-between text-xs text-gray-500 mb-1">
+                      <span>進捗率</span>
+                      <span><%= @project.progress_rate || 0 %>%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                      <div class="bg-blue-600 h-2 rounded-full" style="width: <%= [(@project.progress_rate || 0), 100].min %>%"></div>
+                    </div>
+                  </div>
+                <% end %>
+
+                <%# 月次出来高入力フォーム %>
+                <div class="border-t border-gray-200 pt-4 mt-4">
+                  <h4 class="text-sm font-medium text-gray-700 mb-3">月次出来高を入力</h4>
+
+                  <% current_date = Date.current %>
+                  <% current_year = current_date.year %>
+                  <% current_month = current_date.month %>
+                  <% current_progress = MonthlyProgress.find_by(project_id: @project.id, year: current_year, month: current_month) %>
+
+                  <%= form_with url: update_project_progress_path(@project), method: :patch, class: "space-y-3" do |f| %>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-600">年</label>
+                        <%= select_tag :year,
+                            options_for_select((current_year - 1..current_year + 1).map { |y| [y, y] }, current_year),
+                            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" %>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-600">月</label>
+                        <%= select_tag :month,
+                            options_for_select((1..12).map { |m| ["#{m}月", m] }, current_month),
+                            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" %>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-medium text-gray-600">出来高金額</label>
+                      <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span class="text-gray-500 sm:text-sm">¥</span>
+                        </div>
+                        <%= text_field_tag :progress_amount,
+                            current_progress&.progress_amount&.to_i.presence,
+                            class: "block w-full pl-8 pr-3 py-2 text-right rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+                            placeholder: "0",
+                            inputmode: "numeric" %>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-medium text-gray-600">備考</label>
+                      <%= text_field_tag :note,
+                          current_progress&.note,
+                          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+                          placeholder: "材料費など" %>
+                    </div>
+
+                    <div class="flex justify-end">
+                      <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer">
+                        保存
+                      </button>
+                    </div>
+                  <% end %>
+                </div>
+
+                <%# 出来高履歴 %>
+                <% past_progresses = @project.monthly_progresses.order(year: :desc, month: :desc).limit(6) %>
+                <% if past_progresses.any? %>
+                  <div class="mt-4 pt-4 border-t border-gray-200">
+                    <h4 class="text-xs font-medium text-gray-600 mb-2">出来高履歴</h4>
+                    <table class="min-w-full text-xs">
+                      <thead>
+                        <tr class="text-gray-500">
+                          <th class="text-left py-1">年月</th>
+                          <th class="text-right py-1">出来高</th>
+                          <th class="text-left py-1 pl-3">備考</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-100">
+                        <% past_progresses.each do |progress| %>
+                          <tr>
+                            <td class="py-1"><%= progress.year %>/<%= progress.month %></td>
+                            <td class="text-right py-1"><%= number_to_currency(progress.progress_amount, unit: "¥", precision: 0) %></td>
+                            <td class="py-1 pl-3 text-gray-500 truncate max-w-[100px]"><%= progress.note.presence || "-" %></td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
           <% end %>
 
           <% if current_employee.can_access?(:daily_reports) %>

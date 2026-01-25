@@ -1,0 +1,134 @@
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= @fiscal_year %>年度 損益サマリー</h1>
+      <p class="text-sm text-gray-500"><%= @fiscal_year %>年10月〜<%= @fiscal_year + 1 %>年9月（9月決算）</p>
+    </div>
+    <div class="flex space-x-2">
+      <%= link_to "月次一覧", monthly_profit_losses_path,
+          class: "inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+      <%= link_to "推移表", trend_profit_losses_path(fiscal_year: @fiscal_year),
+          class: "inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+      <%= link_to "対比表", comparison_profit_losses_path(fiscal_year: @fiscal_year),
+          class: "inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+    </div>
+  </div>
+
+  <%# 年度選択 %>
+  <div class="mb-6 flex items-center space-x-4">
+    <label class="text-sm font-medium text-gray-700">年度選択:</label>
+    <div class="flex space-x-2">
+      <% @fiscal_years.each do |fy| %>
+        <%= link_to "#{fy}年度",
+            fiscal_year_profit_losses_path(fiscal_year: fy),
+            class: "px-3 py-1 rounded-md text-sm #{fy == @fiscal_year ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# 年度合計サマリー %>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4">
+      <dt class="text-sm font-medium text-gray-500">年間売上</dt>
+      <dd class="mt-1 text-2xl font-bold text-gray-900">
+        <%= number_to_currency(@yearly_total[:revenue], unit: "¥", precision: 0) %>
+      </dd>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <dt class="text-sm font-medium text-gray-500">年間原価</dt>
+      <dd class="mt-1 text-2xl font-bold text-gray-900">
+        <%= number_to_currency(@yearly_total[:total_cost], unit: "¥", precision: 0) %>
+      </dd>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <dt class="text-sm font-medium text-gray-500">年間粗利</dt>
+      <dd class="mt-1 text-2xl font-bold <%= @yearly_total[:gross_profit] >= 0 ? 'text-green-600' : 'text-red-600' %>">
+        <%= number_to_currency(@yearly_total[:gross_profit], unit: "¥", precision: 0) %>
+      </dd>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <dt class="text-sm font-medium text-gray-500">年間利益率</dt>
+      <dd class="mt-1 text-2xl font-bold <%= @yearly_total[:profit_rate] >= 0 ? 'text-green-600' : 'text-red-600' %>">
+        <%= @yearly_total[:profit_rate] %>%
+      </dd>
+    </div>
+  </div>
+
+  <%# 月別テーブル %>
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+      <h3 class="text-lg font-medium text-gray-900">月別損益</h3>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">月</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">売上</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">変動費</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">固定費</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">原価計</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">粗利</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">利益率</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% @months.each do |m| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                <%= m[:full_label] %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right text-gray-900">
+                <%= number_to_currency(m[:revenue], unit: "¥", precision: 0) %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right text-gray-600">
+                <%= number_to_currency(m[:variable_cost], unit: "¥", precision: 0) %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right text-gray-600">
+                <%= number_to_currency(m[:fixed_cost], unit: "¥", precision: 0) %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right text-gray-900">
+                <%= number_to_currency(m[:total_cost], unit: "¥", precision: 0) %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right font-medium <%= m[:gross_profit] >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                <%= number_to_currency(m[:gross_profit], unit: "¥", precision: 0) %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right <%= m[:profit_rate] >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                <%= m[:profit_rate] %>%
+              </td>
+              <td class="px-4 py-3 text-sm text-center">
+                <%= link_to "詳細", monthly_profit_loss_path(year: m[:year], month: m[:month]),
+                    class: "text-blue-600 hover:underline" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot class="bg-gray-100">
+          <tr class="font-bold">
+            <td class="px-4 py-3 text-sm text-gray-900">年度合計</td>
+            <td class="px-4 py-3 text-sm text-right text-gray-900">
+              <%= number_to_currency(@yearly_total[:revenue], unit: "¥", precision: 0) %>
+            </td>
+            <td class="px-4 py-3 text-sm text-right text-gray-900">
+              <%= number_to_currency(@yearly_total[:variable_cost], unit: "¥", precision: 0) %>
+            </td>
+            <td class="px-4 py-3 text-sm text-right text-gray-900">
+              <%= number_to_currency(@yearly_total[:fixed_cost], unit: "¥", precision: 0) %>
+            </td>
+            <td class="px-4 py-3 text-sm text-right text-gray-900">
+              <%= number_to_currency(@yearly_total[:total_cost], unit: "¥", precision: 0) %>
+            </td>
+            <td class="px-4 py-3 text-sm text-right <%= @yearly_total[:gross_profit] >= 0 ? 'text-green-600' : 'text-red-600' %>">
+              <%= number_to_currency(@yearly_total[:gross_profit], unit: "¥", precision: 0) %>
+            </td>
+            <td class="px-4 py-3 text-sm text-right <%= @yearly_total[:profit_rate] >= 0 ? 'text-green-600' : 'text-red-600' %>">
+              <%= @yearly_total[:profit_rate] %>%
+            </td>
+            <td class="px-4 py-3"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>

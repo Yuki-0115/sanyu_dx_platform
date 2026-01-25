@@ -1,0 +1,75 @@
+<tr id="outsourcing_cost_<%= partner.id %>_<%= project.id %>" class="hover:bg-gray-50 <%= cost ? 'bg-green-50' : '' %>">
+  <td class="px-4 py-3">
+    <div class="flex items-center">
+      <% if cost %>
+        <svg class="w-5 h-5 text-green-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      <% else %>
+        <svg class="w-5 h-5 text-gray-300 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      <% end %>
+      <div>
+        <div class="text-sm font-medium text-gray-900"><%= project.name %></div>
+        <div class="text-xs text-gray-500"><%= project.client&.name %></div>
+      </div>
+    </div>
+  </td>
+  <td class="px-4 py-3 text-right">
+    <% if estimated %>
+      <div class="text-sm text-gray-600"><%= number_to_currency(estimated[:total], unit: "¥", precision: 0) %></div>
+      <div class="text-xs text-gray-400">
+        人工: <%= number_to_currency(estimated[:man_days], unit: "", precision: 0) %> /
+        請負: <%= number_to_currency(estimated[:contract], unit: "", precision: 0) %>
+      </div>
+    <% else %>
+      <span class="text-sm text-gray-400">-</span>
+    <% end %>
+  </td>
+  <td class="px-4 py-3">
+    <%= form_with url: confirm_monthly_outsourcing_cost_path(year: year, month: month),
+        method: :post,
+        class: "flex items-center space-x-2",
+        data: { turbo_frame: "_top" } do %>
+      <%= hidden_field_tag :partner_id, partner.id %>
+      <%= hidden_field_tag :project_id, project.id %>
+      <div class="relative rounded-md shadow-sm flex-1">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <span class="text-gray-500 sm:text-sm">¥</span>
+        </div>
+        <%= text_field_tag :amount,
+            cost&.amount&.to_i,
+            class: "block w-full pl-8 pr-3 py-2 text-right rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm #{cost ? 'bg-green-50 border-green-300' : ''}",
+            placeholder: estimated ? estimated[:total].to_s : "0",
+            inputmode: "numeric" %>
+      </div>
+      <%= text_field_tag :note,
+          cost&.note,
+          class: "w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+          placeholder: "備考" %>
+      <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white <%= cost ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700' %> cursor-pointer">
+        <% if cost %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        <% else %>
+          確定
+        <% end %>
+      </button>
+    <% end %>
+  </td>
+  <td class="px-4 py-1">
+    <% if cost %>
+      <%= button_to unconfirm_monthly_outsourcing_cost_path(year: year, month: month, partner_id: partner.id, project_id: project.id),
+          method: :delete,
+          class: "text-gray-400 hover:text-red-600 cursor-pointer",
+          title: "確定解除",
+          data: { turbo_confirm: "確定を解除しますか？" } do %>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      <% end %>
+    <% end %>
+  </td>
+</tr>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_25_110001) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_25_200002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -377,8 +377,91 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_25_110001) do
     t.string "status", default: "draft"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "progress_year", comment: "対象年"
+    t.integer "progress_month", comment: "対象月"
+    t.index ["progress_year", "progress_month"], name: "index_invoices_on_progress_year_and_progress_month"
     t.index ["project_id"], name: "index_invoices_on_project_id"
     t.index ["status"], name: "index_invoices_on_status"
+  end
+
+  create_table "monthly_admin_expenses", force: :cascade do |t|
+    t.integer "year", null: false, comment: "年"
+    t.integer "month", null: false, comment: "月"
+    t.string "category", null: false, comment: "カテゴリ"
+    t.string "name", null: false, comment: "項目名"
+    t.decimal "amount", precision: 12, default: "0", null: false, comment: "金額"
+    t.text "description", comment: "備考"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["year", "month", "category"], name: "index_monthly_admin_expenses_on_year_and_month_and_category"
+    t.index ["year", "month"], name: "index_monthly_admin_expenses_on_year_and_month"
+  end
+
+  create_table "monthly_cost_confirmations", force: :cascade do |t|
+    t.integer "year", null: false, comment: "年"
+    t.integer "month", null: false, comment: "月"
+    t.string "cost_type", null: false, comment: "費用種別(material/expense)"
+    t.bigint "confirmed_by_id", comment: "確認者"
+    t.datetime "confirmed_at", comment: "確認日時"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["confirmed_by_id"], name: "index_monthly_cost_confirmations_on_confirmed_by_id"
+    t.index ["year", "month", "cost_type"], name: "idx_monthly_cost_confirmations_unique", unique: true
+  end
+
+  create_table "monthly_fixed_costs", force: :cascade do |t|
+    t.integer "year", null: false
+    t.integer "month", null: false
+    t.string "name", null: false
+    t.string "category", default: "other", null: false
+    t.decimal "amount", precision: 15, default: "0", null: false
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["year", "month", "category"], name: "index_monthly_fixed_costs_on_year_and_month_and_category"
+    t.index ["year", "month"], name: "index_monthly_fixed_costs_on_year_and_month"
+  end
+
+  create_table "monthly_outsourcing_costs", force: :cascade do |t|
+    t.integer "year", null: false, comment: "年"
+    t.integer "month", null: false, comment: "月"
+    t.bigint "partner_id", null: false, comment: "協力会社"
+    t.bigint "project_id", null: false, comment: "案件"
+    t.decimal "amount", precision: 12, default: "0", comment: "確定金額"
+    t.text "note", comment: "備考"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["partner_id"], name: "index_monthly_outsourcing_costs_on_partner_id"
+    t.index ["project_id"], name: "index_monthly_outsourcing_costs_on_project_id"
+    t.index ["year", "month", "partner_id", "project_id"], name: "idx_monthly_outsourcing_costs_unique", unique: true
+    t.index ["year", "month"], name: "index_monthly_outsourcing_costs_on_year_and_month"
+  end
+
+  create_table "monthly_progresses", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.integer "year", null: false
+    t.integer "month", null: false
+    t.decimal "progress_amount", precision: 15, default: "0", comment: "月次出来高金額"
+    t.decimal "progress_cost", precision: 15, default: "0", comment: "月次出来高原価"
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id", "year", "month"], name: "index_monthly_progresses_on_project_id_and_year_and_month", unique: true
+    t.index ["project_id"], name: "index_monthly_progresses_on_project_id"
+    t.index ["year", "month"], name: "index_monthly_progresses_on_year_and_month"
+  end
+
+  create_table "monthly_salaries", force: :cascade do |t|
+    t.bigint "employee_id", null: false
+    t.integer "year", null: false
+    t.integer "month", null: false
+    t.decimal "total_amount", precision: 15, default: "0", null: false
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id", "year", "month"], name: "index_monthly_salaries_on_employee_id_and_year_and_month", unique: true
+    t.index ["employee_id"], name: "index_monthly_salaries_on_employee_id"
+    t.index ["year", "month"], name: "index_monthly_salaries_on_year_and_month"
   end
 
   create_table "offsets", force: :cascade do |t|
@@ -460,6 +543,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_25_110001) do
     t.index ["project_id", "category"], name: "index_project_documents_on_project_id_and_category"
     t.index ["project_id"], name: "index_project_documents_on_project_id"
     t.index ["uploaded_by_id"], name: "index_project_documents_on_uploaded_by_id"
+  end
+
+  create_table "project_monthly_progresses", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.integer "year", null: false
+    t.integer "month", null: false
+    t.decimal "progress_amount", precision: 12, default: "0"
+    t.string "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id", "year", "month"], name: "idx_project_monthly_progress_unique", unique: true
+    t.index ["project_id"], name: "index_project_monthly_progresses_on_project_id"
   end
 
   create_table "projects", force: :cascade do |t|
@@ -573,6 +668,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_25_110001) do
   add_foreign_key "expenses", "projects"
   add_foreign_key "invoice_items", "invoices"
   add_foreign_key "invoices", "projects"
+  add_foreign_key "monthly_cost_confirmations", "employees", column: "confirmed_by_id"
+  add_foreign_key "monthly_outsourcing_costs", "partners"
+  add_foreign_key "monthly_outsourcing_costs", "projects"
+  add_foreign_key "monthly_progresses", "projects"
+  add_foreign_key "monthly_salaries", "employees"
   add_foreign_key "offsets", "partners"
   add_foreign_key "outsourcing_entries", "daily_reports"
   add_foreign_key "outsourcing_entries", "partners"
@@ -581,6 +681,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_25_110001) do
   add_foreign_key "project_assignments", "projects"
   add_foreign_key "project_documents", "employees", column: "uploaded_by_id"
   add_foreign_key "project_documents", "projects"
+  add_foreign_key "project_monthly_progresses", "projects"
   add_foreign_key "projects", "clients"
   add_foreign_key "safety_files", "employees", column: "uploaded_by_id"
   add_foreign_key "safety_files", "safety_folders"

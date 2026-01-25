@@ -1,0 +1,102 @@
+<div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= @year %>年<%= @month %>月 販売費及び一般管理費</h1>
+      <p class="text-sm text-gray-500">役員報酬、事務員給与、事務所家賃などの販管費を管理</p>
+    </div>
+    <div class="flex space-x-2">
+      <%= link_to "追加", new_monthly_admin_expense_path(year: @year, month: @month),
+          class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+      <%= link_to "月次損益計算書", monthly_income_statement_path(year: @year, month: @month),
+          class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    </div>
+  </div>
+
+  <%# 月移動ナビゲーション %>
+  <div class="flex items-center justify-between mb-4 bg-gray-50 rounded-lg p-3">
+    <% prev_date = Date.new(@year, @month, 1).prev_month %>
+    <% next_date = Date.new(@year, @month, 1).next_month %>
+    <%= link_to monthly_admin_expenses_path(year: prev_date.year, month: prev_date.month),
+        class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      <%= prev_date.month %>月
+    <% end %>
+    <span class="font-medium text-gray-900"><%= @year %>年<%= @month %>月</span>
+    <%= link_to monthly_admin_expenses_path(year: next_date.year, month: next_date.month),
+        class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+      <%= next_date.month %>月
+      <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    <% end %>
+  </div>
+
+  <% if @admin_expenses.any? %>
+    <%# カテゴリ別表示（デフォルト＋カスタム） %>
+    <% all_categories = MonthlyAdminExpense::CATEGORIES.merge(
+         @grouped_expenses.keys.reject { |k| MonthlyAdminExpense::CATEGORIES.key?(k) }.index_with { |k| k }
+       ) %>
+    <% all_categories.each do |category_key, category_name| %>
+      <% expenses_in_category = @grouped_expenses[category_key] %>
+      <% if expenses_in_category.present? %>
+        <div class="bg-white shadow rounded-lg mb-4 overflow-hidden">
+          <div class="px-4 py-3 bg-purple-50 border-b border-purple-200">
+            <div class="flex justify-between items-center">
+              <h3 class="text-sm font-medium text-purple-900"><%= category_name %></h3>
+              <span class="text-sm font-medium text-purple-900">
+                <%= number_to_currency(expenses_in_category.sum(&:amount), unit: "¥", precision: 0) %>
+              </span>
+            </div>
+          </div>
+          <table class="min-w-full">
+            <tbody class="divide-y divide-gray-100">
+              <% expenses_in_category.each do |expense| %>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-4 py-3 text-sm text-gray-900"><%= expense.name %></td>
+                  <td class="px-4 py-3 text-sm text-gray-500"><%= expense.description %></td>
+                  <td class="px-4 py-3 text-sm text-right text-gray-900 w-32">
+                    <%= number_to_currency(expense.amount, unit: "¥", precision: 0) %>
+                  </td>
+                  <td class="px-4 py-3 text-right text-sm w-24 space-x-2">
+                    <%= link_to "編集", edit_monthly_admin_expense_path(year: @year, month: @month, id: expense.id),
+                        class: "text-blue-600 hover:text-blue-800" %>
+                    <%= link_to "削除", monthly_admin_expense_path(year: @year, month: @month, id: expense.id),
+                        data: { turbo_method: :delete, turbo_confirm: "#{expense.name}を削除しますか？" },
+                        class: "text-red-600 hover:text-red-800" %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    <% end %>
+
+    <%# 合計 %>
+    <div class="bg-purple-100 border border-purple-300 rounded-lg p-4 mt-6">
+      <div class="flex justify-between items-center">
+        <span class="text-lg font-medium text-purple-900">販管費 合計（<%= @admin_expenses.size %>件）</span>
+        <span class="text-2xl font-bold text-purple-900">
+          <%= number_to_currency(@total, unit: "¥", precision: 0) %>
+        </span>
+      </div>
+    </div>
+
+    <div class="mt-4 text-right">
+      <span class="text-sm text-gray-500">前月のデータをコピーする場合は先にこの月のデータを削除してください</span>
+    </div>
+  <% else %>
+    <div class="bg-white shadow rounded-lg p-6 text-center">
+      <p class="text-gray-500 mb-4">この月にはまだ販管費が登録されていません</p>
+      <div class="flex justify-center space-x-3">
+        <%= link_to "販管費を追加", new_monthly_admin_expense_path(year: @year, month: @month),
+            class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+        <%= button_to "前月からコピー", copy_from_previous_monthly_admin_expenses_path(year: @year, month: @month),
+            method: :post,
+            class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer" %>
+      </div>
+    </div>
+  <% end %>
+</div>

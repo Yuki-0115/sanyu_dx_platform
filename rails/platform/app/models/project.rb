@@ -33,6 +33,7 @@ class Project < ApplicationRecord
   has_many :assigned_employees, through: :project_assignments, source: :employee
   has_many :safety_folders, dependent: :nullify
   has_many :project_documents, dependent: :destroy
+  has_many :monthly_progresses, class_name: "ProjectMonthlyProgress", dependent: :destroy
 
   # Validations
   validates :code, uniqueness: true
@@ -331,6 +332,37 @@ class Project < ApplicationRecord
       expense: (budget.expense_cost || 0) - site_ledger_expense_cost,
       total: (budget.total_cost || 0) - site_ledger_total_cost
     }
+  end
+
+  # ========================================
+  # 出来高・仕掛かり管理
+  # ========================================
+
+  # 累計出来高（月次出来高の合計）
+  def cumulative_progress_amount
+    monthly_progresses.sum(:progress_amount).to_i
+  end
+
+  # 累計請求額（発行済み請求書の合計）
+  def cumulative_invoiced_amount
+    invoices.where(status: %w[issued paid]).sum(:total_amount).to_i
+  end
+
+  # 仕掛かり金額（累計出来高 - 累計請求額）
+  def wip_amount
+    cumulative_progress_amount - cumulative_invoiced_amount
+  end
+
+  # 進捗率（累計出来高 / 受注金額）
+  def progress_rate
+    return nil unless order_amount && order_amount.positive?
+
+    ((cumulative_progress_amount.to_d / order_amount) * 100).round(1)
+  end
+
+  # 仕掛かり対象か（施工中で請求前の案件）
+  def wip_target?
+    %w[ordered preparing in_progress].include?(status)
   end
 
   private

@@ -1,0 +1,80 @@
+<%= form_with model: admin_expense, url: (admin_expense.persisted? ? monthly_admin_expense_path(year: @year, month: @month, id: admin_expense.id) : monthly_admin_expenses_path(year: @year, month: @month)), class: "space-y-6" do |f| %>
+  <% if admin_expense.errors.any? %>
+    <div class="rounded-md bg-red-50 p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">入力エラーがあります</h3>
+          <ul class="mt-2 list-disc list-inside text-sm text-red-700">
+            <% admin_expense.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="bg-white border border-gray-200 rounded-lg p-6 space-y-6">
+    <div class="bg-gray-50 rounded-lg p-3 mb-4">
+      <p class="text-sm text-gray-600">対象月: <strong><%= @year %>年<%= @month %>月</strong></p>
+    </div>
+
+    <div>
+      <%= f.label :category, "カテゴリ", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.select :category, MonthlyAdminExpense::CATEGORIES.map { |k, v| [v, k] },
+          { include_blank: "選択 または 下に新規入力" },
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+          id: "category_select" %>
+      <div class="mt-2">
+        <label class="text-xs text-gray-500">新しいカテゴリを追加する場合:</label>
+        <%= text_field_tag :custom_category, nil,
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+            placeholder: "例: 交際費、旅費交通費、保険料 など",
+            id: "custom_category" %>
+      </div>
+      <p class="mt-1 text-xs text-gray-400">※上で選択した場合はそちらが優先されます</p>
+    </div>
+
+    <div>
+      <%= f.label :name, "費目名", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :name,
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+          placeholder: "例: 代表取締役報酬、NTT電話代、○○ビル家賃 など",
+          required: true %>
+    </div>
+
+    <div>
+      <%= f.label :amount, "金額", class: "block text-sm font-medium text-gray-700" %>
+      <div class="relative rounded-md shadow-sm mt-1">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <span class="text-gray-500 sm:text-sm">¥</span>
+        </div>
+        <%= f.text_field :amount,
+            class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm text-right",
+            placeholder: "500000",
+            inputmode: "numeric",
+            required: true %>
+      </div>
+    </div>
+
+    <div>
+      <%= f.label :description, "備考（任意）", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :description,
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+          placeholder: "補足情報があれば入力" %>
+    </div>
+  </div>
+
+  <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+    <%= link_to "キャンセル", monthly_admin_expenses_path(year: @year, month: @month),
+        class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer">
+      <%= admin_expense.persisted? ? "更新" : "追加" %>
+    </button>
+  </div>
+<% end %>

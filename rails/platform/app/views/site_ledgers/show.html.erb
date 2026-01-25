@@ -19,6 +19,23 @@
   </div>
 
   <%# 計算条件（人工単価） %>
+  <% unless @budget %>
+    <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-4">
+      <div class="flex items-start">
+        <svg class="w-5 h-5 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <div>
+          <p class="text-sm font-medium text-yellow-800">実行予算が未設定です</p>
+          <p class="text-xs text-yellow-700 mt-1">
+            人工単価がデフォルト値（¥18,000）で計算されています。正確な原価計算のために
+            <%= link_to "実行予算を作成", new_project_budget_path(@project), class: "underline font-medium" %>
+            してください。
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
   <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-sm font-medium text-blue-800">人工単価設定</h3>
@@ -34,10 +51,16 @@
       <div class="bg-white rounded p-2">
         <span class="text-gray-500">正社員:</span>
         <strong class="ml-1"><%= number_to_currency(@project.regular_labor_unit_price, unit: "¥", precision: 0) %></strong>
+        <% unless @budget&.regular_labor_unit_price %>
+          <span class="text-xs text-yellow-600 ml-1">(デフォルト)</span>
+        <% end %>
       </div>
       <div class="bg-white rounded p-2">
         <span class="text-gray-500">外注（人工）:</span>
         <strong class="ml-1"><%= number_to_currency(@project.outsourcing_unit_price, unit: "¥", precision: 0) %></strong>
+        <% unless @budget&.outsourcing_unit_price %>
+          <span class="text-xs text-yellow-600 ml-1">(デフォルト)</span>
+        <% end %>
       </div>
     </div>
   </div>

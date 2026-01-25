@@ -1,0 +1,112 @@
+<div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= @year %>年<%= @month %>月 固定費</h1>
+      <p class="text-sm text-gray-500">減価償却、車両費、保険料などの固定費を管理</p>
+    </div>
+    <div class="flex space-x-2">
+      <%= link_to "追加", new_monthly_fixed_cost_path(year: @year, month: @month),
+          class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+      <%= link_to "月次損益に戻る", monthly_profit_loss_path(year: @year, month: @month),
+          class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+    </div>
+  </div>
+
+  <%# 月移動ナビゲーション %>
+  <div class="flex items-center justify-between mb-4 bg-gray-50 rounded-lg p-3">
+    <% prev_date = Date.new(@year, @month, 1).prev_month %>
+    <% next_date = Date.new(@year, @month, 1).next_month %>
+    <%= link_to monthly_fixed_costs_path(year: prev_date.year, month: prev_date.month),
+        class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      <%= prev_date.month %>月
+    <% end %>
+    <span class="font-medium text-gray-900"><%= @year %>年<%= @month %>月</span>
+    <%= link_to monthly_fixed_costs_path(year: next_date.year, month: next_date.month),
+        class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+      <%= next_date.month %>月
+      <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    <% end %>
+  </div>
+
+  <% if @fixed_costs.any? %>
+    <%# カテゴリ別表示 %>
+    <% MonthlyFixedCost::CATEGORIES.each do |category_key, category_name| %>
+      <% costs_in_category = @grouped_costs[category_key] %>
+      <% if costs_in_category.present? %>
+        <div class="bg-white shadow rounded-lg mb-4">
+          <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+            <h3 class="text-sm font-medium text-gray-700"><%= category_name %></h3>
+          </div>
+          <ul class="divide-y divide-gray-200">
+            <% costs_in_category.each do |cost| %>
+              <li class="px-4 py-3 flex items-center justify-between">
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-gray-900"><%= cost.name %></p>
+                  <% if cost.description.present? %>
+                    <p class="text-xs text-gray-500 mt-1"><%= cost.description %></p>
+                  <% end %>
+                </div>
+                <div class="flex items-center space-x-4">
+                  <span class="text-sm font-medium text-gray-900">
+                    <%= number_to_currency(cost.amount, unit: "¥", precision: 0) %>
+                  </span>
+                  <div class="flex space-x-2">
+                    <%= link_to "編集", edit_monthly_fixed_cost_path(year: @year, month: @month, id: cost.id),
+                        class: "text-blue-600 hover:text-blue-800 text-sm" %>
+                    <%= link_to "削除", monthly_fixed_cost_path(year: @year, month: @month, id: cost.id),
+                        data: { turbo_method: :delete, turbo_confirm: "#{cost.name}を削除しますか？" },
+                        class: "text-red-600 hover:text-red-800 text-sm" %>
+                  </div>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+          <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 rounded-b-lg">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-500">小計</span>
+              <span class="font-medium text-gray-900">
+                <%= number_to_currency(costs_in_category.sum(&:amount), unit: "¥", precision: 0) %>
+              </span>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+
+    <%# 合計 %>
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+      <div class="flex justify-between items-center">
+        <span class="text-lg font-medium text-blue-900">固定費 合計</span>
+        <span class="text-2xl font-bold text-blue-900">
+          <%= number_to_currency(@total, unit: "¥", precision: 0) %>
+        </span>
+      </div>
+    </div>
+  <% else %>
+    <div class="bg-white shadow rounded-lg p-6 text-center">
+      <p class="text-gray-500 mb-4">この月にはまだ固定費が登録されていません</p>
+      <div class="flex justify-center space-x-3">
+        <%= link_to "固定費を追加", new_monthly_fixed_cost_path(year: @year, month: @month),
+            class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+        <%= button_to "前月からコピー", copy_from_previous_monthly_fixed_costs_path(year: @year, month: @month),
+            method: :post,
+            class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# 前月コピーボタン（固定費がある場合も表示） %>
+  <% if @fixed_costs.any? %>
+    <div class="mt-4 text-right">
+      <%= button_to "前月からコピー", copy_from_previous_monthly_fixed_costs_path(year: @year, month: @month),
+          method: :post,
+          data: { turbo_confirm: "前月の固定費をコピーしますか？既存のデータに追加されます。" },
+          class: "text-sm text-gray-600 hover:text-gray-900" %>
+    </div>
+  <% end %>
+</div>
