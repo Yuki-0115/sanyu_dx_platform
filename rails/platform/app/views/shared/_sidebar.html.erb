@@ -6,10 +6,7 @@
   <!-- ロゴ・ヘッダー -->
   <div class="flex items-center justify-between h-14 px-3 bg-gray-800">
     <%= link_to root_path, class: "flex items-center overflow-hidden" do %>
-      <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-        <span class="text-white font-bold text-sm">S</span>
-      </div>
-      <span class="ml-2 text-lg font-bold text-white whitespace-nowrap" data-sidebar-target="text">SanyuTech</span>
+      <%= image_tag "sanyu_logo.png", class: "h-10 w-auto flex-shrink-0", alt: "SanyuTech" %>
     <% end %>
     <!-- モバイル用閉じるボタン -->
     <button type="button" data-action="click->sidebar#close" class="lg:hidden text-gray-400 hover:text-white p-1">
@@ -108,6 +105,16 @@
       <% end %>
     <% end %>
 
+    <!-- 経費報告（全員アクセス可） -->
+    <%= link_to expense_reports_path,
+        class: "flex items-center px-3 py-2.5 text-sm transition-colors rounded-lg #{controller_name == 'expense_reports' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}",
+        title: "経費報告" do %>
+      <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+      </svg>
+      <span class="ml-3" data-sidebar-target="text">経費報告</span>
+    <% end %>
+
     <!-- 区切り線 -->
     <div class="my-2 border-t border-gray-700"></div>
 
@@ -168,6 +175,24 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
         </svg>
         <span class="ml-3" data-sidebar-target="text">仮経費確定</span>
+      <% end %>
+
+      <%= link_to accounting_expenses_path,
+          class: "flex items-center px-3 py-2 text-sm transition-colors rounded-lg #{controller_path == 'accounting/expenses' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}",
+          title: "経費処理（freee/MF連携）" do %>
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <span class="ml-3" data-sidebar-target="text">経費処理</span>
+      <% end %>
+
+      <%= link_to accounting_reimbursements_path,
+          class: "flex items-center px-3 py-2 text-sm transition-colors rounded-lg #{controller_path == 'accounting/reimbursements' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}",
+          title: "立替精算" do %>
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+        </svg>
+        <span class="ml-3" data-sidebar-target="text">立替精算</span>
       <% end %>
 
       <!-- 区切り線 -->

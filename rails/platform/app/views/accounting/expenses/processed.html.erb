@@ -1,0 +1,121 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">処理済み経費</h1>
+    <div class="flex gap-2">
+      <%= link_to "未処理一覧", accounting_expenses_path, class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+    </div>
+  </div>
+
+  <!-- 月選択・エクスポート -->
+  <div class="bg-white rounded-lg shadow p-4 mb-6">
+    <div class="flex flex-wrap gap-4 items-end justify-between">
+      <%= form_with url: processed_accounting_expenses_path, method: :get, class: "flex gap-4 items-end" do %>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">年</label>
+          <%= select_tag :year, options_for_select((2024..Date.current.year + 1).to_a.reverse, params[:year] || Date.current.year), class: "border rounded px-3 py-2" %>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">月</label>
+          <%= select_tag :month, options_for_select((1..12).to_a, params[:month] || Date.current.month), class: "border rounded px-3 py-2" %>
+        </div>
+        <div>
+          <%= submit_tag "表示", class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
+        </div>
+      <% end %>
+
+      <div class="flex gap-2">
+        <%= link_to "freee形式CSV",
+              export_accounting_expenses_path(
+                year: params[:year] || Date.current.year,
+                month: params[:month] || Date.current.month,
+                format_type: "freee"
+              ),
+              class: "px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" %>
+        <%= link_to "MF形式CSV",
+              export_accounting_expenses_path(
+                year: params[:year] || Date.current.year,
+                month: params[:month] || Date.current.month,
+                format_type: "moneyforward"
+              ),
+              class: "px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- サマリー -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">処理済み件数</div>
+      <div class="text-2xl font-bold text-green-600"><%= @expenses.count %>件</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">処理済み金額合計</div>
+      <div class="text-2xl font-bold"><%= number_with_delimiter(@total_amount.to_i) %>円</div>
+    </div>
+  </div>
+
+  <!-- 一覧 -->
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">処理日</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">取引日</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">案件</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">カテゴリ</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">内容</th>
+          <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">勘定科目</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">税区分</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">処理者</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @expenses.each do |expense| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 text-sm text-gray-500">
+              <%= expense.processed_at&.strftime("%Y/%m/%d") %>
+            </td>
+            <td class="px-4 py-3 text-sm">
+              <%= expense.daily_report&.report_date&.strftime("%Y/%m/%d") || "-" %>
+            </td>
+            <td class="px-4 py-3 text-sm">
+              <% if expense.project %>
+                <%= link_to expense.project.name, project_path(expense.project), class: "text-blue-600 hover:underline" %>
+              <% else %>
+                <span class="text-gray-400">-</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-1 text-xs rounded bg-gray-100">
+                <%= expense.category_label %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-sm"><%= expense.description %></td>
+            <td class="px-4 py-3 text-sm text-right font-medium">
+              <%= number_with_delimiter(expense.amount.to_i) %>円
+            </td>
+            <td class="px-4 py-3 text-center text-sm">
+              <%= expense.account_code_name %>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <span class="px-2 py-1 text-xs rounded <%= expense.tax_category == 'taxable' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100' %>">
+                <%= expense.tax_category_label %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-500">
+              <%= expense.processed_by&.name || "-" %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @expenses.empty? %>
+          <tr>
+            <td colspan="9" class="px-4 py-8 text-center text-gray-500">
+              処理済みの経費はありません
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

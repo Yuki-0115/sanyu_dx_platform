@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
+require_dependency "invoice_pdf"
+
 class InvoicesController < ApplicationController
   authorize_with :invoices
   before_action :set_project
-  before_action :set_invoice, only: %i[show edit update destroy issue]
+  before_action :set_invoice, only: %i[show edit update destroy issue pdf]
 
   def index
     @invoices = @project.invoices.order(created_at: :desc)
@@ -55,6 +57,16 @@ class InvoicesController < ApplicationController
     else
       redirect_to project_invoice_path(@project, @invoice), alert: "この請求書は既に発行済みです"
     end
+  end
+
+  def pdf
+    pdf = InvoicePdf.new(@invoice)
+    filename = "請求書_#{@invoice.invoice_number || @invoice.id}_#{Date.current.strftime('%Y%m%d')}.pdf"
+
+    send_data pdf.render_pdf,
+              filename: filename,
+              type: "application/pdf",
+              disposition: "inline"  # ブラウザで表示（downloadにすると直接ダウンロード）
   end
 
   private

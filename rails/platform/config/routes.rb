@@ -100,6 +100,7 @@ Rails.application.routes.draw do
       post :import_from_estimate
     end
     resource :site_ledger, only: [:show]
+    resources :outsourcing_reports, only: %i[index new create]
     resources :daily_reports do
       member do
         post :confirm
@@ -108,6 +109,7 @@ Rails.application.routes.draw do
     resources :invoices do
       member do
         post :issue
+        get :pdf
       end
       resources :payments, only: %i[new create destroy]
     end
@@ -137,6 +139,9 @@ Rails.application.routes.draw do
 
   # 全請求書一覧
   resources :all_invoices, only: [:index]
+
+  # 経費報告（日報外）
+  resources :expense_reports, only: %i[index new create show edit update destroy]
 
   # 仮経費確定
   resources :provisional_expenses, only: [:index] do
@@ -173,6 +178,33 @@ Rails.application.routes.draw do
   resources :offsets do
     member do
       post :confirm
+    end
+  end
+
+  # 経理処理（freee/MoneyForward連携）
+  namespace :accounting do
+    resources :expenses, only: %i[index show] do
+      member do
+        post :process_expense
+        post :reimburse
+      end
+      collection do
+        get :processed
+        post :bulk_process
+        post :bulk_reimburse
+        post :confirm_supplier
+        get :export
+      end
+    end
+
+    # 立替精算管理
+    resources :reimbursements, only: %i[index show] do
+      member do
+        post :reimburse
+      end
+      collection do
+        post :bulk_reimburse
+      end
     end
   end
 

@@ -203,16 +203,16 @@ class Project < ApplicationRecord
   end
 
   # ========================================
-  # 労務費（正社員のみ）
+  # 労務費（正社員：人工×単価で自動計算）
   # ========================================
 
-  # 現場台帳：労務費（正社員のみ）
+  # 現場台帳：労務費（正社員のみ）= 人工数 × 単価
   def site_ledger_labor_cost
     (regular_labor_unit_price * site_ledger_regular_man_days).round(0)
   end
 
   # ========================================
-  # 外注費（人工・請負）
+  # 外注費（人工×単価 + 請負出来高）
   # ========================================
 
   # 外注エントリの人工数（billing_type = 'man_days' のみ）
@@ -234,12 +234,9 @@ class Project < ApplicationRecord
     (outsourcing_unit_price * site_ledger_outsourcing_man_days).round(0)
   end
 
-  # 現場台帳：外注費（請負）= 請負金額の合計
+  # 現場台帳：外注費（請負出来高）= 日報の直接入力値
   def site_ledger_outsourcing_contract_cost
-    confirmed_daily_reports
-      .joins(:outsourcing_entries)
-      .where(outsourcing_entries: { billing_type: "contract" })
-      .sum("outsourcing_entries.contract_amount").to_i
+    confirmed_daily_reports.sum(:outsourcing_cost).to_i
   end
 
   # 現場台帳：外注費合計
@@ -248,7 +245,35 @@ class Project < ApplicationRecord
   end
 
   # ========================================
-  # 勤怠管理用（原価計算には含めない）
+  # その他原価（日報の直接入力値）
+  # ========================================
+
+  # 現場台帳：材料費（日報の直接入力値）
+  def site_ledger_material_cost
+    confirmed_daily_reports.sum(:material_cost).to_i
+  end
+
+  # 現場台帳：運搬費（日報の直接入力値）
+  def site_ledger_transportation_cost
+    confirmed_daily_reports.sum(:transportation_cost).to_i
+  end
+
+  # 現場台帳：その他経費（ガソリン・高速代など）
+  def site_ledger_expense_cost
+    fuel = confirmed_daily_reports.sum(:fuel_amount).to_i
+    highway = confirmed_daily_reports.sum(:highway_amount).to_i
+    fuel + highway
+  end
+
+  # 現場台帳：原価合計
+  def site_ledger_total_cost
+    site_ledger_labor_cost + site_ledger_outsourcing_cost +
+      site_ledger_material_cost + site_ledger_transportation_cost +
+      site_ledger_expense_cost
+  end
+
+  # ========================================
+  # 勤怠管理用（参考情報）
   # ========================================
 
   # 仮社員の人工数（勤怠管理・相殺用）
@@ -265,46 +290,23 @@ class Project < ApplicationRecord
       ").to_d
   end
 
-  # 現場台帳：材料費（経費の material カテゴリ合計）
-  def site_ledger_material_cost
-    site_ledger_expenses_by_category["material"] || 0
-  end
+  # ========================================
+  # 経費詳細（参考情報）
+  # ========================================
 
-  # 現場台帳：その他経費（material以外の経費合計）
-  def site_ledger_expense_cost
-    total = 0
-    site_ledger_expenses_by_category.each do |category, amount|
-      total += amount unless category == "material"
-    end
-    total
-  end
-
-  # 経費をカテゴリ別に集計
+  # 日報経費をカテゴリ別に集計（参考）
   def site_ledger_expenses_by_category
     @site_ledger_expenses_by_category ||= begin
       result = Hash.new(0)
 
-      # 日報に紐づく経費（承認済み）
+      # 日報に紐づく経費
       Expense.where(daily_report_id: confirmed_daily_reports.select(:id))
-             .where(status: "approved")
              .group(:category)
              .sum(:amount)
              .each { |cat, amt| result[cat] += amt.to_i }
 
-      # 案件に直接紐づく経費（承認済み）
-      expenses.where(status: "approved")
-              .group(:category)
-              .sum(:amount)
-              .each { |cat, amt| result[cat] += amt.to_i }
-
       result
     end
-  end
-
-  # 現場台帳：原価合計
-  def site_ledger_total_cost
-    site_ledger_labor_cost + site_ledger_outsourcing_cost +
-      site_ledger_material_cost + site_ledger_expense_cost
   end
 
   # 現場台帳：粗利（受注金額 - 原価合計）
@@ -327,8 +329,9 @@ class Project < ApplicationRecord
 
     {
       labor: (budget.labor_cost || 0) - site_ledger_labor_cost,
-      outsourcing: (budget.outsourcing_cost || 0) - site_ledger_outsourcing_cost,
       material: (budget.material_cost || 0) - site_ledger_material_cost,
+      outsourcing: (budget.outsourcing_cost || 0) - site_ledger_outsourcing_cost,
+      transportation: (budget.transportation_cost || 0) - site_ledger_transportation_cost,
       expense: (budget.expense_cost || 0) - site_ledger_expense_cost,
       total: (budget.total_cost || 0) - site_ledger_total_cost
     }

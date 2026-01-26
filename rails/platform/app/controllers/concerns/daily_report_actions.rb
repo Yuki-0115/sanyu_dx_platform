@@ -96,10 +96,10 @@ module DailyReportActions
   end
 
   def expense_params
-    { expenses_attributes: %i[id expense_type category description amount payment_method voucher_number receipt voucher _destroy] }
+    { expenses_attributes: %i[id expense_type category description amount payment_method payee_name voucher_number receipt voucher _destroy] }
   end
 
   def outsourcing_entry_params
-    { outsourcing_entries_attributes: %i[id partner_id partner_name headcount attendance_type _destroy] }
+    { outsourcing_entries_attributes: %i[id partner_id partner_name billing_type headcount attendance_type contract_amount quantity unit work_description _destroy] }
   end
 end

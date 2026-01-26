@@ -1,0 +1,232 @@
+<div class="space-y-6">
+  <%# ヘッダー %>
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">外注報告を追加</h1>
+      <p class="mt-1 text-sm text-gray-500">
+        <%= @project.code %> - <%= @project.name %>
+      </p>
+    </div>
+  </div>
+
+  <%= form_with model: [@project, @daily_report], url: project_outsourcing_reports_path(@project), class: "space-y-6" do |f| %>
+    <%= render "shared/form_errors", resource: @daily_report %>
+
+    <%# 基本情報 %>
+    <div class="bg-white shadow rounded-lg p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">基本情報</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <%= f.label :report_date, "報告日", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.date_field :report_date, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm", required: true %>
+        </div>
+      </div>
+    </div>
+
+    <%# 外注入力 %>
+    <div class="bg-white shadow rounded-lg p-6" data-controller="nested-form" data-nested-form-new-record-id-value="outsourcing">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h3 class="text-lg font-medium text-gray-900">外注入力</h3>
+          <p class="text-sm text-gray-500">協力会社の稼働人数や請負出来高を入力してください。</p>
+        </div>
+        <button type="button" data-action="nested-form#add"
+            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          追加
+        </button>
+      </div>
+
+      <%# テンプレート %>
+      <template data-nested-form-target="template">
+        <div class="border border-gray-200 rounded-lg p-4 mb-4" data-nested-form-target="item" data-controller="billing-type-toggle">
+          <div class="grid grid-cols-1 lg:grid-cols-6 gap-4">
+            <div class="lg:col-span-2">
+              <label class="block text-sm font-medium text-gray-700">協力会社</label>
+              <select name="daily_report[outsourcing_entries_attributes][NEW_RECORD][partner_id]"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
+                <option value="">手入力</option>
+                <% Partner.order(:name).each do |p| %>
+                  <option value="<%= p.id %>"><%= p.name %></option>
+                <% end %>
+              </select>
+              <input type="text" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][partner_name]"
+                  placeholder="会社名を入力"
+                  class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">種別</label>
+              <select name="daily_report[outsourcing_entries_attributes][NEW_RECORD][billing_type]"
+                  data-billing-type-toggle-target="select"
+                  data-action="change->billing-type-toggle#toggle"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
+                <option value="man_days">人工</option>
+                <option value="contract">請負</option>
+              </select>
+            </div>
+            <div data-billing-type-toggle-target="manDaysFields">
+              <label class="block text-sm font-medium text-gray-700">人数</label>
+              <input type="number" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][headcount]"
+                  min="0" step="1" placeholder="0"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
+            </div>
+            <div data-billing-type-toggle-target="manDaysFields">
+              <label class="block text-sm font-medium text-gray-700">出勤</label>
+              <select name="daily_report[outsourcing_entries_attributes][NEW_RECORD][attendance_type]"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
+                <option value="full">1日</option>
+                <option value="half">半日</option>
+              </select>
+            </div>
+            <div data-billing-type-toggle-target="contractFields" class="hidden">
+              <label class="block text-sm font-medium text-gray-700">請負金額 (円)</label>
+              <input type="number" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][contract_amount]"
+                  min="0" step="1" placeholder="0"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mt-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">数量</label>
+              <input type="number" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][quantity]"
+                  step="0.01" placeholder="0"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">単位</label>
+              <select name="daily_report[outsourcing_entries_attributes][NEW_RECORD][unit]"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
+                <option value="">選択</option>
+                <% OutsourcingEntry::UNITS.each do |u| %>
+                  <option value="<%= u %>"><%= u %></option>
+                <% end %>
+              </select>
+            </div>
+            <div class="lg:col-span-2">
+              <label class="block text-sm font-medium text-gray-700">作業内容</label>
+              <input type="text" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][work_description]"
+                  placeholder="例: 電気配線工事、配管敷設"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
+            </div>
+          </div>
+          <div class="mt-3 flex justify-end">
+            <button type="button" data-action="nested-form#remove"
+                class="inline-flex items-center text-sm text-red-600 hover:text-red-800">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+              削除
+            </button>
+          </div>
+        </div>
+      </template>
+
+      <div data-nested-form-target="container">
+        <%= f.fields_for :outsourcing_entries do |oef| %>
+          <div class="border border-gray-200 rounded-lg p-4 mb-4" data-nested-form-target="item" data-controller="billing-type-toggle">
+            <%= oef.hidden_field :id %>
+            <%= oef.hidden_field :_destroy %>
+            <div class="grid grid-cols-1 lg:grid-cols-6 gap-4">
+              <div class="lg:col-span-2">
+                <label class="block text-sm font-medium text-gray-700">協力会社</label>
+                <%= oef.select :partner_id,
+                    Partner.order(:name).map { |p| [p.name, p.id] },
+                    { include_blank: "手入力" },
+                    { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" } %>
+                <%= oef.text_field :partner_name, placeholder: "会社名を入力",
+                    class: "mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" %>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">種別</label>
+                <%= oef.select :billing_type,
+                    OutsourcingEntry::BILLING_TYPE_LABELS.map { |k, v| [v, k] },
+                    {},
+                    { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm",
+                      data: { billing_type_toggle_target: "select", action: "change->billing-type-toggle#toggle" } } %>
+              </div>
+              <div data-billing-type-toggle-target="manDaysFields" class="<%= 'hidden' if oef.object.contract_billing? %>">
+                <label class="block text-sm font-medium text-gray-700">人数</label>
+                <%= oef.number_field :headcount, min: 0, step: 1, placeholder: "0",
+                    class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" %>
+              </div>
+              <div data-billing-type-toggle-target="manDaysFields" class="<%= 'hidden' if oef.object.contract_billing? %>">
+                <label class="block text-sm font-medium text-gray-700">出勤</label>
+                <%= oef.select :attendance_type,
+                    OutsourcingEntry::ATTENDANCE_LABELS.map { |k, v| [v, k] },
+                    {},
+                    { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" } %>
+              </div>
+              <div data-billing-type-toggle-target="contractFields" class="<%= 'hidden' unless oef.object.contract_billing? %>">
+                <label class="block text-sm font-medium text-gray-700">請負金額 (円)</label>
+                <%= oef.number_field :contract_amount, min: 0, step: 1, placeholder: "0",
+                    class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" %>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mt-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">数量</label>
+                <%= oef.number_field :quantity, step: 0.01, placeholder: "0",
+                    class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" %>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">単位</label>
+                <%= oef.select :unit,
+                    OutsourcingEntry::UNITS.map { |u| [u, u] },
+                    { include_blank: "選択" },
+                    { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" } %>
+              </div>
+              <div class="lg:col-span-2">
+                <label class="block text-sm font-medium text-gray-700">作業内容</label>
+                <%= oef.text_field :work_description, placeholder: "例: 電気配線工事、配管敷設",
+                    class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" %>
+              </div>
+            </div>
+            <div class="mt-3 flex justify-end">
+              <button type="button" data-action="nested-form#remove"
+                  class="inline-flex items-center text-sm text-red-600 hover:text-red-800">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                削除
+              </button>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <p class="mt-4 text-sm text-gray-500">
+        「追加」ボタンで協力会社を追加できます。
+      </p>
+    </div>
+
+    <%# 請負出来高（日報の直接入力値） %>
+    <div class="bg-white shadow rounded-lg p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">請負出来高（合計）</h3>
+      <p class="text-sm text-gray-500 mb-4">
+        人工計算でない請負の出来高合計を入力してください。
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <%= f.label :outsourcing_cost, "外注費・請負出来高 (円)", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.number_field :outsourcing_cost, step: 1, placeholder: "0",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" %>
+        </div>
+        <div>
+          <%= f.label :outsourcing_details, "外注メモ", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_area :outsourcing_details, rows: 2, placeholder: "例: 電気工事 ○○電気 出来高50m、配管工事 △△設備 3式",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" %>
+          <p class="text-xs text-gray-400 mt-1">出来高数量・単位なども記載してください</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end space-x-3">
+      <%= link_to "キャンセル", project_outsourcing_reports_path(@project),
+          class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+      <%= f.submit "登録",
+          class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 cursor-pointer" %>
+    </div>
+  <% end %>
+</div>

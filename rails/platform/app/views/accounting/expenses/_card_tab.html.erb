@@ -1,0 +1,121 @@
+<!-- サマリー -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="text-sm text-gray-500">処理待ち件数</div>
+    <div class="text-2xl font-bold text-orange-600"><%= @expenses.count %>件</div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="text-sm text-gray-500">処理待ち金額</div>
+    <div class="text-2xl font-bold"><%= number_with_delimiter(@total_amount.to_i) %>円</div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="text-sm text-gray-500 mb-2">カテゴリ別</div>
+    <div class="flex flex-wrap gap-2">
+      <% @expenses_by_category.each do |cat, amount| %>
+        <span class="px-2 py-1 bg-gray-100 rounded text-xs">
+          <%= Expense::CATEGORY_LABELS[cat] || cat %>: <%= number_with_delimiter(amount.to_i) %>円
+        </span>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+  <p class="text-blue-800 text-sm">
+    <strong>カード明細との突合:</strong>
+    カード明細を確認し、金額・日付が一致していれば「処理」ボタンで確定してください。
+    勘定科目の変更が必要な場合は「詳細」から変更できます。
+  </p>
+</div>
+
+<!-- カード経費一覧 -->
+<%= form_with url: bulk_process_accounting_expenses_path, method: :post, id: "bulk-form-card" do %>
+  <input type="hidden" name="tab" value="card">
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="select-all-card" class="w-4 h-4">
+        <label for="select-all-card" class="text-sm text-gray-600">すべて選択</label>
+      </div>
+      <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        選択した経費を処理
+      </button>
+    </div>
+
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500 w-10"></th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">日付</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">案件</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">カテゴリ</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">内容</th>
+          <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">カード種別</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">勘定科目</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">伝票</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">操作</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @expenses.each do |expense| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3">
+              <input type="checkbox" name="expense_ids[]" value="<%= expense.id %>" class="card-checkbox w-4 h-4">
+            </td>
+            <td class="px-4 py-3 text-sm">
+              <%= expense.daily_report&.report_date&.strftime("%m/%d") || "-" %>
+            </td>
+            <td class="px-4 py-3 text-sm">
+              <%= expense.project&.name || "-" %>
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-1 text-xs rounded bg-gray-100"><%= expense.category_label %></span>
+            </td>
+            <td class="px-4 py-3 text-sm"><%= expense.description %></td>
+            <td class="px-4 py-3 text-sm text-right font-medium">
+              <%= number_with_delimiter(expense.amount.to_i) %>円
+            </td>
+            <td class="px-4 py-3 text-center">
+              <span class="px-2 py-1 text-xs rounded
+                <%= case expense.payment_method
+                    when 'company_card' then 'bg-purple-100 text-purple-800'
+                    when 'gas_card' then 'bg-orange-100 text-orange-800'
+                    when 'etc_card' then 'bg-green-100 text-green-800'
+                    else 'bg-gray-100'
+                    end %>">
+                <%= expense.payment_method_label %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-center text-sm text-gray-500">
+              <%= expense.account_code_name %>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <% if expense.voucher_attached? %>
+                <span class="text-green-600">○</span>
+              <% else %>
+                <span class="text-gray-400">-</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <%= link_to "詳細", accounting_expense_path(expense), class: "px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700" %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @expenses.empty? %>
+          <tr>
+            <td colspan="10" class="px-4 py-8 text-center text-gray-500">
+              処理待ちのカード経費はありません
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<script>
+  document.getElementById('select-all-card')?.addEventListener('change', function() {
+    document.querySelectorAll('.card-checkbox').forEach(cb => cb.checked = this.checked);
+  });
+</script>

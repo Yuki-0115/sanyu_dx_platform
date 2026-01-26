@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_25_200002) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_25_230000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -342,12 +342,28 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_25_200002) do
     t.datetime "confirmed_at"
     t.integer "confirmed_by_id"
     t.decimal "provisional_amount", precision: 15, scale: 2
+    t.string "account_code"
+    t.string "accounting_status", default: "pending_accounting"
+    t.bigint "processed_by_id"
+    t.datetime "processed_at"
+    t.text "accounting_note"
+    t.string "tax_category", default: "taxable"
+    t.bigint "supplier_id"
+    t.boolean "reimbursement_required", default: false
+    t.boolean "reimbursed", default: false
+    t.datetime "reimbursed_at"
+    t.string "payee_name"
+    t.index ["account_code"], name: "index_expenses_on_account_code"
+    t.index ["accounting_status"], name: "index_expenses_on_accounting_status"
     t.index ["approved_by_id"], name: "index_expenses_on_approved_by_id"
     t.index ["confirmed_by_id"], name: "index_expenses_on_confirmed_by_id"
     t.index ["daily_report_id"], name: "index_expenses_on_daily_report_id"
     t.index ["is_provisional"], name: "index_expenses_on_is_provisional"
     t.index ["payer_id"], name: "index_expenses_on_payer_id"
+    t.index ["processed_by_id"], name: "index_expenses_on_processed_by_id"
     t.index ["project_id"], name: "index_expenses_on_project_id"
+    t.index ["reimbursement_required"], name: "index_expenses_on_reimbursement_required"
+    t.index ["supplier_id"], name: "index_expenses_on_supplier_id"
   end
 
   create_table "invoice_items", force: :cascade do |t|
@@ -491,6 +507,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_25_200002) do
     t.datetime "updated_at", null: false
     t.string "billing_type", default: "man_days", null: false
     t.decimal "contract_amount", precision: 15, default: "0"
+    t.decimal "quantity", precision: 10, scale: 2
+    t.string "unit"
+    t.text "work_description"
     t.index ["billing_type"], name: "index_outsourcing_entries_on_billing_type"
     t.index ["daily_report_id"], name: "index_outsourcing_entries_on_daily_report_id"
     t.index ["partner_id"], name: "index_outsourcing_entries_on_partner_id"
@@ -665,6 +684,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_25_200002) do
   add_foreign_key "estimates", "projects"
   add_foreign_key "expenses", "daily_reports"
   add_foreign_key "expenses", "employees", column: "payer_id"
+  add_foreign_key "expenses", "employees", column: "processed_by_id"
+  add_foreign_key "expenses", "partners", column: "supplier_id"
   add_foreign_key "expenses", "projects"
   add_foreign_key "invoice_items", "invoices"
   add_foreign_key "invoices", "projects"

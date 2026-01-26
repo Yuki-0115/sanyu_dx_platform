@@ -38,6 +38,9 @@ class DailyReport < ApplicationRecord
   accepts_nested_attributes_for :outsourcing_entries, allow_destroy: true,
                                 reject_if: ->(attrs) { attrs["headcount"].blank? || attrs["headcount"].to_i <= 0 }
 
+  # Callbacks
+  before_save :set_expense_payer_and_project
+
   # Validations
   validates :report_date, presence: true
   validates :report_date, uniqueness: { scope: :project_id, message: "この案件の同日の日報は既に存在します。編集画面から更新してください。" }, unless: :is_external?
@@ -148,5 +151,16 @@ class DailyReport < ApplicationRecord
   # 仮経費（未確定の燃料費・高速代）があるか
   def has_provisional_card_expenses?
     (has_fuel? && !fuel_confirmed?) || (has_highway? && !highway_confirmed?)
+  end
+
+  private
+
+  # 日報経費の支払者と案件を設定
+  def set_expense_payer_and_project
+    expenses.each do |expense|
+      expense.payer ||= foreman
+      expense.project ||= project
+      expense.expense_type ||= "site"
+    end
   end
 end

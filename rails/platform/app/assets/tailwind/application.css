@@ -1,1 +1,33 @@
 @import "tailwindcss";
+
+/* SanyuTech カスタムテーマ（ロゴカラーに合わせた配色） */
+@theme {
+  /* Primary: オレンジ（ロゴの「TECH」部分） */
+  --color-primary-50: #fff7ed;
+  --color-primary-100: #ffedd5;
+  --color-primary-200: #fed7aa;
+  --color-primary-300: #fdba74;
+  --color-primary-400: #fb923c;
+  --color-primary-500: #f7931e;
+  --color-primary-600: #ea7c0c;
+  --color-primary-700: #c2600c;
+  --color-primary-800: #9a4e12;
+  --color-primary-900: #7c4012;
+
+  /* Secondary: ブルー（ロゴの「sanyu」部分） */
+  --color-secondary-50: #e6f7ff;
+  --color-secondary-100: #bae7ff;
+  --color-secondary-200: #91d5ff;
+  --color-secondary-300: #69c0ff;
+  --color-secondary-400: #40a9ff;
+  --color-secondary-500: #00a0e9;
+  --color-secondary-600: #0083c9;
+  --color-secondary-700: #0066a8;
+  --color-secondary-800: #004d80;
+  --color-secondary-900: #003659;
+
+  /* Accent: ダークブルー */
+  --color-accent-500: #2c3e50;
+  --color-accent-600: #1a252f;
+  --color-accent-700: #0d1318;
+}

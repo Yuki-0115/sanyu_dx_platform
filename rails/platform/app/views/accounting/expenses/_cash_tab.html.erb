@@ -1,0 +1,159 @@
+<!-- サマリー -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="text-sm text-gray-500">処理待ち件数</div>
+    <div class="text-2xl font-bold text-orange-600"><%= @expenses.count %>件</div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="text-sm text-gray-500">処理待ち金額</div>
+    <div class="text-2xl font-bold"><%= number_with_delimiter(@total_amount.to_i) %>円</div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="text-sm text-gray-500">精算待ち</div>
+    <div class="text-2xl font-bold text-red-600"><%= @needs_reimbursement.count %>件</div>
+  </div>
+</div>
+
+<!-- 処理待ち経費一覧 -->
+<%= form_with url: bulk_process_accounting_expenses_path, method: :post, id: "bulk-form" do %>
+  <input type="hidden" name="tab" value="cash">
+  <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+    <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="select-all" class="w-4 h-4">
+        <label for="select-all" class="text-sm text-gray-600">すべて選択</label>
+        <span class="text-sm text-gray-500 ml-4">レシート確認 → 勘定科目確定</span>
+      </div>
+      <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        選択した経費を処理
+      </button>
+    </div>
+
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500 w-10"></th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">日付</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">案件</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">カテゴリ</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">内容</th>
+          <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">支払方法</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">支払者</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">レシート</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">操作</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @expenses.each do |expense| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3">
+              <input type="checkbox" name="expense_ids[]" value="<%= expense.id %>" class="expense-checkbox w-4 h-4">
+            </td>
+            <td class="px-4 py-3 text-sm">
+              <%= expense.daily_report&.report_date&.strftime("%m/%d") || "-" %>
+            </td>
+            <td class="px-4 py-3 text-sm">
+              <%= expense.project&.name || "-" %>
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-1 text-xs rounded bg-gray-100"><%= expense.category_label %></span>
+            </td>
+            <td class="px-4 py-3 text-sm"><%= expense.description %></td>
+            <td class="px-4 py-3 text-sm text-right font-medium">
+              <%= number_with_delimiter(expense.amount.to_i) %>円
+            </td>
+            <td class="px-4 py-3 text-center">
+              <span class="px-2 py-1 text-xs rounded <%= expense.advance_payment? ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100' %>">
+                <%= expense.payment_method_label %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-sm text-center"><%= expense.payer&.name || "-" %></td>
+            <td class="px-4 py-3 text-center">
+              <% if expense.receipt_attached? %>
+                <span class="text-green-600">○</span>
+              <% else %>
+                <span class="text-red-400">×</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <%= link_to "詳細", accounting_expense_path(expense), class: "px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700" %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @expenses.empty? %>
+          <tr>
+            <td colspan="10" class="px-4 py-8 text-center text-gray-500">
+              処理待ちの経費はありません
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<!-- 精算待ちセクション（立替払い） -->
+<% if @needs_reimbursement.any? %>
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="p-4 bg-yellow-50 border-b">
+      <h3 class="font-bold text-yellow-800">精算待ち一覧（立替払い）</h3>
+      <p class="text-sm text-yellow-600 mt-1">経理処理済みで、社員への精算が必要な経費</p>
+    </div>
+
+    <%= form_with url: bulk_reimburse_accounting_expenses_path, method: :post do %>
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500 w-10">
+              <input type="checkbox" id="select-all-reimburse" class="w-4 h-4">
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">日付</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">案件</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">内容</th>
+            <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">支払者</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">操作</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% @needs_reimbursement.each do |expense| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3">
+                <input type="checkbox" name="expense_ids[]" value="<%= expense.id %>" class="reimburse-checkbox w-4 h-4">
+              </td>
+              <td class="px-4 py-3 text-sm">
+                <%= expense.daily_report&.report_date&.strftime("%m/%d") || "-" %>
+              </td>
+              <td class="px-4 py-3 text-sm"><%= expense.project&.name || "-" %></td>
+              <td class="px-4 py-3 text-sm"><%= expense.description %></td>
+              <td class="px-4 py-3 text-sm text-right font-medium">
+                <%= number_with_delimiter(expense.amount.to_i) %>円
+              </td>
+              <td class="px-4 py-3 text-sm text-center"><%= expense.payer&.name || "-" %></td>
+              <td class="px-4 py-3 text-center">
+                <%= button_to "精算済み", reimburse_accounting_expense_path(expense),
+                    method: :post,
+                    class: "px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      <div class="p-4 bg-gray-50 border-t flex justify-end">
+        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+          選択した経費を精算済みにする
+        </button>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<script>
+  document.getElementById('select-all')?.addEventListener('change', function() {
+    document.querySelectorAll('.expense-checkbox').forEach(cb => cb.checked = this.checked);
+  });
+  document.getElementById('select-all-reimburse')?.addEventListener('change', function() {
+    document.querySelectorAll('.reimburse-checkbox').forEach(cb => cb.checked = this.checked);
+  });
+</script>

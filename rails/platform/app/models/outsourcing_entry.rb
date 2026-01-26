@@ -15,6 +15,8 @@ class OutsourcingEntry < ApplicationRecord
     "contract" => "請負"
   }.freeze
 
+  UNITS = %w[m m² m³ 式 本 枚 個 台 人 日 回 t kg].freeze
+
   # Associations
   belongs_to :daily_report
   belongs_to :partner, optional: true  # マスタから選択（任意）
@@ -60,6 +62,13 @@ class OutsourcingEntry < ApplicationRecord
 
   def billing_type_label
     BILLING_TYPE_LABELS[billing_type] || billing_type
+  end
+
+  # 数量表示（数量 + 単位）
+  def quantity_with_unit
+    return nil if quantity.blank?
+
+    "#{quantity.to_s(:delimited)}#{unit}"
   end
 
   # 請求種別判定

@@ -1,0 +1,153 @@
+<div class="space-y-6">
+  <%# ヘッダー %>
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">外注報告</h1>
+      <p class="mt-1 text-sm text-gray-500">
+        <%= @project.code %> - <%= @project.name %>
+      </p>
+    </div>
+    <div class="flex items-center space-x-3">
+      <%= link_to project_path(@project),
+          class: "inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" do %>
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        案件に戻る
+      <% end %>
+      <%= link_to new_project_outsourcing_report_path(@project),
+          class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700" do %>
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        外注報告を追加
+      <% end %>
+    </div>
+  </div>
+
+  <%# 会社別集計 %>
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="px-4 py-3 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">協力会社別集計</h3>
+    </div>
+    <% if @summary_by_company.any? %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">協力会社</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">人工数</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">請負出来高</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">報告数</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% @summary_by_company.each do |company_name, data| %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm font-medium text-gray-900"><%= company_name %></td>
+                <td class="px-4 py-3 text-sm text-right text-gray-700">
+                  <%= number_with_precision(data[:man_days], precision: 1) %> 人工
+                </td>
+                <td class="px-4 py-3 text-sm text-right text-gray-700">
+                  <%= number_to_currency(data[:contract_amount], unit: "¥", precision: 0) %>
+                </td>
+                <td class="px-4 py-3 text-sm text-right text-gray-500">
+                  <%= data[:entries_count] %>件
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+          <tfoot class="bg-gray-50">
+            <tr class="font-bold">
+              <td class="px-4 py-3 text-sm text-gray-900">合計</td>
+              <td class="px-4 py-3 text-sm text-right text-gray-900">
+                <%= number_with_precision(@summary_by_company.sum { |_, d| d[:man_days] }, precision: 1) %> 人工
+              </td>
+              <td class="px-4 py-3 text-sm text-right text-gray-900">
+                <%= number_to_currency(@summary_by_company.sum { |_, d| d[:contract_amount] }, unit: "¥", precision: 0) %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right text-gray-500">
+                <%= @summary_by_company.sum { |_, d| d[:entries_count] } %>件
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    <% else %>
+      <div class="p-8 text-center text-gray-500">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+        </svg>
+        <p class="mt-2">外注報告がありません</p>
+      </div>
+    <% end %>
+  </div>
+
+  <%# 報告一覧 %>
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="px-4 py-3 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">報告一覧</h3>
+    </div>
+    <% if @outsourcing_entries.any? %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">日付</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">協力会社</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">種別</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">人工/金額</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">数量</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">作業内容</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">報告者</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% @outsourcing_entries.each do |entry| %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm text-gray-900">
+                  <%= entry.daily_report.report_date.strftime("%Y/%m/%d") %>
+                </td>
+                <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                  <%= entry.company_name %>
+                </td>
+                <td class="px-4 py-3 text-sm">
+                  <% if entry.man_days_billing? %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      人工
+                    </span>
+                  <% else %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                      請負
+                    </span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-sm text-right text-gray-700">
+                  <% if entry.man_days_billing? %>
+                    <%= entry.headcount %>名 × <%= entry.attendance_label %>
+                    <span class="text-gray-400">(<%= number_with_precision(entry.man_days, precision: 1) %>人工)</span>
+                  <% else %>
+                    <%= number_to_currency(entry.contract_amount, unit: "¥", precision: 0) %>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700">
+                  <%= entry.quantity_with_unit %>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title="<%= entry.work_description %>">
+                  <%= entry.work_description %>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-500">
+                  <%= entry.daily_report.foreman&.name %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="p-8 text-center text-gray-500">
+        <p>外注報告がありません</p>
+      </div>
+    <% end %>
+  </div>
+</div>

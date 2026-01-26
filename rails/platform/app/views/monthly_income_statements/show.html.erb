@@ -1,8 +1,19 @@
 <div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
   <div class="flex justify-between items-center mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900"><%= @year %>年<%= @month %>月 月次損益計算書</h1>
-      <p class="text-sm text-gray-500">管理会計形式（出来高ベースの売上 - 売上原価 - 販管費 = 営業利益）</p>
+      <h1 class="text-2xl font-bold text-gray-900">
+        <%= @year %>年<%= @month %>月 月次損益計算書
+        <% if @is_fiscal_year_end %>
+          <span class="ml-2 px-2 py-1 bg-red-100 text-red-800 text-sm rounded">決算月</span>
+        <% end %>
+      </h1>
+      <p class="text-sm text-gray-500">
+        <% if @is_fiscal_year_end %>
+          決算月のため出来高ベースで計上（未請求分含む）
+        <% else %>
+          請求確定ベース（発行済み請求書の合計）
+        <% end %>
+      </p>
     </div>
     <div class="flex space-x-2">
       <%= link_to "出来高入力", monthly_progresses_path(year: @year, month: @month),
@@ -45,32 +56,45 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200">
-        <%# 売上高（出来高ベース） %>
+        <%# 売上高 %>
         <tr class="bg-blue-50">
           <td class="px-6 py-4 text-sm font-bold text-blue-900" colspan="2">
-            売上高（出来高）
-            <% unless @progress_entered %>
-              <span class="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs">出来高未入力・請求ベース</span>
+            <% if @is_fiscal_year_end %>
+              売上高（出来高ベース）
+            <% else %>
+              売上高（請求確定）
             <% end %>
           </td>
           <td class="px-6 py-4 text-right text-lg font-bold text-blue-900">
             <%= number_to_currency(@revenue, unit: "¥", precision: 0) %>
           </td>
         </tr>
-        <% if @progress_entered %>
+        <% if @is_fiscal_year_end %>
+          <%# 決算月：出来高ベースの内訳 %>
           <tr>
             <td class="px-6 py-2"></td>
-            <td class="px-6 py-2 text-sm text-gray-500">うち請求済（税抜）</td>
+            <td class="px-6 py-2 text-sm text-gray-500">うち請求確定分</td>
             <td class="px-6 py-2 text-right text-sm text-gray-600">
-              <%= number_to_currency(@invoiced_amount, unit: "¥", precision: 0) %>
+              <%= number_to_currency(@invoiced_revenue, unit: "¥", precision: 0) %>
             </td>
           </tr>
-          <% if @unbilled_amount > 0 %>
+          <% if @wip_adjustment > 0 %>
             <tr>
               <td class="px-6 py-2"></td>
-              <td class="px-6 py-2 text-sm text-orange-600">未請求出来高</td>
+              <td class="px-6 py-2 text-sm text-orange-600">期末仕掛品（未請求出来高）</td>
               <td class="px-6 py-2 text-right text-sm font-medium text-orange-600">
-                <%= number_to_currency(@unbilled_amount, unit: "¥", precision: 0) %>
+                <%= number_to_currency(@wip_adjustment, unit: "¥", precision: 0) %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
+          <%# 通常月：参考情報として出来高を表示 %>
+          <% if @progress_entered && @progress_revenue != @invoiced_revenue %>
+            <tr>
+              <td class="px-6 py-2"></td>
+              <td class="px-6 py-2 text-sm text-gray-400">参考：出来高</td>
+              <td class="px-6 py-2 text-right text-sm text-gray-400">
+                <%= number_to_currency(@progress_revenue, unit: "¥", precision: 0) %>
               </td>
             </tr>
           <% end %>
@@ -233,17 +257,18 @@
     </div>
   <% end %>
 
-  <%# 出来高未入力の警告 %>
-  <% unless @progress_entered %>
-    <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+  <%# 決算月の出来高未入力警告 %>
+  <% if @is_fiscal_year_end && !@progress_entered %>
+    <div class="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
       <div class="flex items-center">
-        <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
         </svg>
-        <span class="text-sm text-yellow-800">
-          出来高が未入力のため、請求ベースで売上を表示しています。
+        <span class="text-sm text-red-800">
+          <strong>決算月のため出来高入力が必要です。</strong>
+          未入力のため請求ベースで表示しています。
           <%= link_to "出来高を入力する", monthly_progresses_path(year: @year, month: @month),
-              class: "underline hover:text-yellow-900" %>
+              class: "underline hover:text-red-900 font-medium" %>
         </span>
       </div>
     </div>
@@ -251,14 +276,19 @@
 
   <%# 説明 %>
   <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-    <h4 class="text-sm font-medium text-blue-800 mb-2">この画面について</h4>
+    <h4 class="text-sm font-medium text-blue-800 mb-2">売上計上基準について</h4>
     <ul class="text-sm text-blue-700 space-y-1">
-      <li><strong>売上高（出来高）</strong>: 当月の出来高金額（未請求分を含む）</li>
-      <li><strong>売上原価</strong>: 労務費・外注費・材料費・経費・現場固定費の合計</li>
-      <li><strong>売上総利益</strong>: 売上高 - 売上原価（粗利）</li>
-      <li><strong>販管費</strong>: 役員報酬・事務員給与・事務所家賃など本社経費</li>
-      <li><strong>営業利益</strong>: 売上総利益 - 販管費（会社全体の利益）</li>
+      <li><strong>通常月（10月〜8月）</strong>: 請求確定ベース（発行済み請求書の合計）</li>
+      <li><strong>決算月（9月）</strong>: 出来高ベース（未請求分も含めて計上）</li>
     </ul>
-    <p class="mt-2 text-xs text-blue-600">※ 出来高未入力時は請求ベースで表示されます</p>
+    <div class="mt-3 pt-3 border-t border-blue-200">
+      <h4 class="text-sm font-medium text-blue-800 mb-2">勘定科目</h4>
+      <ul class="text-sm text-blue-700 space-y-1">
+        <li><strong>売上原価</strong>: 労務費・外注費・材料費・経費・現場固定費</li>
+        <li><strong>売上総利益</strong>: 売上高 - 売上原価（粗利）</li>
+        <li><strong>販管費</strong>: 役員報酬・事務員給与・事務所家賃など本社経費</li>
+        <li><strong>営業利益</strong>: 売上総利益 - 販管費（会社全体の利益）</li>
+      </ul>
+    </div>
   </div>
 </div>

@@ -1,0 +1,109 @@
+<!-- サマリー -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="text-sm text-gray-500">処理待ち件数</div>
+    <div class="text-2xl font-bold text-orange-600"><%= @expenses.count %>件</div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="text-sm text-gray-500">処理待ち金額</div>
+    <div class="text-2xl font-bold"><%= number_with_delimiter(@total_amount.to_i) %>円</div>
+  </div>
+</div>
+
+<div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+  <p class="text-green-800 text-sm">
+    <strong>請求書突合:</strong>
+    仕入先からの請求書と金額を照らし合わせ、一致していれば「確認済み」ボタンで処理してください。
+  </p>
+</div>
+
+<!-- 仕入先別グループ -->
+<% if @expenses_by_supplier.any? %>
+  <div class="space-y-6">
+    <% @expenses_by_supplier.each do |supplier, expenses| %>
+      <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+          <div>
+            <h3 class="font-bold text-lg">
+              <% if supplier %>
+                <%= supplier.name %>
+              <% else %>
+                <span class="text-gray-500">仕入先未設定</span>
+              <% end %>
+            </h3>
+            <p class="text-sm text-gray-500">
+              <%= expenses.count %>件 / 合計 <%= number_with_delimiter(expenses.sum(&:amount).to_i) %>円
+            </p>
+          </div>
+          <% if supplier %>
+            <%= button_to "この仕入先をすべて確認済みにする",
+                confirm_supplier_accounting_expenses_path(
+                  supplier_id: supplier.id,
+                  year: @current_date.year,
+                  month: @current_date.month
+                ),
+                method: :post,
+                class: "px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700",
+                data: { turbo_confirm: "#{supplier.name}の#{expenses.count}件を処理済みにしますか？" } %>
+          <% end %>
+        </div>
+
+        <table class="w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">日付</th>
+              <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">案件</th>
+              <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">カテゴリ</th>
+              <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">内容</th>
+              <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
+              <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">伝票</th>
+              <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">操作</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% expenses.each do |expense| %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm">
+                  <%= expense.daily_report&.report_date&.strftime("%m/%d") || "-" %>
+                </td>
+                <td class="px-4 py-3 text-sm">
+                  <%= expense.project&.name || "-" %>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs rounded bg-gray-100"><%= expense.category_label %></span>
+                </td>
+                <td class="px-4 py-3 text-sm"><%= expense.description %></td>
+                <td class="px-4 py-3 text-sm text-right font-medium">
+                  <%= number_with_delimiter(expense.amount.to_i) %>円
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <% if expense.voucher_attached? %>
+                    <%= link_to "確認", accounting_expense_path(expense), class: "text-blue-600 hover:underline" %>
+                  <% else %>
+                    <span class="text-gray-400">-</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <%= link_to "詳細", accounting_expense_path(expense), class: "px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+          <tfoot class="bg-gray-50">
+            <tr>
+              <td colspan="4" class="px-4 py-3 text-right font-medium">合計</td>
+              <td class="px-4 py-3 text-right font-bold text-lg">
+                <%= number_with_delimiter(expenses.sum(&:amount).to_i) %>円
+              </td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+    処理待ちの掛け払い経費はありません
+  </div>
+<% end %>

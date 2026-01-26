@@ -13,7 +13,8 @@ export default class extends Controller {
   ]
 
   static values = {
-    refreshInterval: { type: Number, default: 30000 } // 30秒
+    refreshInterval: { type: Number, default: 30000 }, // 30秒
+    readonly: { type: Boolean, default: false }
   }
 
   connect() {
@@ -184,6 +185,12 @@ export default class extends Controller {
   async openCellModal(event) {
     event.stopPropagation()
 
+    // 閲覧モードの場合は編集モーダルを開かない
+    if (this.readonlyValue) {
+      alert("閲覧モードのため編集できません")
+      return
+    }
+
     this.currentProjectId = event.currentTarget.dataset.projectId
     this.currentDate = event.currentTarget.dataset.date
     this.currentShift = event.currentTarget.dataset.shift || "day"
@@ -339,6 +346,12 @@ export default class extends Controller {
   // ========================
 
   openBulkModal() {
+    // 閲覧モードの場合は編集モーダルを開かない
+    if (this.readonlyValue) {
+      alert("閲覧モードのため編集できません")
+      return
+    }
+
     this.bulkModalTarget.classList.remove("hidden")
     document.body.classList.add("overflow-hidden")
     this.resetBulkForm()
@@ -519,6 +532,12 @@ export default class extends Controller {
 
   async openNoteModal(event) {
     event.stopPropagation()
+
+    // 閲覧モードの場合は編集モーダルを開かない
+    if (this.readonlyValue) {
+      alert("閲覧モードのため編集できません")
+      return
+    }
 
     this.currentNoteProjectId = event.currentTarget.dataset.projectId
     this.currentNoteDate = event.currentTarget.dataset.date

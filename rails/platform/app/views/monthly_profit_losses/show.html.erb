@@ -97,18 +97,17 @@
     </div>
   </div>
 
-  <%# 仕掛かりサマリー %>
-  <% if @wip_revenue_total > 0 %>
-    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center">
-          <span class="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
-          <span class="text-sm font-medium text-yellow-800">仕掛かり残高（累計出来高 - 累計請求額）</span>
-        </div>
-        <span class="text-lg font-bold text-yellow-900"><%= number_to_currency(@wip_revenue_total, unit: "¥", precision: 0) %></span>
-      </div>
+  <%# 整合性チェック（出来高 = 請求 + 仕掛かり） %>
+  <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+    <div class="flex items-center justify-between text-sm">
+      <span class="text-gray-600">出来高 = 請求 + 仕掛かり</span>
+      <span class="font-medium text-gray-900">
+        <%= number_to_currency(@progress_revenue_total, unit: "¥", precision: 0) %> =
+        <%= number_to_currency(@invoiced_revenue, unit: "¥", precision: 0) %> +
+        <%= number_to_currency(@wip_revenue_total, unit: "¥", precision: 0) %>
+      </span>
     </div>
-  <% end %>
+  </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <%# 左側: 売上詳細 %>
@@ -124,7 +123,9 @@
         </div>
         <% if @monthly_progresses.any? %>
           <div class="divide-y divide-gray-100">
-            <% @monthly_progresses.values.sort_by { |p| -p.progress_amount.to_i }.each do |progress| %>
+            <% @monthly_progresses.values.sort_by { |p| -p.monthly_progress_amount.to_i }.each do |progress| %>
+              <% monthly_amount = progress.monthly_progress_amount %>
+              <% next if monthly_amount <= 0 %>
               <div class="px-4 py-3 hover:bg-blue-50">
                 <div class="flex justify-between items-start">
                   <div>
@@ -132,8 +133,9 @@
                     <% if progress.note.present? %>
                       <p class="text-xs text-gray-500"><%= progress.note %></p>
                     <% end %>
+                    <p class="text-xs text-gray-400">累計: <%= number_to_currency(progress.progress_amount, unit: "¥", precision: 0) %></p>
                   </div>
-                  <span class="text-sm font-medium text-blue-900"><%= number_to_currency(progress.progress_amount, unit: "¥", precision: 0) %></span>
+                  <span class="text-sm font-medium text-blue-900"><%= number_to_currency(monthly_amount, unit: "¥", precision: 0) %></span>
                 </div>
               </div>
             <% end %>
@@ -149,10 +151,10 @@
       <div class="bg-white shadow rounded-lg overflow-hidden border-l-4 border-green-400">
         <div class="px-4 py-3 border-b border-gray-200 bg-green-50">
           <div class="flex justify-between items-center">
-            <h3 class="text-lg font-medium text-green-900">月次請求額</h3>
+            <h3 class="text-lg font-medium text-green-900">当月請求額</h3>
             <span class="text-lg font-bold text-green-900"><%= number_to_currency(@invoiced_revenue, unit: "¥", precision: 0) %></span>
           </div>
-          <p class="text-xs text-green-600 mt-1">今月発行の請求書</p>
+          <p class="text-xs text-green-600 mt-1">今月出来高に対する請求</p>
         </div>
         <% if @invoiced_projects.any? %>
           <div class="divide-y divide-gray-100">
@@ -163,10 +165,8 @@
                     <%= link_to ip[:project].name, project_path(ip[:project]), class: "text-sm font-medium text-gray-900 hover:text-blue-600" %>
                     <p class="text-xs text-gray-500">
                       <%= ip[:invoice_number] %>
-                      <% if ip[:progress_year] && ip[:progress_month] %>
-                        <span class="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
-                          <%= ip[:progress_year] %>/<%= ip[:progress_month] %>月分
-                        </span>
+                      <% if ip[:issued_date] %>
+                        <span class="ml-1 text-gray-400">発行: <%= ip[:issued_date].strftime("%m/%d") %></span>
                       <% end %>
                     </p>
                   </div>
@@ -177,37 +177,39 @@
           </div>
         <% else %>
           <div class="p-4 text-center text-gray-500 text-sm">
-            今月発行の請求書はありません
+            今月出来高への請求はありません
           </div>
         <% end %>
       </div>
 
-      <%# 仕掛かり（出来高-請求額） %>
-      <% if @wip_projects_data.any? %>
+      <%# 仕掛かり（当月出来高 - 当月請求） %>
+      <% if @wip_revenue_total > 0 %>
         <div class="bg-white shadow rounded-lg overflow-hidden border-l-4 border-yellow-400">
           <div class="px-4 py-3 border-b border-gray-200 bg-yellow-50">
             <div class="flex justify-between items-center">
-              <h3 class="text-lg font-medium text-yellow-900">仕掛かり残高</h3>
+              <h3 class="text-lg font-medium text-yellow-900">当月仕掛かり</h3>
               <span class="text-lg font-bold text-yellow-900"><%= number_to_currency(@wip_revenue_total, unit: "¥", precision: 0) %></span>
             </div>
-            <p class="text-xs text-yellow-600 mt-1">累計出来高 - 累計請求額</p>
+            <p class="text-xs text-yellow-600 mt-1">当月出来高 - 当月請求</p>
           </div>
-          <div class="divide-y divide-gray-100">
-            <% @wip_projects_data.each do |wp| %>
-              <div class="px-4 py-3 hover:bg-yellow-50">
-                <div class="flex justify-between items-start">
-                  <div>
-                    <%= link_to wp[:project].name, project_path(wp[:project]), class: "text-sm font-medium text-gray-700 hover:text-blue-600" %>
-                    <p class="text-xs text-gray-500">
-                      出来高: <%= number_to_currency(wp[:cumulative_progress], unit: "¥", precision: 0) %> -
-                      請求: <%= number_to_currency(wp[:cumulative_invoiced], unit: "¥", precision: 0) %>
-                    </p>
+          <% if @wip_projects_data.any? %>
+            <div class="divide-y divide-gray-100">
+              <% @wip_projects_data.each do |wp| %>
+                <div class="px-4 py-3 hover:bg-yellow-50">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <%= link_to wp[:project].name, project_path(wp[:project]), class: "text-sm font-medium text-gray-700 hover:text-blue-600" %>
+                      <p class="text-xs text-gray-500">
+                        出来高: <%= number_to_currency(wp[:monthly_progress], unit: "¥", precision: 0) %> -
+                        請求: <%= number_to_currency(wp[:invoiced], unit: "¥", precision: 0) %>
+                      </p>
+                    </div>
+                    <span class="text-sm font-bold text-yellow-800"><%= number_to_currency(wp[:wip_amount], unit: "¥", precision: 0) %></span>
                   </div>
-                  <span class="text-sm font-bold text-yellow-800"><%= number_to_currency(wp[:wip_amount], unit: "¥", precision: 0) %></span>
                 </div>
-              </div>
-            <% end %>
-          </div>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       <% end %>
     </div>

@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class ScheduleController < ApplicationController
-  authorize_with :projects
+  authorize_with :schedule
+  before_action :authorize_edit!, only: %i[save_cell bulk_assign remove_assignment save_schedule_note]
 
   def index
     # 週の開始日を設定
@@ -289,6 +290,15 @@ class ScheduleController < ApplicationController
   end
 
   private
+
+  def authorize_edit!
+    unless current_employee.can_edit?(:schedule)
+      respond_to do |format|
+        format.html { redirect_to schedule_path, alert: "編集権限がありません" }
+        format.json { render json: { success: false, error: "編集権限がありません" }, status: :forbidden }
+      end
+    end
+  end
 
   def schedule_json(schedule)
     {

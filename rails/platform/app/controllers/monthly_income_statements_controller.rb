@@ -2,26 +2,44 @@
 
 # 月次損益計算書（第1層：会計形式）
 # 売上高 - 売上原価 = 売上総利益 - 販管費 = 営業利益
+#
+# 売上計上基準:
+#   通常月: 請求確定ベース（発行日が当月の請求書）
+#   決算月（9月）: 出来高ベース（未請求分も計上）
 class MonthlyIncomeStatementsController < ApplicationController
   before_action :set_period
+
+  # 決算月（9月）
+  FISCAL_YEAR_END_MONTH = 9
 
   def show
     start_date = Date.new(@year, @month, 1)
     end_date = start_date.end_of_month
 
-    # === 売上高（出来高ベース）===
-    @revenue = calculate_progress_revenue(@year, @month)
+    # 決算月かどうか
+    @is_fiscal_year_end = (@month == FISCAL_YEAR_END_MONTH)
 
-    # 参考：請求済み金額（税抜）
-    @invoiced_amount = Invoice.where(issued_date: start_date..end_date)
-                              .where(status: %w[issued paid])
-                              .sum(:amount).to_i
+    # === 売上高 ===
+    # 請求確定ベース（発行日が当月の請求書）
+    @invoiced_revenue = Invoice.where(issued_date: start_date..end_date)
+                               .where(status: %w[issued paid])
+                               .sum(:amount).to_i
 
-    # 未請求額
-    @unbilled_amount = [@revenue - cumulative_invoiced_amount(@year, @month), 0].max
+    # 出来高ベースの売上（参考値 / 決算月は主値）
+    @progress_revenue = calculate_progress_revenue(@year, @month)
 
     # 出来高入力済みか
     @progress_entered = ProjectMonthlyProgress.exists_for_month?(@year, @month)
+
+    if @is_fiscal_year_end
+      # 決算月: 出来高ベース + 期末仕掛品調整
+      @revenue = @progress_revenue
+      @wip_adjustment = @progress_revenue - @invoiced_revenue  # 期末仕掛品（未請求出来高）
+    else
+      # 通常月: 請求確定ベース
+      @revenue = @invoiced_revenue
+      @wip_adjustment = 0
+    end
 
     # === 売上原価（第2層から取得）===
     @cost_of_sales = calculate_cost_of_sales(@year, @month)

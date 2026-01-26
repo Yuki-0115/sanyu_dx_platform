@@ -67,13 +67,21 @@ class Employee < ApplicationRecord
       sales: %i[dashboard projects estimates clients master schedule],
       engineering: %i[dashboard projects budgets daily_reports safety_documents schedule attendance_sheets],
       construction: %i[dashboard projects daily_reports attendances expenses safety_documents schedule],
-      worker: %i[daily_reports attendances]
+      worker: %i[dashboard daily_reports attendances schedule]
     }
 
     allowed = permissions[role.to_sym]
     return true if allowed == :all
 
     allowed&.include?(feature.to_sym)
+  end
+
+  # Check if user can edit a feature (some features are read-only for certain roles)
+  def can_edit?(feature)
+    # Workers can only view schedule, not edit
+    return false if worker? && feature.to_sym == :schedule
+
+    can_access?(feature)
   end
 
   private

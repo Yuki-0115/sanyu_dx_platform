@@ -1,0 +1,146 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold"><%= @employee.name %>の立替経費</h1>
+      <p class="text-gray-500"><%= @employee.department %></p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "戻る", accounting_reimbursements_path, class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+      <% if @pending_expenses.any? %>
+        <%= button_to "全て精算", bulk_reimburse_accounting_reimbursements_path(employee_id: @employee.id),
+            method: :post,
+            class: "px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700",
+            data: { turbo_confirm: "#{@employee.name}の立替経費を全て精算済みにしますか？" } %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- サマリー -->
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="text-sm text-gray-500">未精算合計</div>
+        <div class="text-3xl font-bold text-red-600">
+          <%= number_with_delimiter(@total_pending.to_i) %>円
+        </div>
+      </div>
+      <div class="text-right">
+        <div class="text-sm text-gray-500">未精算件数</div>
+        <div class="text-2xl font-bold"><%= @pending_expenses.count %>件</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 未精算一覧 -->
+  <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+    <div class="px-4 py-3 border-b bg-red-50">
+      <h2 class="font-bold text-red-800">未精算の立替経費</h2>
+    </div>
+    <% if @pending_expenses.any? %>
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">日付</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">案件</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">支払先</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">カテゴリ</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">内容</th>
+            <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">レシート</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">操作</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% @pending_expenses.each do |expense| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3 text-sm">
+                <%= expense.created_at.strftime("%Y/%m/%d") %>
+              </td>
+              <td class="px-4 py-3 text-sm">
+                <% if expense.project.present? %>
+                  <%= expense.project.name %>
+                <% else %>
+                  <span class="text-gray-400">販管費</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-sm"><%= expense.payee_name || "-" %></td>
+              <td class="px-4 py-3 text-sm">
+                <span class="px-2 py-1 text-xs rounded bg-gray-100"><%= expense.category_label %></span>
+              </td>
+              <td class="px-4 py-3 text-sm"><%= expense.description %></td>
+              <td class="px-4 py-3 text-sm text-right font-bold">
+                <%= number_with_delimiter(expense.amount.to_i) %>円
+              </td>
+              <td class="px-4 py-3 text-center">
+                <% if expense.receipt.attached? %>
+                  <%= link_to rails_blob_path(expense.receipt, disposition: "inline"), target: "_blank" do %>
+                    <% if expense.receipt.content_type.start_with?("image/") %>
+                      <%= image_tag expense.receipt, class: "h-12 w-12 object-cover rounded inline" %>
+                    <% else %>
+                      <span class="text-blue-600 hover:underline">PDF</span>
+                    <% end %>
+                  <% end %>
+                <% else %>
+                  <span class="text-gray-400 text-xs">なし</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <%= button_to "精算", reimburse_accounting_reimbursement_path(expense),
+                    method: :post,
+                    class: "px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot class="bg-gray-100">
+          <tr>
+            <td colspan="5" class="px-4 py-3 text-right font-bold">合計</td>
+            <td class="px-4 py-3 text-right font-bold text-red-600">
+              <%= number_with_delimiter(@total_pending.to_i) %>円
+            </td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    <% else %>
+      <div class="p-8 text-center text-gray-500">
+        未精算の経費はありません
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 精算済み（直近） -->
+  <% if @reimbursed_expenses.any? %>
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      <div class="px-4 py-3 border-b bg-green-50">
+        <h2 class="font-bold text-green-800">精算済み（直近20件）</h2>
+      </div>
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">精算日</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">報告日</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">内容</th>
+            <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% @reimbursed_expenses.each do |expense| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3 text-sm text-green-600">
+                <%= expense.reimbursed_at&.strftime("%Y/%m/%d") || "-" %>
+              </td>
+              <td class="px-4 py-3 text-sm">
+                <%= expense.created_at.strftime("%Y/%m/%d") %>
+              </td>
+              <td class="px-4 py-3 text-sm"><%= expense.description %></td>
+              <td class="px-4 py-3 text-sm text-right">
+                <%= number_with_delimiter(expense.amount.to_i) %>円
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

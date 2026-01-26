@@ -53,16 +53,20 @@ class MonthlyProfitLossesController < ApplicationController
     # 請求済みと仕掛かりに分類（表示用）
     @completed_projects = all_projects.select { |p| INVOICED_STATUSES.include?(p[:project].status) }
 
-    # === 売上（請求ベース）===
-    # その月に発行された請求書の合計
-    start_date = Date.new(@year, @month, 1)
-    end_date = start_date.end_of_month
-    @invoiced_revenue = Invoice.where(issued_date: start_date..end_date)
+    # その月の出来高データ
+    @monthly_progresses = ProjectMonthlyProgress.for_month(@year, @month).includes(:project).index_by(&:project_id)
+    @progress_revenue_total = calculate_monthly_revenue(@year, @month)
+
+    # === 請求（出来高月ベース）===
+    # その月の出来高に対する請求書の合計
+    @invoiced_revenue = Invoice.where(progress_year: @year, progress_month: @month)
                                .where(status: %w[issued paid])
                                .sum(:total_amount).to_i
 
     # 請求書の内訳（表示用）
-    @invoiced_projects = Invoice.where(issued_date: start_date..end_date)
+    start_date = Date.new(@year, @month, 1)
+    end_date = start_date.end_of_month
+    @invoiced_projects = Invoice.where(progress_year: @year, progress_month: @month)
                                 .where(status: %w[issued paid])
                                 .includes(:project)
                                 .map do |invoice|
@@ -70,31 +74,33 @@ class MonthlyProfitLossesController < ApplicationController
         project: invoice.project,
         invoice_number: invoice.invoice_number,
         amount: invoice.total_amount.to_i,
-        progress_year: invoice.progress_year,
-        progress_month: invoice.progress_month
+        issued_date: invoice.issued_date
       }
     end
 
-    # === 仕掛かり（出来高 - 請求額）===
-    # その月の出来高データ
-    @monthly_progresses = ProjectMonthlyProgress.for_month(@year, @month).includes(:project).index_by(&:project_id)
-    @progress_revenue_total = calculate_monthly_revenue(@year, @month)
+    # === 当月仕掛かり（当月出来高 - 当月請求）===
+    # 出来高ベースで計算（請求 + 仕掛かり = 出来高 の関係）
+    @wip_revenue_total = @progress_revenue_total - @invoiced_revenue
 
-    # 仕掛かり対象案件の仕掛かり金額（累計出来高 - 累計請求額）
-    @wip_projects_data = Project.where(status: %w[ordered preparing in_progress])
-                                .includes(:monthly_progresses, :invoices)
-                                .map do |project|
-      wip_amount = project.wip_amount
+    # 案件別の仕掛かり内訳
+    @wip_projects_data = @monthly_progresses.values.map do |progress|
+      monthly_amount = progress.monthly_progress_amount
+      next if monthly_amount <= 0
+
+      # この案件の当月出来高に対する請求
+      project_invoiced = Invoice.where(project_id: progress.project_id, progress_year: @year, progress_month: @month)
+                                .where(status: %w[issued paid])
+                                .sum(:total_amount).to_i
+      wip_amount = monthly_amount - project_invoiced
       next if wip_amount <= 0
 
       {
-        project: project,
-        cumulative_progress: project.cumulative_progress_amount,
-        cumulative_invoiced: project.cumulative_invoiced_amount,
+        project: progress.project,
+        monthly_progress: monthly_amount,
+        invoiced: project_invoiced,
         wip_amount: wip_amount
       }
     end.compact
-    @wip_revenue_total = @wip_projects_data.sum { |p| p[:wip_amount] }
 
     # 日報ベースの原価（全案件）
     @estimated_labor_cost = all_projects.sum { |p| p[:labor_cost] }

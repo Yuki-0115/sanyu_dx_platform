@@ -7,13 +7,15 @@ class EstimatePdfGenerator
   include ActionView::Helpers::NumberHelper
 
   FONT_PATH = Rails.root.join("app/assets/fonts")
+  IMAGE_PATH = Rails.root.join("app/assets/images")
+
   # A4 Landscape: 842 x 595 points
   PAGE_WIDTH = 782  # 842 - 30 - 30 (margins)
   PAGE_HEIGHT = 510 # 595 - 25 - 60 (margins, bottom increased for footer)
 
-  # Colors
-  PRIMARY_COLOR = "F7941D"     # Orange
-  SECONDARY_COLOR = "4A90A4"   # Blue-gray
+  # Colors（ロゴに合わせた配色）
+  PRIMARY_COLOR = "F7931E"     # Orange (from logo)
+  SECONDARY_COLOR = "00A0E9"   # Blue (from logo)
   ACCENT_COLOR = "2C3E50"      # Dark blue
   LIGHT_BG = "F8F9FA"          # Light gray background
   CATEGORY_BG = "E8E8E8"       # Category row background
@@ -191,23 +193,37 @@ class EstimatePdfGenerator
 
   def render_amount_box(pdf)
     box_width = 375
-
-    pdf.move_down 25
-
-    # 会社名（横並び・黒文字・大きく）
-    pdf.fill_color "000000"
-    pdf.text "株式会社 サンユウテック", size: 20, style: :bold, align: :center
-    pdf.fill_color "000000"
+    logo_path = IMAGE_PATH.join("sanyu_logo.png")
+    stamp_path = IMAGE_PATH.join("sanyu_stamp.jpg")
 
     pdf.move_down 10
 
-    # 住所・連絡先（大きく）
+    # ロゴ + 会社名 + 角印を横並び
+    company_top = pdf.cursor
+
+    # ロゴ（左側）
+    if File.exist?(logo_path)
+      pdf.image logo_path, at: [20, company_top], width: 80
+    end
+
+    # 会社名（中央）
+    pdf.fill_color "000000"
+    pdf.text_box "株式会社 サンユウテック", at: [110, company_top - 10], width: 180, size: 14, style: :bold, align: :center
+
+    # 角印（右側）
+    if File.exist?(stamp_path)
+      pdf.image stamp_path, at: [300, company_top], width: 50, height: 50
+    end
+
+    pdf.move_down 55
+
+    # 住所・連絡先
     pdf.fill_color "333333"
-    pdf.text "〒816-0912 福岡県大野城市御笠川6丁目2-5", size: 11, align: :center
-    pdf.text "TEL: 092-555-9211  FAX: 092-555-9217", size: 11, align: :center
+    pdf.text "〒816-0912 福岡県大野城市御笠川6丁目2-5", size: 10, align: :center
+    pdf.text "TEL: 092-555-9211  FAX: 092-555-9217", size: 10, align: :center
     pdf.fill_color "000000"
 
-    pdf.move_down 18
+    pdf.move_down 12
 
     # 金額ボックス
     amount_box_height = 95

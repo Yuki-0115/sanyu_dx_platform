@@ -1,0 +1,145 @@
+<div class="container mx-auto px-4 py-6 max-w-2xl">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">経費報告 編集</h1>
+    <%= link_to "戻る", expense_reports_path, class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <%= form_with model: @expense, url: expense_report_path(@expense), method: :patch, class: "space-y-6" do |f| %>
+      <% if @expense.errors.any? %>
+        <div class="bg-red-50 border border-red-200 rounded p-4">
+          <p class="text-red-800 font-medium">入力エラーがあります</p>
+          <ul class="mt-2 text-sm text-red-600 list-disc list-inside">
+            <% @expense.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <!-- 経費種別（表示のみ） -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">経費種別</label>
+        <div class="flex gap-4">
+          <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <%= f.radio_button :expense_type, "sales", class: "mr-2" %>
+            <div>
+              <span class="font-medium">営業経費</span>
+              <p class="text-xs text-gray-500">→ 工事原価（固定費）</p>
+            </div>
+          </label>
+          <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <%= f.radio_button :expense_type, "admin", class: "mr-2" %>
+            <div>
+              <span class="font-medium">管理経費</span>
+              <p class="text-xs text-gray-500">→ 販管費</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- 案件（任意） -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">案件</label>
+        <%= f.select :project_id,
+              options_for_select(@projects.map { |p| [p.name, p.id] }, @expense.project_id),
+              { include_blank: "-- 案件なし（共通経費）--" },
+              class: "w-full border rounded px-3 py-2" %>
+      </div>
+
+      <!-- カテゴリ -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">カテゴリ</label>
+        <%= f.select :category,
+              options_for_select(Expense::CATEGORY_LABELS.map { |k, v| [v, k] }, @expense.category),
+              {},
+              class: "w-full border rounded px-3 py-2", required: true %>
+      </div>
+
+      <!-- 支払方法 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">支払方法</label>
+        <%= f.select :payment_method,
+              options_for_select([
+                ["立替（現金）", "advance"],
+                ["会社カード", "company_card"],
+                ["掛け払い", "credit"]
+              ], @expense.payment_method),
+              {},
+              class: "w-full border rounded px-3 py-2", required: true %>
+      </div>
+
+      <!-- 支払先 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">支払先（店舗名・会社名など）</label>
+        <%= f.text_field :payee_name, placeholder: "例: コンビニ、ホームセンター、◯◯商事",
+            class: "w-full border rounded px-3 py-2" %>
+      </div>
+
+      <!-- 仕入先 -->
+      <div id="supplier-field" class="<%= @expense.credit_payment? ? '' : 'hidden' %>">
+        <label class="block text-sm font-medium text-gray-700 mb-2">仕入先</label>
+        <%= f.select :supplier_id,
+              options_for_select(@partners.map { |p| [p.name, p.id] }, @expense.supplier_id),
+              { include_blank: "-- 仕入先を選択 --" },
+              class: "w-full border rounded px-3 py-2" %>
+      </div>
+
+      <!-- 内容 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">内容・用途</label>
+        <%= f.text_field :description,
+            class: "w-full border rounded px-3 py-2", required: true %>
+      </div>
+
+      <!-- 金額・数量 -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">金額（税込）</label>
+          <%= f.number_field :amount, step: 1, min: 0,
+              class: "w-full border rounded px-3 py-2", required: true %>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">数量</label>
+          <div class="flex gap-2">
+            <%= f.number_field :quantity, step: 0.1, min: 0,
+                class: "flex-1 border rounded px-3 py-2" %>
+            <%= f.text_field :unit,
+                class: "w-20 border rounded px-3 py-2" %>
+          </div>
+        </div>
+      </div>
+
+      <!-- レシート添付 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">レシート・領収書</label>
+        <% if @expense.receipt.attached? %>
+          <p class="text-sm text-green-600 mb-2">添付済み</p>
+        <% end %>
+        <%= f.file_field :receipt, accept: "image/*,.pdf", class: "w-full border rounded px-3 py-2" %>
+      </div>
+
+      <!-- 送信ボタン -->
+      <div class="flex justify-between pt-4 border-t">
+        <%= button_to "削除", expense_report_path(@expense), method: :delete,
+            class: "px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700",
+            data: { turbo_confirm: "この経費報告を削除しますか？" } %>
+        <div class="flex gap-4">
+          <%= link_to "キャンセル", expense_reports_path, class: "px-6 py-2 bg-gray-300 rounded hover:bg-gray-400" %>
+          <%= f.submit "更新", class: "px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  document.querySelector('select[name="expense[payment_method]"]').addEventListener('change', function() {
+    const supplierField = document.getElementById('supplier-field');
+    if (this.value === 'credit') {
+      supplierField.classList.remove('hidden');
+    } else {
+      supplierField.classList.add('hidden');
+    }
+  });
+</script>

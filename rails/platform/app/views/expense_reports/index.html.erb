@@ -1,0 +1,91 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">経費報告</h1>
+      <p class="text-gray-500">日報以外の経費（営業経費・経営者経費など）を報告</p>
+    </div>
+    <%= link_to "新規報告", new_expense_report_path, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+  </div>
+
+  <!-- サマリー -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">報告件数</div>
+      <div class="text-2xl font-bold"><%= @expenses.count %>件</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">承認待ち</div>
+      <div class="text-2xl font-bold text-orange-600"><%= @pending_count %>件</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">承認済み</div>
+      <div class="text-2xl font-bold text-green-600"><%= @approved_count %>件</div>
+    </div>
+  </div>
+
+  <!-- 経費一覧 -->
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">報告日</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">種別</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">カテゴリ</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">支払先</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">内容</th>
+          <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">ステータス</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">操作</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @expenses.each do |expense| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 text-sm">
+              <%= expense.created_at.strftime("%m/%d") %>
+            </td>
+            <td class="px-4 py-3">
+              <% if expense.expense_type == "sales" %>
+                <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">営業</span>
+              <% else %>
+                <span class="px-2 py-1 text-xs rounded bg-purple-100 text-purple-800">管理</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-1 text-xs rounded bg-gray-100"><%= expense.category_label %></span>
+            </td>
+            <td class="px-4 py-3 text-sm"><%= expense.payee_name || "-" %></td>
+            <td class="px-4 py-3 text-sm"><%= expense.description %></td>
+            <td class="px-4 py-3 text-sm text-right font-medium">
+              <%= number_with_delimiter(expense.amount.to_i) %>円
+            </td>
+            <td class="px-4 py-3 text-center">
+              <% case expense.status %>
+              <% when "pending" %>
+                <span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">承認待ち</span>
+              <% when "approved" %>
+                <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">承認済み</span>
+              <% when "rejected" %>
+                <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-800">却下</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <% if expense.pending? %>
+                <%= link_to "編集", edit_expense_report_path(expense), class: "px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700" %>
+              <% else %>
+                <%= link_to "詳細", expense_report_path(expense), class: "px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @expenses.empty? %>
+          <tr>
+            <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+              経費報告はありません
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,160 @@
+<div class="container mx-auto px-4 py-6 max-w-2xl">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">経費報告 詳細</h1>
+    <%= link_to "戻る", expense_reports_path, class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <dl class="space-y-4">
+      <div class="flex border-b pb-4">
+        <dt class="w-32 text-gray-500">ステータス</dt>
+        <dd>
+          <% case @expense.status %>
+          <% when "pending" %>
+            <span class="px-3 py-1 rounded bg-yellow-100 text-yellow-800">承認待ち</span>
+          <% when "approved" %>
+            <span class="px-3 py-1 rounded bg-green-100 text-green-800">承認済み</span>
+          <% when "rejected" %>
+            <span class="px-3 py-1 rounded bg-red-100 text-red-800">却下</span>
+          <% end %>
+        </dd>
+      </div>
+
+      <div class="flex">
+        <dt class="w-32 text-gray-500">報告日</dt>
+        <dd class="font-medium"><%= @expense.created_at.strftime("%Y年%m月%d日") %></dd>
+      </div>
+
+      <div class="flex">
+        <dt class="w-32 text-gray-500">経費種別</dt>
+        <dd>
+          <% if @expense.expense_type == "sales" %>
+            <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">営業経費</span>
+            <span class="text-xs text-gray-500 ml-2">→ 工事原価（固定費）</span>
+          <% else %>
+            <span class="px-2 py-1 text-xs rounded bg-purple-100 text-purple-800">管理経費</span>
+            <span class="text-xs text-gray-500 ml-2">→ 販管費</span>
+          <% end %>
+        </dd>
+      </div>
+
+      <div class="flex">
+        <dt class="w-32 text-gray-500">案件</dt>
+        <dd class="font-medium">
+          <% if @expense.project %>
+            <%= @expense.project.name %>
+          <% else %>
+            <span class="text-gray-400">販管費</span>
+          <% end %>
+        </dd>
+      </div>
+
+      <div class="flex">
+        <dt class="w-32 text-gray-500">カテゴリ</dt>
+        <dd><span class="px-2 py-1 rounded bg-gray-100"><%= @expense.category_label %></span></dd>
+      </div>
+
+      <div class="flex">
+        <dt class="w-32 text-gray-500">支払方法</dt>
+        <dd><%= @expense.payment_method_label %></dd>
+      </div>
+
+      <% if @expense.payee_name.present? %>
+        <div class="flex">
+          <dt class="w-32 text-gray-500">支払先</dt>
+          <dd><%= @expense.payee_name %></dd>
+        </div>
+      <% end %>
+
+      <% if @expense.supplier %>
+        <div class="flex">
+          <dt class="w-32 text-gray-500">仕入先</dt>
+          <dd><%= @expense.supplier.name %></dd>
+        </div>
+      <% end %>
+
+      <div class="flex">
+        <dt class="w-32 text-gray-500">内容</dt>
+        <dd class="font-medium"><%= @expense.description %></dd>
+      </div>
+
+      <div class="flex">
+        <dt class="w-32 text-gray-500">金額</dt>
+        <dd class="text-xl font-bold text-blue-600"><%= number_with_delimiter(@expense.amount.to_i) %>円</dd>
+      </div>
+
+      <% if @expense.quantity.present? %>
+        <div class="flex">
+          <dt class="w-32 text-gray-500">数量</dt>
+          <dd><%= @expense.quantity_with_unit %></dd>
+        </div>
+      <% end %>
+    </dl>
+
+    <!-- 添付ファイル -->
+    <div class="mt-6 pt-6 border-t">
+      <h3 class="font-bold mb-4">添付ファイル</h3>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <p class="text-sm text-gray-500 mb-2">レシート・領収書</p>
+          <% if @expense.receipt.attached? %>
+            <div class="border rounded overflow-hidden">
+              <% if @expense.receipt.content_type.start_with?("image/") %>
+                <%= image_tag @expense.receipt, class: "w-full h-auto" %>
+              <% else %>
+                <div class="p-4 text-center">
+                  <%= link_to "ダウンロード", rails_blob_path(@expense.receipt, disposition: "attachment"), class: "text-blue-600 hover:underline" %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-gray-400 p-4 border-2 border-dashed rounded text-center">未添付</p>
+          <% end %>
+        </div>
+
+        <div>
+          <p class="text-sm text-gray-500 mb-2">伝票・納品書</p>
+          <% if @expense.voucher.attached? %>
+            <div class="border rounded overflow-hidden">
+              <% if @expense.voucher.content_type.start_with?("image/") %>
+                <%= image_tag @expense.voucher, class: "w-full h-auto" %>
+              <% else %>
+                <div class="p-4 text-center">
+                  <%= link_to "ダウンロード", rails_blob_path(@expense.voucher, disposition: "attachment"), class: "text-blue-600 hover:underline" %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-gray-400 p-4 border-2 border-dashed rounded text-center">未添付</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 経理処理情報 -->
+    <% if @expense.accounting_processed? %>
+      <div class="mt-6 pt-6 border-t">
+        <h3 class="font-bold mb-4">経理処理情報</h3>
+        <dl class="space-y-2 text-sm">
+          <div class="flex">
+            <dt class="w-24 text-gray-500">勘定科目</dt>
+            <dd><%= @expense.account_code_name %></dd>
+          </div>
+          <div class="flex">
+            <dt class="w-24 text-gray-500">税区分</dt>
+            <dd><%= @expense.tax_category_label %></dd>
+          </div>
+          <div class="flex">
+            <dt class="w-24 text-gray-500">処理者</dt>
+            <dd><%= @expense.processed_by&.name %></dd>
+          </div>
+          <div class="flex">
+            <dt class="w-24 text-gray-500">処理日時</dt>
+            <dd><%= @expense.processed_at&.strftime("%Y/%m/%d %H:%M") %></dd>
+          </div>
+        </dl>
+      </div>
+    <% end %>
+  </div>
+</div>
