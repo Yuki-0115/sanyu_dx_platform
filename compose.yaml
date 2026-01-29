@@ -31,6 +31,7 @@ services:
       - DB_POSTGRESDB_USER=${POSTGRES_USER:-sanyu}
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-sanyu_dev_password}
       - DB_POSTGRESDB_SCHEMA=n8n
+      - N8N_SECURE_COOKIE=false
     ports:
       - "${N8N_PORT:-5678}:5678"
     volumes:
