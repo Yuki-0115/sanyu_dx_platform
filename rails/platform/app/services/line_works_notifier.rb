@@ -1,23 +1,30 @@
 # frozen_string_literal: true
 
+require "jwt"
+require "net/http"
+require "uri"
+require "json"
+
 # LINE WORKS通知サービス
-# n8n Webhook経由、または直接LINE WORKS APIで通知を送信
+# Bot APIを使用してメッセージを送信
 class LineWorksNotifier
   include Singleton
 
+  TOKEN_URL = "https://auth.worksmobile.com/oauth2/v2.0/token"
+  BOT_API_URL = "https://www.worksapis.com/v1.0/bots"
+
   NOTIFICATION_TYPES = {
-    project_created: "📋 新規案件登録",
-    four_point_completed: "✅ 4点チェック完了",
-    pre_construction_completed: "🔧 着工前ゲート完了",
-    construction_started: "🚧 着工",
-    project_completed: "🎉 完工",
-    budget_confirmed: "💰 実行予算確定",
-    daily_report_submitted: "📝 日報提出",
-    daily_report_confirmed: "✔️ 日報確認",
-    daily_report_reminder: "⏰ 日報リマインダー",
-    invoice_issued: "📄 請求書発行",
-    payment_received: "💵 入金確認",
-    offset_confirmed: "🔄 相殺確定"
+    project_created: "新規案件登録",
+    four_point_completed: "4点チェック完了",
+    pre_construction_completed: "着工前ゲート完了",
+    construction_started: "着工",
+    project_completed: "完工",
+    budget_confirmed: "実行予算確定",
+    daily_report_submitted: "日報提出",
+    daily_report_confirmed: "日報確認",
+    invoice_issued: "請求書発行",
+    payment_received: "入金確認",
+    offset_confirmed: "相殺確定"
   }.freeze
 
   class << self
@@ -29,16 +36,21 @@ class LineWorksNotifier
   end
 
   def initialize
-    @n8n_webhook_url = ENV.fetch("N8N_WEBHOOK_URL", "http://sanyu-n8n:5678/webhook/lineworks")
-    @direct_api_enabled = ENV.fetch("LINE_WORKS_BOT_ID", nil).present?
+    @bot_id = ENV.fetch("LINE_WORKS_BOT_ID", nil)
+    @client_id = ENV.fetch("LINE_WORKS_CLIENT_ID", nil)
+    @client_secret = ENV.fetch("LINE_WORKS_CLIENT_SECRET", nil)
+    @service_account = ENV.fetch("LINE_WORKS_SERVICE_ACCOUNT", nil)
+    @private_key_path = ENV.fetch("LINE_WORKS_PRIVATE_KEY_PATH", nil)
+    @notify_user_id = ENV.fetch("LINE_WORKS_NOTIFY_USER_ID", nil)
+    @access_token = nil
+    @token_expires_at = nil
   end
 
   # 汎用通知メソッド
   def notify(type:, message:, data: {})
     return mock_response(type, message) unless enabled?
 
-    payload = build_payload(type, message, data)
-    send_to_n8n(payload)
+    send_message(message)
   end
 
   # === 案件関連通知 ===
@@ -50,13 +62,7 @@ class LineWorksNotifier
         "案件名: #{project.name}",
         "顧客: #{project.client&.name || '未設定'}",
         "現場: #{project.site_address || '未設定'}"
-      ]),
-      data: {
-        project_id: project.id,
-        project_code: project.code,
-        project_name: project.name,
-        client_name: project.client&.name
-      }
+      ])
     )
   end
 
@@ -66,12 +72,7 @@ class LineWorksNotifier
       message: build_message(:four_point_completed, [
         "案件名: #{project.name}",
         "受注金額: #{format_currency(project.order_amount)}"
-      ]),
-      data: {
-        project_id: project.id,
-        project_code: project.code,
-        order_amount: project.order_amount
-      }
+      ])
     )
   end
 
@@ -81,11 +82,7 @@ class LineWorksNotifier
       message: build_message(:pre_construction_completed, [
         "案件名: #{project.name}",
         "実行予算が確定し、着工準備が整いました"
-      ]),
-      data: {
-        project_id: project.id,
-        project_code: project.code
-      }
+      ])
     )
   end
 
@@ -95,12 +92,7 @@ class LineWorksNotifier
       message: build_message(:construction_started, [
         "案件名: #{project.name}",
         "着工日: #{project.construction_started_at&.strftime('%Y/%m/%d')}"
-      ]),
-      data: {
-        project_id: project.id,
-        project_code: project.code,
-        started_at: project.construction_started_at
-      }
+      ])
     )
   end
 
@@ -110,12 +102,7 @@ class LineWorksNotifier
       message: build_message(:project_completed, [
         "案件名: #{project.name}",
         "完工日: #{project.completed_at&.strftime('%Y/%m/%d')}"
-      ]),
-      data: {
-        project_id: project.id,
-        project_code: project.code,
-        completed_at: project.completed_at
-      }
+      ])
     )
   end
 
@@ -126,14 +113,8 @@ class LineWorksNotifier
       type: :budget_confirmed,
       message: build_message(:budget_confirmed, [
         "案件名: #{budget.project&.name}",
-        "原価予算: #{format_currency(budget.total_cost)}",
-        "目標利益率: #{budget.target_profit_rate}%"
-      ]),
-      data: {
-        budget_id: budget.id,
-        project_id: budget.project_id,
-        total_cost: budget.total_cost
-      }
+        "原価予算: #{format_currency(budget.total_cost)}"
+      ])
     )
   end
 
@@ -145,14 +126,8 @@ class LineWorksNotifier
       message: build_message(:daily_report_submitted, [
         "案件: #{report.project&.name}",
         "日付: #{report.report_date}",
-        "天気: #{report.weather}",
         "出面: #{report.attendances.count}名"
-      ]),
-      data: {
-        daily_report_id: report.id,
-        project_id: report.project_id,
-        report_date: report.report_date
-      }
+      ])
     )
   end
 
@@ -163,11 +138,7 @@ class LineWorksNotifier
         "案件: #{report.project&.name}",
         "日付: #{report.report_date}",
         "確認者: #{report.confirmed_by&.name}"
-      ]),
-      data: {
-        daily_report_id: report.id,
-        project_id: report.project_id
-      }
+      ])
     )
   end
 
@@ -179,14 +150,8 @@ class LineWorksNotifier
       message: build_message(:invoice_issued, [
         "案件: #{invoice.project&.name}",
         "請求番号: #{invoice.invoice_number}",
-        "請求額: #{format_currency(invoice.total_amount)}",
-        "支払期限: #{invoice.due_date&.strftime('%Y/%m/%d')}"
-      ]),
-      data: {
-        invoice_id: invoice.id,
-        invoice_number: invoice.invoice_number,
-        total_amount: invoice.total_amount
-      }
+        "請求額: #{format_currency(invoice.total_amount)}"
+      ])
     )
   end
 
@@ -198,12 +163,7 @@ class LineWorksNotifier
         "案件: #{invoice&.project&.name}",
         "入金額: #{format_currency(payment.amount)}",
         "残高: #{format_currency(invoice&.remaining_amount)}"
-      ]),
-      data: {
-        payment_id: payment.id,
-        invoice_id: invoice&.id,
-        amount: payment.amount
-      }
+      ])
     )
   end
 
@@ -216,51 +176,47 @@ class LineWorksNotifier
         "協力会社: #{offset.partner&.name}",
         "対象月: #{offset.year_month}",
         "相殺額: #{format_currency(offset.offset_amount)}"
-      ]),
-      data: {
-        offset_id: offset.id,
-        partner_name: offset.partner&.name,
-        offset_amount: offset.offset_amount
-      }
+      ])
     )
   end
 
   private
 
   def enabled?
-    ENV.fetch("LINE_WORKS_NOTIFICATIONS_ENABLED", "true") == "true"
+    return false unless ENV.fetch("LINE_WORKS_NOTIFICATIONS_ENABLED", "true") == "true"
+
+    @bot_id.present? && @client_id.present? && @service_account.present? && @private_key_path.present?
   end
 
   def build_message(type, lines)
     title = NOTIFICATION_TYPES[type] || type.to_s
-    "#{title}\n\n#{lines.join("\n")}"
+    "[#{title}]\n\n#{lines.join("\n")}"
   end
 
-  def build_payload(type, message, data)
-    {
-      event_type: type.to_s,
-      type_label: NOTIFICATION_TYPES[type] || type.to_s,
-      message: message,
-      data: data,
-      timestamp: Time.current.iso8601
-    }
-  end
+  def send_message(message)
+    token = get_access_token
+    return { success: false, error: "Failed to get access token" } unless token
 
-  def send_to_n8n(payload)
-    uri = URI.parse(@n8n_webhook_url)
+    uri = URI.parse("#{BOT_API_URL}/#{@bot_id}/users/#{@notify_user_id}/messages")
     http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = uri.scheme == "https"
-    http.open_timeout = 5
+    http.use_ssl = true
+    http.open_timeout = 10
     http.read_timeout = 10
 
     request = Net::HTTP::Post.new(uri.path)
     request["Content-Type"] = "application/json"
-    request.body = payload.to_json
+    request["Authorization"] = "Bearer #{token}"
+    request.body = {
+      content: {
+        type: "text",
+        text: message
+      }
+    }.to_json
 
     response = http.request(request)
 
     if response.code.to_i.between?(200, 299)
-      Rails.logger.info "[LineWorksNotifier] Sent: #{payload[:event_type]}"
+      Rails.logger.info "[LineWorksNotifier] Message sent successfully"
       { success: true, response_code: response.code }
     else
       Rails.logger.warn "[LineWorksNotifier] Failed: #{response.code} - #{response.body}"
@@ -271,6 +227,64 @@ class LineWorksNotifier
     { success: false, error: e.message }
   end
 
+  def get_access_token
+    # キャッシュされたトークンが有効ならそれを使う
+    if @access_token && @token_expires_at && Time.current < @token_expires_at
+      return @access_token
+    end
+
+    jwt = generate_jwt
+    return nil unless jwt
+
+    uri = URI.parse(TOKEN_URL)
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+
+    request = Net::HTTP::Post.new(uri.path)
+    request["Content-Type"] = "application/x-www-form-urlencoded"
+    request.body = URI.encode_www_form(
+      assertion: jwt,
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      client_id: @client_id,
+      client_secret: @client_secret,
+      scope: "bot"
+    )
+
+    response = http.request(request)
+
+    if response.code.to_i == 200
+      data = JSON.parse(response.body)
+      @access_token = data["access_token"]
+      @token_expires_at = Time.current + (data["expires_in"].to_i - 60).seconds
+      Rails.logger.info "[LineWorksNotifier] Access token obtained"
+      @access_token
+    else
+      Rails.logger.error "[LineWorksNotifier] Token error: #{response.code} - #{response.body}"
+      nil
+    end
+  rescue StandardError => e
+    Rails.logger.error "[LineWorksNotifier] Token error: #{e.message}"
+    nil
+  end
+
+  def generate_jwt
+    return nil unless File.exist?(@private_key_path)
+
+    private_key = OpenSSL::PKey::RSA.new(File.read(@private_key_path))
+
+    payload = {
+      iss: @client_id,
+      sub: @service_account,
+      iat: Time.current.to_i,
+      exp: Time.current.to_i + 3600
+    }
+
+    JWT.encode(payload, private_key, "RS256")
+  rescue StandardError => e
+    Rails.logger.error "[LineWorksNotifier] JWT error: #{e.message}"
+    nil
+  end
+
   def mock_response(type, message)
     Rails.logger.info "[LineWorksNotifier Mock] #{type}: #{message.truncate(100)}"
     { success: true, mock: true, type: type }
@@ -278,6 +292,7 @@ class LineWorksNotifier
 
   def format_currency(amount)
     return "¥0" unless amount
-    "¥#{amount.to_i.to_s(:delimited)}"
+
+    "¥#{amount.to_i.to_fs(:delimited)}"
   end
 end

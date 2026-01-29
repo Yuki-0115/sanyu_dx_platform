@@ -33,3 +33,4 @@ backups/*.sql.gz
 *.pem
 *.key
 service_account*.json
+secrets/

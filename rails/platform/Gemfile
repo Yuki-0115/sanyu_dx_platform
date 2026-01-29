@@ -74,3 +74,6 @@ gem "holiday_jp"
 gem "prawn"
 gem "prawn-table"
 gem "matrix"  # Required for prawn on Ruby 3.1+
+
+# LINE WORKS API authentication
+gem "jwt"
