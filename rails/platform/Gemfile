@@ -77,3 +77,6 @@ gem "matrix"  # Required for prawn on Ruby 3.1+
 
 # LINE WORKS API authentication
 gem "jwt"
+
+# Google Drive API
+gem "google-apis-drive_v3"

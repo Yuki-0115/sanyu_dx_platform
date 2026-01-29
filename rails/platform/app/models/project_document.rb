@@ -41,6 +41,9 @@ class ProjectDocument < ApplicationRecord
   validates :name, presence: true
   validates :category, presence: true, inclusion: { in: CATEGORIES }
 
+  # Callbacks
+  after_create_commit :sync_to_google_drive
+
   # Scopes
   scope :by_category, ->(cat) { where(category: cat) }
   scope :recent, -> { order(created_at: :desc) }
@@ -71,5 +74,17 @@ class ProjectDocument < ApplicationRecord
     else
       "#{(size / (1024.0 * 1024)).round(1)} MB"
     end
+  end
+
+  private
+
+  def sync_to_google_drive
+    return unless file.attached?
+
+    GoogleDriveSyncJob.perform_later(
+      action: "upload_document",
+      record_type: "ProjectDocument",
+      record_id: id
+    )
   end
 end

@@ -1,0 +1,114 @@
+<div class="max-w-4xl mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">月次帳票</h1>
+  </div>
+
+  <!-- 月選択 -->
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h2 class="text-lg font-semibold mb-4">対象月を選択</h2>
+    <%= form_with url: monthly_reports_path, method: :get, class: "flex items-center gap-4" do %>
+      <select name="year" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        <% (Date.current.year - 2..Date.current.year).each do |y| %>
+          <option value="<%= y %>" <%= 'selected' if y == @year %>><%= y %>年</option>
+        <% end %>
+      </select>
+      <select name="month" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        <% (1..12).each do |m| %>
+          <option value="<%= m %>" <%= 'selected' if m == @month %>><%= m %>月</option>
+        <% end %>
+      </select>
+      <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+        表示
+      </button>
+    <% end %>
+  </div>
+
+  <!-- 帳票一覧 -->
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold"><%= @year %>年<%= @month %>月の帳票</h2>
+    </div>
+
+    <div class="divide-y divide-gray-200">
+      <!-- 原価集計 -->
+      <div class="p-6 flex justify-between items-center">
+        <div>
+          <h3 class="font-medium">原価集計レポート</h3>
+          <p class="text-sm text-gray-500">案件別の予算・実績・粗利を集計</p>
+        </div>
+        <div class="flex gap-2">
+          <%= link_to download_cost_report_monthly_reports_path(year: @year, month: @month),
+                      class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm" do %>
+            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            CSV
+          <% end %>
+        </div>
+      </div>
+
+      <!-- 案件別利益 -->
+      <div class="p-6 flex justify-between items-center">
+        <div>
+          <h3 class="font-medium">案件別利益レポート</h3>
+          <p class="text-sm text-gray-500">進行中案件の利益率・進捗状況</p>
+        </div>
+        <div class="flex gap-2">
+          <%= link_to download_profit_report_monthly_reports_path(year: @year, month: @month),
+                      class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm" do %>
+            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            CSV
+          <% end %>
+        </div>
+      </div>
+
+      <!-- 経費精算 -->
+      <div class="p-6 flex justify-between items-center">
+        <div>
+          <h3 class="font-medium">経費精算レポート</h3>
+          <p class="text-sm text-gray-500">承認済み経費の一覧</p>
+        </div>
+        <div class="flex gap-2">
+          <%= link_to download_expense_report_monthly_reports_path(year: @year, month: @month),
+                      class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm" do %>
+            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            CSV
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Google Drive連携 -->
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+      <% if GoogleDriveService.enabled? %>
+        <div class="flex justify-between items-center">
+          <div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              Google Drive連携中
+            </span>
+            <p class="text-sm text-gray-500 mt-1">全帳票をGoogle Driveに自動保存できます</p>
+          </div>
+          <%= button_to generate_monthly_reports_path(year: @year, month: @month),
+                        method: :post,
+                        class: "px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm" do %>
+            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            Driveに保存
+          <% end %>
+        </div>
+      <% else %>
+        <div class="flex items-center text-gray-500">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span class="text-sm">Google Drive連携を設定すると、帳票を自動保存できます</span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

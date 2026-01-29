@@ -45,6 +45,7 @@ class Project < ApplicationRecord
   # Callbacks
   before_validation :generate_code, on: :create
   after_create_commit :notify_project_created
+  after_create_commit :create_drive_folder
   after_update_commit :notify_status_changes
 
   # Defaults
@@ -426,5 +427,15 @@ class Project < ApplicationRecord
         record_id: id
       )
     end
+  end
+
+  # === Google Drive連携 ===
+
+  def create_drive_folder
+    GoogleDriveSyncJob.perform_later(
+      action: "create_project_folder",
+      record_type: "Project",
+      record_id: id
+    )
   end
 end

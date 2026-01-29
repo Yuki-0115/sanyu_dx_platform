@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_25_230000) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_29_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -559,6 +559,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_25_230000) do
     t.date "document_date"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "drive_file_url"
     t.index ["project_id", "category"], name: "index_project_documents_on_project_id_and_category"
     t.index ["project_id"], name: "index_project_documents_on_project_id"
     t.index ["uploaded_by_id"], name: "index_project_documents_on_uploaded_by_id"

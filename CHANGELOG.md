@@ -7,19 +7,22 @@
 ## [Unreleased]
 
 ### Added
-- LINE WORKS通知システム（n8n Webhook連携）
-  - LineWorksNotifier サービス（Singletonパターン）
+- LINE WORKS通知システム（Bot API直接連携）
+  - LineWorksNotifier サービス（JWT認証）
   - NotificationJob 非同期ジョブ
-  - n8n ワークフローJSON（lineworks_notifications.json）
 - 通知イベント対応
-  - 案件作成（project_created）
-  - 4点チェック完了（four_point_completed）
-  - 着工前ゲート完了（pre_construction_completed）
-  - 着工（construction_started）
-  - 完工（project_completed）
-  - 実行予算確定（budget_confirmed）
-  - 請求書発行（invoice_issued）
-  - 入金確認（payment_received）
+  - 案件作成、4点チェック完了、着工、完工
+  - 実行予算確定、請求書発行、入金確認
+- Google Drive連携
+  - GoogleDriveService（案件フォルダ自動作成）
+  - 案件作成時にサブフォルダ自動生成（見積・現場管理・安全・写真・竣工・請求）
+  - 書類アップロード時にDriveへ自動同期
+  - ProjectDocumentにdrive_file_urlカラム追加
+- 月次帳票機能
+  - MonthlyReportGenerator サービス
+  - 原価集計・案件別利益・経費精算レポート（CSV）
+  - 月次帳票画面（/monthly_reports）
+  - Google Driveへの自動保存
 
 ### Changed
 

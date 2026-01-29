@@ -208,6 +208,16 @@ Rails.application.routes.draw do
     end
   end
 
+  # 月次帳票
+  resources :monthly_reports, only: [:index] do
+    collection do
+      post :generate
+      get :download_cost_report
+      get :download_profit_report
+      get :download_expense_report
+    end
+  end
+
   # 安全書類管理（フォルダ形式）
   resources :safety_documents, only: %i[index show] do
     collection do
