@@ -31,9 +31,22 @@ class Budget < ApplicationRecord
   # Instance methods
   def confirm!(user)
     update!(status: "confirmed", confirmed_by: user, confirmed_at: Time.current)
+    notify_confirmed
+  end
+
+  def confirmed?
+    status == "confirmed"
   end
 
   private
+
+  def notify_confirmed
+    NotificationJob.perform_later(
+      event_type: "budget_confirmed",
+      record_type: "Budget",
+      record_id: id
+    )
+  end
 
   def calculate_total_cost
     self.total_cost = material_cost.to_d + outsourcing_cost.to_d + labor_cost.to_d + expense_cost.to_d

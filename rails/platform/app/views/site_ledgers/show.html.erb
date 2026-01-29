@@ -178,12 +178,8 @@
               <%= number_to_currency(@project.site_ledger_transportation_cost, unit: "¥", precision: 0) %>
             </td>
             <% if @budget %>
-              <td class="px-4 py-3 text-sm text-right text-gray-500">
-                <%= number_to_currency(@budget.transportation_cost || 0, unit: "¥", precision: 0) %>
-              </td>
-              <td class="px-4 py-3 text-sm text-right <%= variance[:transportation].to_i >= 0 ? 'text-green-600' : 'text-red-600' %>">
-                <%= variance[:transportation].to_i >= 0 ? '+' : '' %><%= number_to_currency(variance[:transportation] || 0, unit: "¥", precision: 0) %>
-              </td>
+              <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
+              <td class="px-4 py-3 text-sm text-right text-gray-400">-</td>
             <% end %>
           </tr>
 

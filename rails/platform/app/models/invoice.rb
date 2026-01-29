@@ -36,6 +36,7 @@ class Invoice < ApplicationRecord
   # Instance methods
   def issue!
     update!(status: "issued", issued_date: Time.current.to_date)
+    notify_issued
     # 案件ステータスは変更しない（複数回請求があるため）
     # 完工時に手動で status を変更する
   end
@@ -72,5 +73,13 @@ class Invoice < ApplicationRecord
 
   def calculate_total_amount
     self.total_amount = amount.to_d + tax_amount.to_d
+  end
+
+  def notify_issued
+    NotificationJob.perform_later(
+      event_type: "invoice_issued",
+      record_type: "Invoice",
+      record_id: id
+    )
   end
 end

@@ -44,6 +44,8 @@ class Project < ApplicationRecord
 
   # Callbacks
   before_validation :generate_code, on: :create
+  after_create_commit :notify_project_created
+  after_update_commit :notify_status_changes
 
   # Defaults
   attribute :status, :string, default: "draft"
@@ -331,7 +333,6 @@ class Project < ApplicationRecord
       labor: (budget.labor_cost || 0) - site_ledger_labor_cost,
       material: (budget.material_cost || 0) - site_ledger_material_cost,
       outsourcing: (budget.outsourcing_cost || 0) - site_ledger_outsourcing_cost,
-      transportation: (budget.transportation_cost || 0) - site_ledger_transportation_cost,
       expense: (budget.expense_cost || 0) - site_ledger_expense_cost,
       total: (budget.total_cost || 0) - site_ledger_total_cost
     }
@@ -377,5 +378,53 @@ class Project < ApplicationRecord
     date_part = Date.current.strftime("%Y%m")
     seq = Project.where("code LIKE ?", "#{prefix}#{date_part}%").count + 1
     self.code = "#{prefix}#{date_part}#{seq.to_s.rjust(3, '0')}"
+  end
+
+  # === LINE WORKS通知 ===
+
+  def notify_project_created
+    NotificationJob.perform_later(
+      event_type: "project_created",
+      record_type: "Project",
+      record_id: id
+    )
+  end
+
+  def notify_status_changes
+    # 4点チェック完了
+    if saved_change_to_four_point_approved_at? && four_point_approved_at.present?
+      NotificationJob.perform_later(
+        event_type: "four_point_completed",
+        record_type: "Project",
+        record_id: id
+      )
+    end
+
+    # 着工前ゲート完了
+    if saved_change_to_pre_construction_gate_at? && pre_construction_gate_at.present?
+      NotificationJob.perform_later(
+        event_type: "pre_construction_completed",
+        record_type: "Project",
+        record_id: id
+      )
+    end
+
+    # 着工
+    if saved_change_to_construction_started_at? && construction_started_at.present?
+      NotificationJob.perform_later(
+        event_type: "construction_started",
+        record_type: "Project",
+        record_id: id
+      )
+    end
+
+    # 完工
+    if saved_change_to_completed_at? && completed_at.present?
+      NotificationJob.perform_later(
+        event_type: "project_completed",
+        record_type: "Project",
+        record_id: id
+      )
+    end
   end
 end

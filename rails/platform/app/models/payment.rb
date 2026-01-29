@@ -13,6 +13,7 @@ class Payment < ApplicationRecord
   # Callbacks
   after_save :update_invoice_status
   after_destroy :update_invoice_status
+  after_create_commit :notify_payment_received
 
   private
 
@@ -24,5 +25,13 @@ class Payment < ApplicationRecord
     elsif invoice.status == "paid"
       invoice.update!(status: "waiting")
     end
+  end
+
+  def notify_payment_received
+    NotificationJob.perform_later(
+      event_type: "payment_received",
+      record_type: "Payment",
+      record_id: id
+    )
   end
 end

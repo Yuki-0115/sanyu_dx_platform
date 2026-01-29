@@ -1,0 +1,346 @@
+{
+  "name": "LINE WORKS通知（案件・請求等）",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lineworks",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-receive",
+      "name": "Webhook受信",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "lineworks"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, received: $json.event_type }) }}",
+        "options": {}
+      },
+      "id": "webhook-response",
+      "name": "Webhook応答",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event_type }}",
+                    "rightValue": "project_created",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "案件作成"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event_type }}",
+                    "rightValue": "four_point_completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "4点完了"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event_type }}",
+                    "rightValue": "construction_started",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "着工"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event_type }}",
+                    "rightValue": "budget_confirmed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "予算確定"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event_type }}",
+                    "rightValue": "invoice_issued",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "請求発行"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event_type }}",
+                    "rightValue": "payment_received",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "入金"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "event-switch",
+      "name": "イベント振り分け",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.LINE_WORKS_BOT_WEBHOOK_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LINE_WORKS_BOT_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"botId\": \"{{ $env.LINE_WORKS_BOT_ID }}\",\n  \"channelId\": \"{{ $env.LINE_WORKS_CHANNEL_ID }}\",\n  \"content\": {\n    \"type\": \"text\",\n    \"text\": \"{{ $json.message }}\"\n  }\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "send-lineworks",
+      "name": "LINE WORKS送信",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "event_type",
+              "value": "={{ $json.event_type }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "merge-data",
+      "name": "データ統合",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/YOUR_SLACK_WEBHOOK",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"{{ $json.message }}\",\n  \"username\": \"SanyuTech Bot\",\n  \"icon_emoji\": \":construction:\"\n}",
+        "options": {}
+      },
+      "id": "send-slack-fallback",
+      "name": "Slack送信（代替）",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 500],
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Webhook受信": {
+      "main": [
+        [
+          {
+            "node": "Webhook応答",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook応答": {
+      "main": [
+        [
+          {
+            "node": "イベント振り分け",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "イベント振り分け": {
+      "main": [
+        [
+          {
+            "node": "データ統合",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "データ統合",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "データ統合",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "データ統合",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "データ統合",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "データ統合",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "データ統合",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "データ統合": {
+      "main": [
+        [
+          {
+            "node": "LINE WORKS送信",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "sunyutech"
+    },
+    {
+      "name": "notifications"
+    }
+  ],
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "sanyu-dx-platform"
+  }
+}
