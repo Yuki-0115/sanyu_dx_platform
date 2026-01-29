@@ -146,6 +146,7 @@ class Expense < ApplicationRecord
   before_save :store_provisional_amount, if: :becoming_provisional?
   before_save :set_default_account_code, if: :should_set_account_code?
   before_save :set_reimbursement_required, if: :payment_method_changed?
+  after_commit :sync_receipt_to_drive, if: :receipt_just_attached?
 
   # Instance methods
   def approve!(user)
@@ -378,5 +379,19 @@ class Expense < ApplicationRecord
     else
       self.reimbursement_required = false
     end
+  end
+
+  # 領収書が今回添付されたか
+  def receipt_just_attached?
+    receipt.attached? && saved_change_to_attribute?(:updated_at)
+  end
+
+  # 領収書をGoogle Driveにアップロード
+  def sync_receipt_to_drive
+    GoogleDriveSyncJob.perform_later(
+      action: "upload_receipt",
+      record_type: "Expense",
+      record_id: id
+    )
   end
 end

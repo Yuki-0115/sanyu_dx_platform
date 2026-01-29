@@ -1,0 +1,245 @@
+{
+  "name": "Google Drive書類アップロード",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drive-upload",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-receive",
+      "name": "Webhook受信",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "drive-upload"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, file_id: $json.file_id || 'pending', message: 'Upload request received' }) }}",
+        "options": {}
+      },
+      "id": "webhook-response",
+      "name": "Webhook応答",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "queryString": "={{ \"name = '\" + $json.folder_name + \"' and mimeType = 'application/vnd.google-apps.folder' and trashed = false\" }}",
+        "options": {
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          }
+        }
+      },
+      "id": "search-folder",
+      "name": "フォルダ検索",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [680, 300],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "google-drive-cred",
+          "name": "Google Drive OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "folder-exists",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ]
+        }
+      },
+      "id": "folder-check",
+      "name": "フォルダ存在確認",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "operation": "createFolder",
+        "name": "={{ $('Webhook受信').item.json.folder_name }}",
+        "options": {
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          }
+        }
+      },
+      "id": "create-folder",
+      "name": "フォルダ作成",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [1120, 400],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "google-drive-cred",
+          "name": "Google Drive OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "name": "={{ $('Webhook受信').item.json.file_name }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.id || $('フォルダ検索').item.json[0].id }}"
+        },
+        "inputDataFieldName": "={{ $('Webhook受信').item.json.file_data }}",
+        "options": {}
+      },
+      "id": "upload-file-new",
+      "name": "ファイルアップロード（新規フォルダ）",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [1340, 400],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "google-drive-cred",
+          "name": "Google Drive OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "name": "={{ $('Webhook受信').item.json.file_name }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('フォルダ検索').item.json[0].id }}"
+        },
+        "inputDataFieldName": "={{ $('Webhook受信').item.json.file_data }}",
+        "options": {}
+      },
+      "id": "upload-file-existing",
+      "name": "ファイルアップロード（既存フォルダ）",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [1120, 200],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "google-drive-cred",
+          "name": "Google Drive OAuth2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook受信": {
+      "main": [
+        [
+          {
+            "node": "Webhook応答",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook応答": {
+      "main": [
+        [
+          {
+            "node": "フォルダ検索",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "フォルダ検索": {
+      "main": [
+        [
+          {
+            "node": "フォルダ存在確認",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "フォルダ存在確認": {
+      "main": [
+        [
+          {
+            "node": "ファイルアップロード（既存フォルダ）",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "フォルダ作成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "フォルダ作成": {
+      "main": [
+        [
+          {
+            "node": "ファイルアップロード（新規フォルダ）",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "sanyutech"
+    },
+    {
+      "name": "google-drive"
+    }
+  ],
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "sanyu-dx-platform"
+  }
+}

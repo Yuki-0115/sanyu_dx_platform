@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Google Driveへの非同期同期ジョブ
+# Google Driveへの非同期同期ジョブ（n8n経由）
 class GoogleDriveSyncJob < ApplicationJob
   queue_as :default
 
@@ -11,14 +11,17 @@ class GoogleDriveSyncJob < ApplicationJob
     return unless record
 
     case action.to_s
-    when "create_project_folder"
-      GoogleDriveService.create_project_folder(record)
     when "upload_document"
       GoogleDriveService.upload_document(record)
-    when "create_monthly_folder"
-      year = options[:year] || Time.current.year
-      month = options[:month] || Time.current.month
-      GoogleDriveService.create_monthly_report_folder(year, month)
+    when "upload_receipt"
+      GoogleDriveService.upload_expense_receipt(record)
+    when "upload_monthly_report"
+      GoogleDriveService.upload_monthly_report(
+        file_path: options[:file_path],
+        file_name: options[:file_name],
+        year: options[:year],
+        month: options[:month]
+      )
     else
       Rails.logger.warn "[GoogleDriveSyncJob] Unknown action: #{action}"
     end
