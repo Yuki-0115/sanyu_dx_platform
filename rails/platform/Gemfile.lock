@@ -138,6 +138,8 @@ GEM
       retriable (~> 3.1)
     google-apis-drive_v3 (0.76.0)
       google-apis-core (>= 0.15.0, < 2.a)
+    google-apis-sheets_v4 (0.46.0)
+      google-apis-core (>= 0.15.0, < 2.a)
     google-cloud-env (2.3.1)
       base64 (~> 0.2)
       faraday (>= 1.0, < 3.a)
@@ -466,6 +468,8 @@ DEPENDENCIES
   devise (~> 4.9)
   factory_bot_rails (~> 6.5)
   google-apis-drive_v3
+  google-apis-sheets_v4
+  googleauth
   holiday_jp
   importmap-rails
   jbuilder

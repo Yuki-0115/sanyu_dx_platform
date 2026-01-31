@@ -80,3 +80,5 @@ gem "jwt"
 
 # Google Drive API
 gem "google-apis-drive_v3"
+gem "google-apis-sheets_v4"
+gem "googleauth"

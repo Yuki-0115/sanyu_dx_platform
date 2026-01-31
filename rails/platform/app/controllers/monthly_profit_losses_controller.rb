@@ -58,10 +58,11 @@ class MonthlyProfitLossesController < ApplicationController
     @progress_revenue_total = calculate_monthly_revenue(@year, @month)
 
     # === 請求（出来高月ベース）===
-    # その月の出来高に対する請求書の合計
+    # その月の出来高に対する請求書の合計（税抜金額で計算）
+    # 出来高は税抜ベースなので、請求額も税抜で比較する
     @invoiced_revenue = Invoice.where(progress_year: @year, progress_month: @month)
                                .where(status: %w[issued paid])
-                               .sum(:total_amount).to_i
+                               .sum(:amount).to_i
 
     # 請求書の内訳（表示用）
     start_date = Date.new(@year, @month, 1)
@@ -73,7 +74,8 @@ class MonthlyProfitLossesController < ApplicationController
       {
         project: invoice.project,
         invoice_number: invoice.invoice_number,
-        amount: invoice.total_amount.to_i,
+        amount: invoice.amount.to_i,  # 税抜金額
+        total_amount: invoice.total_amount.to_i,  # 税込金額（参考）
         issued_date: invoice.issued_date
       }
     end
@@ -87,10 +89,10 @@ class MonthlyProfitLossesController < ApplicationController
       monthly_amount = progress.monthly_progress_amount
       next if monthly_amount <= 0
 
-      # この案件の当月出来高に対する請求
+      # この案件の当月出来高に対する請求（税抜）
       project_invoiced = Invoice.where(project_id: progress.project_id, progress_year: @year, progress_month: @month)
                                 .where(status: %w[issued paid])
-                                .sum(:total_amount).to_i
+                                .sum(:amount).to_i
       wip_amount = monthly_amount - project_invoiced
       next if wip_amount <= 0
 
