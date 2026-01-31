@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class BudgetsController < ApplicationController
+  include ProjectScoped
+
   authorize_with :budgets
-  before_action :set_project
   before_action :set_budget, only: %i[show edit update confirm]
 
   def show; end
@@ -69,10 +70,6 @@ class BudgetsController < ApplicationController
   end
 
   private
-
-  def set_project
-    @project = Project.find(params[:project_id])
-  end
 
   def set_budget
     @budget = @project.budget || @project.build_budget

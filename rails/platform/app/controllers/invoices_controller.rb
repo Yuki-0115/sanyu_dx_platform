@@ -3,8 +3,9 @@
 require_dependency "invoice_pdf"
 
 class InvoicesController < ApplicationController
+  include ProjectScoped
+
   authorize_with :invoices
-  before_action :set_project
   before_action :set_invoice, only: %i[show edit update destroy issue pdf]
 
   def index
@@ -70,10 +71,6 @@ class InvoicesController < ApplicationController
   end
 
   private
-
-  def set_project
-    @project = Project.find(params[:project_id])
-  end
 
   def set_invoice
     @invoice = @project.invoices.find(params[:id])

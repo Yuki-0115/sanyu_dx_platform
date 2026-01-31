@@ -6,6 +6,9 @@ class Project < ApplicationRecord
   # Constants
   STATUSES = %w[draft estimating ordered preparing in_progress completed invoiced paid closed].freeze
   PROJECT_TYPES = %w[regular misc].freeze
+
+  # デフォルト人工単価（円/人日）
+  DEFAULT_LABOR_UNIT_PRICE = 18_000
   PROJECT_TYPE_LABELS = {
     "regular" => "通常案件",
     "misc" => "その他（小工事・常用）"
@@ -173,17 +176,17 @@ class Project < ApplicationRecord
   # 現場台帳（第3層）用の集計メソッド
   # ========================================
 
-  # 人工単価（社員区分別、実行予算から取得、未設定時はデフォルト18,000円）
+  # 人工単価（社員区分別、実行予算から取得、未設定時はデフォルト単価）
   def regular_labor_unit_price
-    budget&.regular_labor_unit_price || 18_000
+    budget&.regular_labor_unit_price || DEFAULT_LABOR_UNIT_PRICE
   end
 
   def temporary_labor_unit_price
-    budget&.temporary_labor_unit_price || 18_000
+    budget&.temporary_labor_unit_price || DEFAULT_LABOR_UNIT_PRICE
   end
 
   def outsourcing_unit_price
-    budget&.outsourcing_unit_price || 18_000
+    budget&.outsourcing_unit_price || DEFAULT_LABOR_UNIT_PRICE
   end
 
   # 確定済み日報を取得
@@ -393,7 +396,7 @@ class Project < ApplicationRecord
 
   def notify_status_changes
     # 4点チェック完了
-    if saved_change_to_four_point_approved_at? && four_point_approved_at.present?
+    if saved_change_to_four_point_completed_at? && four_point_completed_at.present?
       NotificationJob.perform_later(
         event_type: "four_point_completed",
         record_type: "Project",
@@ -402,7 +405,7 @@ class Project < ApplicationRecord
     end
 
     # 着工前ゲート完了
-    if saved_change_to_pre_construction_gate_at? && pre_construction_gate_at.present?
+    if saved_change_to_pre_construction_gate_completed_at? && pre_construction_gate_completed_at.present?
       NotificationJob.perform_later(
         event_type: "pre_construction_completed",
         record_type: "Project",
@@ -411,7 +414,7 @@ class Project < ApplicationRecord
     end
 
     # 着工
-    if saved_change_to_construction_started_at? && construction_started_at.present?
+    if saved_change_to_actual_start_date? && actual_start_date.present?
       NotificationJob.perform_later(
         event_type: "construction_started",
         record_type: "Project",
@@ -420,7 +423,7 @@ class Project < ApplicationRecord
     end
 
     # 完工
-    if saved_change_to_completed_at? && completed_at.present?
+    if saved_change_to_actual_end_date? && actual_end_date.present?
       NotificationJob.perform_later(
         event_type: "project_completed",
         record_type: "Project",

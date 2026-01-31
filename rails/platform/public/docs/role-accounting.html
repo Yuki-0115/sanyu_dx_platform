@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>経理担当マニュアル - SanyuTech DX Platform</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header header-sub">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← マニュアルトップへ</a>
+      <h1>経理担当マニュアル</h1>
+      <p>請求・入金・経費・相殺処理の業務ガイド</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 経理担当の役割 -->
+    <section class="section">
+      <h2>経理担当の主な業務</h2>
+      <p>経理担当は、請求書発行から入金確認、経費処理、仮社員相殺までの経理業務を担当します。</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>請求書発行</h4>
+          <p>完工案件の請求書を作成・発行します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>入金管理</h4>
+          <p>入金の確認・消込、遅延管理を行います。</p>
+        </div>
+        <div class="feature-card">
+          <h4>経費処理</h4>
+          <p>日報経費の確認・承認、勘定科目の設定を行います。</p>
+        </div>
+        <div class="feature-card">
+          <h4>仮社員相殺</h4>
+          <p>協力会社との相殺計算・確認を行います。</p>
+        </div>
+        <div class="feature-card">
+          <h4>月次処理</h4>
+          <p>月次固定費、販管費の記録を行います。</p>
+        </div>
+        <div class="feature-card">
+          <h4>会計連携</h4>
+          <p>会計ソフトへのデータ出力を行います。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 請求書発行 -->
+    <section class="section">
+      <h2>請求書の発行</h2>
+      <p>工事完了後（または出来高に応じて）、請求書を発行します。</p>
+
+      <h3>発行手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>案件詳細画面で「請求」タブを選択</strong>
+          請求一覧が表示されます。
+        </li>
+        <li>
+          <strong>「新規請求書」をクリック</strong>
+          請求書作成フォームが表示されます。
+        </li>
+        <li>
+          <strong>請求情報を入力</strong>
+          請求日、支払期日、請求金額を入力します。
+        </li>
+        <li>
+          <strong>請求明細を追加</strong>
+          見積項目を参照して明細を追加します。
+        </li>
+        <li>
+          <strong>消費税を確認</strong>
+          消費税額が正しいか確認します。
+        </li>
+        <li>
+          <strong>プレビュー確認</strong>
+          請求書の内容を確認します。
+        </li>
+        <li>
+          <strong>「発行」ボタンで発行</strong>
+          ステータスが「発行済」に変わります。
+        </li>
+        <li>
+          <strong>PDF出力・送付</strong>
+          PDFを出力し、顧客に送付します。
+        </li>
+      </ol>
+
+      <h3>請求パターン別の対応</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>パターン</th>
+              <th>請求タイミング</th>
+              <th>金額</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>一括請求</td>
+              <td>完工後</td>
+              <td>受注金額全額</td>
+            </tr>
+            <tr>
+              <td>着手金+残金</td>
+              <td>着工時 / 完工後</td>
+              <td>50% / 50% など</td>
+            </tr>
+            <tr>
+              <td>出来高請求</td>
+              <td>毎月</td>
+              <td>月次出来高</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-info">
+        <strong>支払期日の設定</strong>
+        <p>顧客マスタに登録された支払条件を参考に、適切な支払期日を設定してください。</p>
+      </div>
+    </section>
+
+    <!-- 入金管理 -->
+    <section class="section">
+      <h2>入金の管理</h2>
+
+      <h3>入金登録</h3>
+      <ol class="steps">
+        <li>
+          <strong>銀行明細で入金を確認</strong>
+          口座への入金を確認します。
+        </li>
+        <li>
+          <strong>該当する請求書を特定</strong>
+          振込名義・金額から請求書を特定します。
+        </li>
+        <li>
+          <strong>請求詳細画面で「入金登録」</strong>
+          入金登録フォームを開きます。
+        </li>
+        <li>
+          <strong>入金日・金額を入力</strong>
+          実際の入金日と金額を入力します。
+        </li>
+        <li>
+          <strong>登録</strong>
+          入金が記録され、請求残高が更新されます。
+        </li>
+      </ol>
+
+      <h3>入金状況の確認</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>状態</th>
+              <th>表示</th>
+              <th>対応</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>未入金</td>
+              <td><span class="badge badge-secondary">未入金</span></td>
+              <td>支払期日まで待機</td>
+            </tr>
+            <tr>
+              <td>一部入金</td>
+              <td><span class="badge badge-warning">一部入金</span></td>
+              <td>残金の入金を待つ</td>
+            </tr>
+            <tr>
+              <td>入金完了</td>
+              <td><span class="badge badge-success">入金完了</span></td>
+              <td>消込完了</td>
+            </tr>
+            <tr>
+              <td>遅延</td>
+              <td><span class="badge badge-danger">遅延</span></td>
+              <td>督促対応</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>入金遅延への対応</h3>
+      <div class="alert alert-warning">
+        <strong>遅延アラート</strong>
+        <p>支払期日を過ぎた未入金請求は、ダッシュボードにアラート表示されます。遅延期間に応じた督促対応を行ってください。</p>
+      </div>
+    </section>
+
+    <!-- 経費処理 -->
+    <section class="section">
+      <h2>経費の処理</h2>
+      <p>日報で入力された経費を確認・承認し、勘定科目を設定します。</p>
+
+      <h3>経費確認の流れ</h3>
+      <ol class="steps">
+        <li>
+          <strong>「経費一覧」を確認</strong>
+          未処理の経費一覧を確認します。
+        </li>
+        <li>
+          <strong>内容を確認</strong>
+          カテゴリ、金額、摘要を確認します。
+        </li>
+        <li>
+          <strong>領収書を確認</strong>
+          添付された領収書と照合します。
+        </li>
+        <li>
+          <strong>勘定科目を確認・修正</strong>
+          自動設定された勘定科目を確認、必要に応じて修正。
+        </li>
+        <li>
+          <strong>承認</strong>
+          問題なければ承認処理を行います。
+        </li>
+      </ol>
+
+      <h3>勘定科目の対応</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>経費カテゴリ</th>
+              <th>デフォルト勘定科目</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>material（材料費）</td><td>510 仕入高</td></tr>
+            <tr><td>transport（運搬費）</td><td>513 運搬費</td></tr>
+            <tr><td>equipment（機材費）</td><td>514 機材費</td></tr>
+            <tr><td>rental（リース）</td><td>515 リース料</td></tr>
+            <tr><td>consumable（消耗品）</td><td>720 消耗品費</td></tr>
+            <tr><td>meal（飲食費）</td><td>730 会議費</td></tr>
+            <tr><td>fuel（燃料費）</td><td>740 車両費</td></tr>
+            <tr><td>highway_toll（高速代）</td><td>741 旅費交通費</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>仮経費の確定</h3>
+      <p>ガソリンカード、ETCカードなどの仮経費は、月次の請求書到着後に確定処理を行います。</p>
+      <ol class="steps">
+        <li>
+          <strong>カード明細を確認</strong>
+          ガソリン会社、ETC会社からの明細を確認。
+        </li>
+        <li>
+          <strong>仮経費と照合</strong>
+          システムの仮経費と明細を照合。
+        </li>
+        <li>
+          <strong>金額を確定</strong>
+          実際の金額で確定処理。
+        </li>
+      </ol>
+    </section>
+
+    <!-- 仮社員相殺 -->
+    <section class="section">
+      <h2>仮社員相殺</h2>
+      <p>協力会社から派遣された仮社員について、給与と売上を相殺計算します。</p>
+
+      <h3>相殺の仕組み</h3>
+      <div class="code-block">
+【支払側】
+給与（基本給 + 手当）+ 社会保険料 = 支払総額
+
+【売上側】
+人工数 × 人工単価 = 売上額
+
+【差額】
+売上額 - 支払総額 = 相殺差額（プラスなら当社受取、マイナスなら当社支払）
+      </div>
+
+      <h3>相殺処理手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>「月次処理」→「仮社員相殺」を選択</strong>
+          相殺対象の協力会社一覧が表示されます。
+        </li>
+        <li>
+          <strong>対象月・協力会社を選択</strong>
+          相殺計算する月と協力会社を選択。
+        </li>
+        <li>
+          <strong>給与・社会保険を入力</strong>
+          協力会社から提示された給与額を入力。
+        </li>
+        <li>
+          <strong>人工数を確認</strong>
+          日報から集計された人工数を確認。
+        </li>
+        <li>
+          <strong>相殺金額を確認</strong>
+          自動計算された差額を確認。
+        </li>
+        <li>
+          <strong>確定</strong>
+          相殺を確定します。
+        </li>
+      </ol>
+
+      <div class="alert alert-info">
+        <strong>人工数の確認</strong>
+        <p>日報で入力された仮社員の出面が正しく集計されているか、協力会社と照合してください。</p>
+      </div>
+    </section>
+
+    <!-- 月次処理 -->
+    <section class="section">
+      <h2>月次処理</h2>
+
+      <h3>月次固定費の登録</h3>
+      <p>事務所家賃、リース料など毎月発生する固定費を登録します。</p>
+
+      <h3>月次販管費の登録</h3>
+      <p>役員報酬、人件費など販管費を登録します。</p>
+
+      <h3>月次給与の確認</h3>
+      <p>社員の月次給与データを確認・登録します。</p>
+
+      <h3>出来高の確認</h3>
+      <p>案件ごとの月次出来高を確認します。</p>
+    </section>
+
+    <!-- 会計連携 -->
+    <section class="section">
+      <h2>会計ソフト連携</h2>
+      <p>経費・売上データを会計ソフト（freee、MoneyForward等）に連携します。</p>
+
+      <h3>エクスポート可能なデータ</h3>
+      <ul>
+        <li>経費データ（勘定科目付き）</li>
+        <li>売上データ（請求ベース）</li>
+        <li>入金データ</li>
+      </ul>
+
+      <h3>エクスポート形式</h3>
+      <ul>
+        <li>CSV形式（各会計ソフト対応）</li>
+        <li>freee形式</li>
+        <li>MoneyForward形式</li>
+      </ul>
+    </section>
+
+    <!-- 日常の確認事項 -->
+    <section class="section">
+      <h2>日常の確認事項</h2>
+
+      <h3>毎日確認すること</h3>
+      <ul>
+        <li>銀行口座の入金確認</li>
+        <li>入金遅延アラートの確認</li>
+        <li>経費承認待ちの確認</li>
+      </ul>
+
+      <h3>週次で確認すること</h3>
+      <ul>
+        <li>未入金請求の一覧確認</li>
+        <li>完工案件の請求漏れチェック</li>
+      </ul>
+
+      <h3>月次で確認すること</h3>
+      <ul>
+        <li>仮社員相殺処理</li>
+        <li>月次固定費・販管費の登録</li>
+        <li>仮経費の確定処理</li>
+        <li>会計ソフトへのデータ連携</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p><a href="index.html">← マニュアルトップへ戻る</a></p>
+    <p>SanyuTech DX Platform - 経理担当マニュアル</p>
+  </footer>
+</body>
+</html>

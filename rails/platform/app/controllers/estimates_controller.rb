@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class EstimatesController < ApplicationController
+  include ProjectScoped
+
   authorize_with :estimates
-  before_action :set_project
   before_action :set_estimate, only: %i[show edit update destroy approve pdf]
 
   def index
@@ -85,10 +86,6 @@ class EstimatesController < ApplicationController
   end
 
   private
-
-  def set_project
-    @project = Project.find(params[:project_id])
-  end
 
   def set_estimate
     @estimate = @project.estimates.find(params[:id])

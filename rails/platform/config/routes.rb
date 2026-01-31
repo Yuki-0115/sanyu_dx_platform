@@ -134,6 +134,8 @@ Rails.application.routes.draw do
       get "employee/:employee_id/export", action: :export_employee, as: :export_employee
       patch "employee/:employee_id/salary", action: :update_salary, as: :update_employee_salary
       get :export_all
+      get "project/:project_id", action: :project_detail, as: :project_detail
+      get "project/:project_id/export", action: :export_project, as: :export_project
     end
   end
 

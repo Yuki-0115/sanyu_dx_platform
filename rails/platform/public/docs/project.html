@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>案件管理 - SanyuTech DX Platform</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header header-sub">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← マニュアルトップへ</a>
+      <h1>案件管理</h1>
+      <p>案件の登録から完了までの一元管理</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 概要 -->
+    <section class="section">
+      <h2>案件管理とは</h2>
+      <p>案件管理は、工事案件の全ライフサイクルを管理する機能です。引合いから入金完了まで、すべてのデータは案件に紐づいて管理されます。</p>
+
+      <div class="flow-diagram">
+        <div class="flow-steps">
+          <div class="flow-step">引合い</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">案件登録</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">見積作成</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">受注</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">施工</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">完工</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">請求・入金</div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <h4>案件IDがすべてのキー</h4>
+        <p>見積、日報、請求、入金など、すべてのデータは案件IDで紐づけられます。これにより、案件単位での原価管理・収支管理が可能になります。</p>
+      </div>
+    </section>
+
+    <!-- 案件登録 -->
+    <section class="section">
+      <h2>案件の登録</h2>
+
+      <h3>登録項目</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目名</th>
+              <th>必須</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>案件コード</td>
+              <td>-</td>
+              <td>自動採番（PJ + 年月 + 連番）</td>
+            </tr>
+            <tr>
+              <td>案件名</td>
+              <td>◯</td>
+              <td>工事名称</td>
+            </tr>
+            <tr>
+              <td>顧客</td>
+              <td>-</td>
+              <td>顧客マスタから選択</td>
+            </tr>
+            <tr>
+              <td>案件種別</td>
+              <td>◯</td>
+              <td>通常案件 / その他（小工事・常用）</td>
+            </tr>
+            <tr>
+              <td>受注フロー</td>
+              <td>◯</td>
+              <td>通常 / 口頭先行</td>
+            </tr>
+            <tr>
+              <td>現場住所</td>
+              <td>-</td>
+              <td>工事現場の住所</td>
+            </tr>
+            <tr>
+              <td>営業担当</td>
+              <td>-</td>
+              <td>営業担当社員</td>
+            </tr>
+            <tr>
+              <td>工務担当</td>
+              <td>-</td>
+              <td>工務担当社員</td>
+            </tr>
+            <tr>
+              <td>施工担当</td>
+              <td>-</td>
+              <td>施工管理担当社員</td>
+            </tr>
+            <tr>
+              <td>予定開始日</td>
+              <td>-</td>
+              <td>工事予定開始日</td>
+            </tr>
+            <tr>
+              <td>予定終了日</td>
+              <td>-</td>
+              <td>工事予定完了日</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>登録手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>メニューから「案件一覧」を選択</strong>
+          案件一覧画面が表示されます。
+        </li>
+        <li>
+          <strong>「新規案件」ボタンをクリック</strong>
+          案件登録フォームが表示されます。
+        </li>
+        <li>
+          <strong>基本情報を入力</strong>
+          案件名、顧客、担当者などを入力します。
+        </li>
+        <li>
+          <strong>「登録」ボタンで保存</strong>
+          案件コードが自動採番され、案件が作成されます。
+        </li>
+      </ol>
+    </section>
+
+    <!-- 案件種別 -->
+    <section class="section">
+      <h2>案件種別</h2>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>通常案件（regular）</h4>
+          <p>標準的な工事案件。見積作成→4点チェック→実行予算→日報→請求の完全なフローを経由します。</p>
+          <ul>
+            <li>見積作成が必須</li>
+            <li>4点チェック完了で受注確定</li>
+            <li>実行予算の作成が必要</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>その他（misc）</h4>
+          <p>小規模工事や常用作業など、簡略化されたフローで管理する案件。</p>
+          <ul>
+            <li>見積は省略可能</li>
+            <li>4点チェックは簡易版</li>
+            <li>即時着工可能</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 受注フロー -->
+    <section class="section">
+      <h2>受注フロー</h2>
+
+      <h3>通常フロー（standard）</h3>
+      <div class="flow-diagram">
+        <div class="flow-steps">
+          <div class="flow-step">見積提出</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">顧客承認</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">注文書受領</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">4点チェック</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">受注確定</div>
+        </div>
+      </div>
+      <p>見積承認後、正式な注文書を受領してから受注確定とするフローです。</p>
+
+      <h3>口頭先行フロー（oral_first）</h3>
+      <div class="flow-diagram">
+        <div class="flow-steps">
+          <div class="flow-step">口頭受注</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">着工</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">注文書受領（後日）</div>
+        </div>
+      </div>
+      <p>口頭で受注を受け、先に着工し、後から正式な注文書を受領するフローです。</p>
+
+      <div class="alert alert-warning">
+        <strong>口頭先行フローの注意点</strong>
+        <p>口頭受注から14日を超えて注文書が未受領の場合、アラートが表示されます。リスク管理のため、早めの注文書取得を推奨します。</p>
+      </div>
+    </section>
+
+    <!-- ステータス管理 -->
+    <section class="section">
+      <h2>ステータス管理</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ステータス</th>
+              <th>説明</th>
+              <th>できること</th>
+              <th>次のステップ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-secondary">draft</span></td>
+              <td>下書き</td>
+              <td>案件情報の編集、見積作成</td>
+              <td>見積提出</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-primary">estimating</span></td>
+              <td>見積中</td>
+              <td>見積の編集・提出</td>
+              <td>4点チェック完了</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">ordered</span></td>
+              <td>受注済</td>
+              <td>実行予算作成</td>
+              <td>着工準備</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-primary">preparing</span></td>
+              <td>着工準備中</td>
+              <td>5点ゲート確認</td>
+              <td>着工</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-success">in_progress</span></td>
+              <td>施工中</td>
+              <td>日報入力、原価管理</td>
+              <td>完工</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-success">completed</span></td>
+              <td>完工</td>
+              <td>請求書発行</td>
+              <td>請求</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">invoiced</span></td>
+              <td>請求済</td>
+              <td>入金確認</td>
+              <td>入金完了</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-success">paid</span></td>
+              <td>入金済</td>
+              <td>案件クローズ</td>
+              <td>クローズ</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-secondary">closed</span></td>
+              <td>クローズ</td>
+              <td>閲覧のみ</td>
+              <td>-</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 案件詳細画面 -->
+    <section class="section">
+      <h2>案件詳細画面</h2>
+      <p>案件詳細画面では、案件に関連するすべての情報にアクセスできます。</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>基本情報タブ</h4>
+          <p>案件の基本情報、担当者、ステータスを表示・編集します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>見積タブ</h4>
+          <p>見積書の一覧、作成、PDF出力を行います。</p>
+        </div>
+        <div class="feature-card">
+          <h4>4点チェックタブ</h4>
+          <p>受注確定のための4点チェックを管理します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>実行予算タブ</h4>
+          <p>実行予算の作成・確認を行います。</p>
+        </div>
+        <div class="feature-card">
+          <h4>日報タブ</h4>
+          <p>日報の一覧、入力を行います。</p>
+        </div>
+        <div class="feature-card">
+          <h4>現場台帳タブ</h4>
+          <p>原価集計、予算対比を確認します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>請求タブ</h4>
+          <p>請求書の作成・発行を行います。</p>
+        </div>
+        <div class="feature-card">
+          <h4>入金タブ</h4>
+          <p>入金の記録・確認を行います。</p>
+        </div>
+        <div class="feature-card">
+          <h4>書類タブ</h4>
+          <p>関連書類のアップロード・管理を行います。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Google Drive連携 -->
+    <section class="section">
+      <h2>Google Drive連携</h2>
+      <p>案件が登録されると、自動的にGoogle Driveにフォルダが作成されます。</p>
+
+      <h3>フォルダ構成</h3>
+      <div class="code-block">
+案件フォルダ (PJ202601001_新宿ビル外壁改修工事)
+├── 01_見積
+├── 02_契約・注文書
+├── 03_施工図・図面
+├── 04_安全書類
+├── 05_日報
+├── 06_請求書
+├── 07_完了報告
+└── 99_その他
+      </div>
+
+      <div class="alert alert-info">
+        <strong>自動同期</strong>
+        <p>システムから出力したPDF（見積書、請求書など）は自動的に対応するフォルダにアップロードされます。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p><a href="index.html">← マニュアルトップへ戻る</a></p>
+    <p>SanyuTech DX Platform - 案件管理マニュアル</p>
+  </footer>
+</body>
+</html>

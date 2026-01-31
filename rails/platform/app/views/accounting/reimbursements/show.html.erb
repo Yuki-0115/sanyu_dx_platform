@@ -2,7 +2,7 @@
   <div class="flex justify-between items-center mb-6">
     <div>
       <h1 class="text-2xl font-bold"><%= @employee.name %>の立替経費</h1>
-      <p class="text-gray-500"><%= @employee.department %></p>
+      <p class="text-gray-500"><%= @employee.employment_type == "regular" ? "正社員" : "仮社員" %></p>
     </div>
     <div class="flex gap-2">
       <%= link_to "戻る", accounting_reimbursements_path, class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>

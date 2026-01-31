@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class OutsourcingReportsController < ApplicationController
-  before_action :set_project
+  include ProjectScoped
 
   def index
     @outsourcing_entries = OutsourcingEntry
@@ -45,10 +45,6 @@ class OutsourcingReportsController < ApplicationController
   end
 
   private
-
-  def set_project
-    @project = Project.find(params[:project_id])
-  end
 
   def daily_report_params
     params.require(:daily_report).permit(

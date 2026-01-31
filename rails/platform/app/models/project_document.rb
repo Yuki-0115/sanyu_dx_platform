@@ -2,6 +2,24 @@
 
 class ProjectDocument < ApplicationRecord
 
+  # ファイルサイズ・タイプ制限
+  MAX_FILE_SIZE = 100.megabytes
+  ALLOWED_CONTENT_TYPES = %w[
+    application/pdf
+    image/png
+    image/jpeg
+    image/webp
+    image/gif
+    application/msword
+    application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    application/vnd.ms-excel
+    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    application/vnd.ms-powerpoint
+    application/vnd.openxmlformats-officedocument.presentationml.presentation
+    text/plain
+    text/csv
+  ].freeze
+
   # カテゴリ定義
   CATEGORIES = %w[
     contract
@@ -40,6 +58,7 @@ class ProjectDocument < ApplicationRecord
   # Validations
   validates :name, presence: true
   validates :category, presence: true, inclusion: { in: CATEGORIES }
+  validate :validate_file_attachment
 
   # Callbacks
   after_create_commit :sync_to_google_drive
@@ -86,5 +105,17 @@ class ProjectDocument < ApplicationRecord
       record_type: "ProjectDocument",
       record_id: id
     )
+  end
+
+  def validate_file_attachment
+    return unless file.attached?
+
+    if file.byte_size > MAX_FILE_SIZE
+      errors.add(:file, "は#{MAX_FILE_SIZE / 1.megabyte}MB以下にしてください")
+    end
+
+    unless ALLOWED_CONTENT_TYPES.include?(file.content_type)
+      errors.add(:file, "は許可されていないファイル形式です")
+    end
   end
 end

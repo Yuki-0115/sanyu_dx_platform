@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class ProjectDocumentsController < ApplicationController
-  before_action :set_project
+  include ProjectScoped
+
   before_action :set_document, only: %i[destroy]
 
   def index
@@ -34,10 +35,6 @@ class ProjectDocumentsController < ApplicationController
   end
 
   private
-
-  def set_project
-    @project = Project.find(params[:project_id])
-  end
 
   def set_document
     @document = @project.project_documents.find(params[:id])

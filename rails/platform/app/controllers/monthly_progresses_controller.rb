@@ -2,8 +2,10 @@
 
 # 月次出来高入力
 class MonthlyProgressesController < ApplicationController
+  include ProjectScoped
+
+  skip_before_action :set_project, except: [:update_for_project]
   before_action :set_period, except: [:update_for_project]
-  before_action :set_project, only: [:update_for_project]
 
   # 月次出来高一覧（一括入力）
   def index
@@ -137,9 +139,5 @@ class MonthlyProgressesController < ApplicationController
     if @year < 2000 || @month < 1 || @month > 12
       redirect_to monthly_progresses_path(year: Date.current.year, month: Date.current.month)
     end
-  end
-
-  def set_project
-    @project = Project.find(params[:project_id])
   end
 end

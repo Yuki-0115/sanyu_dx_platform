@@ -2,8 +2,8 @@
 
 class DailyReportsController < ApplicationController
   include DailyReportActions
+  include ProjectScoped
 
-  before_action :set_project
   before_action :set_daily_report, only: %i[show edit update confirm]
 
   def index
@@ -56,10 +56,6 @@ class DailyReportsController < ApplicationController
   end
 
   private
-
-  def set_project
-    @project = Project.find(params[:project_id])
-  end
 
   def set_daily_report
     @daily_report = @project.daily_reports.find(params[:id])

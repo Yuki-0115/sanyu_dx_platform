@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SanyuTech DX Platform - 操作マニュアル</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --secondary: #64748b;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --border: #e2e8f0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    /* Navigation */
+    .nav {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .nav a {
+      color: var(--text);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .nav a:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Main Content */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Section */
+    .section {
+      background: var(--card-bg);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .section h2 {
+      color: var(--primary);
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 3px solid var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section h3 {
+      color: var(--text);
+      font-size: 1.3rem;
+      margin: 1.5rem 0 1rem;
+    }
+
+    .section h4 {
+      color: var(--secondary);
+      font-size: 1.1rem;
+      margin: 1rem 0 0.5rem;
+    }
+
+    .section p {
+      margin-bottom: 1rem;
+    }
+
+    /* Flow Diagram */
+    .flow-diagram {
+      background: #f1f5f9;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      overflow-x: auto;
+    }
+
+    .flow-steps {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .flow-step {
+      background: var(--primary);
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .flow-arrow {
+      color: var(--secondary);
+      font-size: 1.5rem;
+    }
+
+    /* Feature Cards */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .feature-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+
+    .feature-card h4 {
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .feature-card p {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    /* Table */
+    .table-wrapper {
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: #f1f5f9;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    tr:hover {
+      background: #f8fafc;
+    }
+
+    /* Status Badge */
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-primary { background: #dbeafe; color: #1d4ed8; }
+    .badge-success { background: #dcfce7; color: #16a34a; }
+    .badge-warning { background: #fef3c7; color: #d97706; }
+    .badge-danger { background: #fee2e2; color: #dc2626; }
+
+    /* Alert Box */
+    .alert {
+      padding: 1rem 1.25rem;
+      border-radius: 0.5rem;
+      margin: 1rem 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .alert-info {
+      background: #dbeafe;
+      border-left: 4px solid var(--primary);
+    }
+
+    .alert-warning {
+      background: #fef3c7;
+      border-left: 4px solid var(--warning);
+    }
+
+    .alert-success {
+      background: #dcfce7;
+      border-left: 4px solid var(--success);
+    }
+
+    /* Steps List */
+    .steps {
+      list-style: none;
+      counter-reset: step;
+      margin: 1rem 0;
+    }
+
+    .steps li {
+      counter-increment: step;
+      padding: 1rem 1rem 1rem 3.5rem;
+      position: relative;
+      border-left: 2px solid var(--border);
+      margin-left: 1rem;
+    }
+
+    .steps li:last-child {
+      border-left-color: transparent;
+    }
+
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: -1rem;
+      top: 0.75rem;
+      width: 2rem;
+      height: 2rem;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .steps li strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Code Block */
+    .code-block {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1rem 1.25rem;
+      border-radius: 0.5rem;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    /* Screenshot placeholder */
+    .screenshot {
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+      border: 2px dashed var(--border);
+      border-radius: 0.5rem;
+      padding: 3rem;
+      text-align: center;
+      color: var(--text-light);
+      margin: 1rem 0;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-light);
+      font-size: 0.9rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .section {
+        padding: 1.5rem;
+      }
+
+      .flow-steps {
+        flex-direction: column;
+      }
+
+      .flow-arrow {
+        transform: rotate(90deg);
+      }
+    }
+
+    /* Print */
+    @media print {
+      .nav {
+        display: none;
+      }
+
+      .section {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid var(--border);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>SanyuTech DX Platform</h1>
+    <p>建設業務デジタル化プラットフォーム 操作マニュアル</p>
+  </header>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#overview">概要</a>
+      <a href="#flow">業務フロー</a>
+      <a href="#master">マスタ管理</a>
+      <a href="#project">案件管理</a>
+      <a href="#estimate">見積作成</a>
+      <a href="#fourpoint">4点チェック</a>
+      <a href="#budget">実行予算</a>
+      <a href="#daily">日報入力</a>
+      <a href="#invoice">請求管理</a>
+      <a href="#payment">入金管理</a>
+      <a href="#monthly">月次処理</a>
+      <a href="#dashboard">経営ダッシュボード</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <!-- 概要 -->
+    <section id="overview" class="section">
+      <h2>システム概要</h2>
+      <p>SanyuTech DX Platformは、建設会社の業務をデジタル化し、案件の受注から入金までを一元管理するシステムです。</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>案件一元管理</h4>
+          <p>案件ID をキーに、見積から入金まで全データを紐付けて管理します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>日報による原価管理</h4>
+          <p>職長が一括入力する日報から、リアルタイムで原価を把握できます。</p>
+        </div>
+        <div class="feature-card">
+          <h4>4点チェック</h4>
+          <p>受注前の重要チェック項目を管理し、リスクを未然に防ぎます。</p>
+        </div>
+        <div class="feature-card">
+          <h4>経営ダッシュボード</h4>
+          <p>売上・粗利・資金繰りをリアルタイムで可視化します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>仮社員相殺</h4>
+          <p>協力会社への支払いと売上を自動計算し、相殺処理を効率化します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>Google Drive連携</h4>
+          <p>書類を自動でクラウドにバックアップし、いつでもアクセス可能です。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 業務フロー -->
+    <section id="flow" class="section">
+      <h2>業務フロー全体像</h2>
+      <p>案件は以下のフローで管理されます。各ステップで必要なチェックを経て、次のステップに進みます。</p>
+
+      <div class="flow-diagram">
+        <div class="flow-steps">
+          <div class="flow-step">引合い</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">見積作成</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">4点チェック</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">受注確定</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">実行予算</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">着工</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">日報入力</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">完工</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">請求</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">入金</div>
+        </div>
+      </div>
+
+      <h3>ステータス一覧</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ステータス</th>
+              <th>説明</th>
+              <th>次のアクション</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-secondary">draft</span></td>
+              <td>下書き - 案件情報入力中</td>
+              <td>見積作成へ</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-primary">estimating</span></td>
+              <td>見積中 - 見積書作成・提出</td>
+              <td>4点チェックへ</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">ordered</span></td>
+              <td>受注済 - 4点チェック完了</td>
+              <td>実行予算作成へ</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-primary">preparing</span></td>
+              <td>着工準備中 - 5点ゲート確認</td>
+              <td>着工へ</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-success">in_progress</span></td>
+              <td>施工中 - 日報入力中</td>
+              <td>完工へ</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-success">completed</span></td>
+              <td>完工 - 工事完了</td>
+              <td>請求へ</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">invoiced</span></td>
+              <td>請求済 - 請求書発行済</td>
+              <td>入金確認へ</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-success">paid</span></td>
+              <td>入金済 - 全額入金完了</td>
+              <td>クローズへ</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-secondary">closed</span></td>
+              <td>クローズ - 案件終了</td>
+              <td>-</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- マスタ管理 -->
+    <section id="master" class="section">
+      <h2>マスタ管理</h2>
+      <p>システムの基本データを管理します。案件登録の前に、必要なマスタデータを登録してください。</p>
+
+      <h3>顧客マスタ</h3>
+      <p>発注元の顧客情報を管理します。</p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>必須</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>顧客名</td><td>◯</td><td>会社名または個人名</td></tr>
+            <tr><td>顧客コード</td><td>-</td><td>自動採番（CL + 連番）</td></tr>
+            <tr><td>担当者名</td><td>-</td><td>主要連絡先の担当者</td></tr>
+            <tr><td>電話番号</td><td>-</td><td>連絡先電話番号</td></tr>
+            <tr><td>メールアドレス</td><td>-</td><td>連絡先メール</td></tr>
+            <tr><td>住所</td><td>-</td><td>請求書送付先等</td></tr>
+            <tr><td>与信限度額</td><td>-</td><td>取引上限金額</td></tr>
+            <tr><td>支払条件</td><td>-</td><td>月末締め翌月払い等</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>協力会社マスタ</h3>
+      <p>外注先・協力会社の情報を管理します。仮社員がいる場合は相殺設定も行います。</p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>必須</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>会社名</td><td>◯</td><td>協力会社名</td></tr>
+            <tr><td>代表者名</td><td>-</td><td>代表者または担当者</td></tr>
+            <tr><td>仮社員有無</td><td>-</td><td>仮社員がいる場合はチェック</td></tr>
+            <tr><td>相殺ルール</td><td>-</td><td>相殺計算のルール設定</td></tr>
+            <tr><td>人工単価</td><td>-</td><td>標準の人工単価</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>社員マスタ</h3>
+      <p>自社社員の情報を管理します。日報の出面入力で使用します。</p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>必須</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>社員名</td><td>◯</td><td>氏名</td></tr>
+            <tr><td>社員番号</td><td>-</td><td>自動採番</td></tr>
+            <tr><td>雇用形態</td><td>◯</td><td>正社員 / 臨時社員</td></tr>
+            <tr><td>役職</td><td>-</td><td>職長 / 作業員 等</td></tr>
+            <tr><td>部署</td><td>-</td><td>所属部署</td></tr>
+            <tr><td>権限</td><td>◯</td><td>管理者 / 経営 / 営業 / 施工 等</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-info">
+        <strong>権限について</strong>
+        <p>権限によってアクセスできる機能が異なります。経営ダッシュボードは「経営」「管理者」権限のみ閲覧可能です。</p>
+      </div>
+    </section>
+
+    <!-- 案件管理 -->
+    <section id="project" class="section">
+      <h2>案件管理</h2>
+      <p>新規案件の登録から完了までを管理します。すべてのデータは案件に紐づきます。</p>
+
+      <h3>案件の登録</h3>
+      <ol class="steps">
+        <li>
+          <strong>メニューから「案件一覧」を選択</strong>
+          案件一覧画面が表示されます。
+        </li>
+        <li>
+          <strong>「新規案件」ボタンをクリック</strong>
+          案件登録フォームが表示されます。
+        </li>
+        <li>
+          <strong>基本情報を入力</strong>
+          案件名、顧客、現場住所、担当者などを入力します。
+        </li>
+        <li>
+          <strong>「登録」ボタンで保存</strong>
+          案件コードが自動採番され、案件が作成されます。
+        </li>
+      </ol>
+
+      <h3>案件種別</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>種別</th>
+              <th>説明</th>
+              <th>用途</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-primary">通常案件</span></td>
+              <td>見積→受注→施工の標準フロー</td>
+              <td>一般的な工事案件</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">その他（小工事・常用）</span></td>
+              <td>簡略化されたフロー</td>
+              <td>小規模工事、常用作業</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>受注フロー</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>フロー</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>通常（見積→注文書→受注）</td>
+              <td>標準的な受注プロセス。注文書受領後に受注確定。</td>
+            </tr>
+            <tr>
+              <td>口頭先行（口頭受注→後から注文書）</td>
+              <td>口頭で受注後、後日注文書を受領するパターン。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 見積作成 -->
+    <section id="estimate" class="section">
+      <h2>見積作成</h2>
+      <p>案件に対する見積書を作成します。カテゴリ別に見積項目を整理できます。</p>
+
+      <h3>見積書の作成手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>案件詳細画面から「見積作成」をクリック</strong>
+          新規見積フォームが表示されます。
+        </li>
+        <li>
+          <strong>見積基本情報を入力</strong>
+          見積番号（自動採番）、有効期限、宛先などを入力します。
+        </li>
+        <li>
+          <strong>カテゴリを追加</strong>
+          「外壁工事」「足場工事」など、工種別にカテゴリを作成します。
+        </li>
+        <li>
+          <strong>見積項目を追加</strong>
+          各カテゴリに、品名・仕様・数量・単価を入力します。
+        </li>
+        <li>
+          <strong>諸経費・福利厚生費を設定</strong>
+          カテゴリ別に諸経費率・福利厚生費率を設定します。
+        </li>
+        <li>
+          <strong>プレビュー・PDF出力</strong>
+          見積書をプレビューし、PDF形式で出力します。
+        </li>
+      </ol>
+
+      <h3>見積ステータス</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ステータス</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="badge badge-secondary">draft</span></td><td>下書き - 編集中</td></tr>
+            <tr><td><span class="badge badge-primary">submitted</span></td><td>提出済 - 顧客に提出済み</td></tr>
+            <tr><td><span class="badge badge-success">approved</span></td><td>承認済 - 顧客から承認</td></tr>
+            <tr><td><span class="badge badge-danger">rejected</span></td><td>却下 - 不採用</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-warning">
+        <strong>見積の改訂について</strong>
+        <p>見積を修正する場合は、新しいバージョンを作成することを推奨します。履歴として以前の見積も保存されます。</p>
+      </div>
+    </section>
+
+    <!-- 4点チェック -->
+    <section id="fourpoint" class="section">
+      <h2>4点チェック（受注確定）</h2>
+      <p>受注前に確認すべき4つの重要項目をチェックします。すべて完了すると受注確定となります。</p>
+
+      <h3>4点チェック項目</h3>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>1. 契約書</h4>
+          <p>契約書または注文書の締結確認。双方の合意内容を書面化。</p>
+        </div>
+        <div class="feature-card">
+          <h4>2. 注文書</h4>
+          <p>顧客からの正式な注文書の受領確認。金額・条件を確認。</p>
+        </div>
+        <div class="feature-card">
+          <h4>3. 支払条件</h4>
+          <p>支払いサイト、締め日、支払日の確認。資金繰りへの影響を把握。</p>
+        </div>
+        <div class="feature-card">
+          <h4>4. 顧客承認</h4>
+          <p>顧客側決裁者の承認確認。着工許可の取得。</p>
+        </div>
+      </div>
+
+      <h3>チェック手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>案件詳細画面で「4点チェック」タブを選択</strong>
+          4点チェック画面が表示されます。
+        </li>
+        <li>
+          <strong>各項目を確認してチェック</strong>
+          確認できた項目にチェックを入れます。必要に応じてメモを記録。
+        </li>
+        <li>
+          <strong>4項目すべて完了で受注確定</strong>
+          すべてのチェックが完了すると、ステータスが「受注済」に変更されます。
+        </li>
+      </ol>
+
+      <div class="alert alert-success">
+        <strong>口頭先行フローの場合</strong>
+        <p>口頭で先に受注した場合は、注文書の受領を後から記録できます。未受領の場合はアラートが表示されます。</p>
+      </div>
+    </section>
+
+    <!-- 実行予算 -->
+    <section id="budget" class="section">
+      <h2>実行予算</h2>
+      <p>受注確定後、実行予算を作成します。原価管理の基準となる重要なデータです。</p>
+
+      <h3>予算項目</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>説明</th>
+              <th>計算方法</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>労務費</td>
+              <td>自社社員の人件費</td>
+              <td>人工数 × 人工単価</td>
+            </tr>
+            <tr>
+              <td>材料費</td>
+              <td>資材・材料の購入費</td>
+              <td>見積もり金額</td>
+            </tr>
+            <tr>
+              <td>外注費</td>
+              <td>協力会社への支払い</td>
+              <td>人工数 × 単価 + 請負金額</td>
+            </tr>
+            <tr>
+              <td>経費</td>
+              <td>その他経費（運搬費等）</td>
+              <td>見積もり金額</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>人工単価の設定</h3>
+      <p>予算作成時に、雇用形態別の人工単価を設定します。</p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>雇用形態</th>
+              <th>デフォルト単価</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>正社員</td><td>¥18,000/人日</td><td>自社正社員の単価</td></tr>
+            <tr><td>臨時社員</td><td>¥15,000/人日</td><td>臨時雇用の単価</td></tr>
+            <tr><td>外注</td><td>¥20,000/人日</td><td>協力会社への支払単価</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>予算確定</h3>
+      <ol class="steps">
+        <li>
+          <strong>各項目の金額を入力</strong>
+          労務費、材料費、外注費、経費を入力します。
+        </li>
+        <li>
+          <strong>目標粗利率を設定</strong>
+          目標とする粗利率（%）を設定します。
+        </li>
+        <li>
+          <strong>「予算確定」ボタンをクリック</strong>
+          予算が確定され、日報入力が可能になります。
+        </li>
+      </ol>
+
+      <div class="alert alert-info">
+        <strong>予算と実績の比較</strong>
+        <p>日報入力が進むと、予算と実績の差異がリアルタイムで表示されます。予算超過時はアラートが出ます。</p>
+      </div>
+    </section>
+
+    <!-- 日報入力 -->
+    <section id="daily" class="section">
+      <h2>日報入力</h2>
+      <p>現場の作業内容、出面（勤怠）、経費を日次で記録します。職長が一括入力します。</p>
+
+      <h3>日報の構成</h3>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>基本情報</h4>
+          <p>日付、天候、作業内容、安全事項などを記録</p>
+        </div>
+        <div class="feature-card">
+          <h4>出面（勤怠）</h4>
+          <p>作業員ごとの出勤状況（終日/半日）を記録</p>
+        </div>
+        <div class="feature-card">
+          <h4>経費</h4>
+          <p>材料費、燃料費、高速代などを記録</p>
+        </div>
+        <div class="feature-card">
+          <h4>外注作業</h4>
+          <p>協力会社の作業内容・人工数を記録</p>
+        </div>
+      </div>
+
+      <h3>入力手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>案件詳細画面から「日報」タブを選択</strong>
+          日報一覧が表示されます。
+        </li>
+        <li>
+          <strong>「新規日報」ボタンをクリック</strong>
+          日報入力フォームが表示されます。
+        </li>
+        <li>
+          <strong>基本情報を入力</strong>
+          日付、天候、作業内容を入力します。
+        </li>
+        <li>
+          <strong>出面を入力</strong>
+          「出面追加」で作業員を追加し、勤務時間を入力します。
+        </li>
+        <li>
+          <strong>経費を入力</strong>
+          材料費、燃料費などを入力します。レシートは添付可能。
+        </li>
+        <li>
+          <strong>外注を入力</strong>
+          協力会社の作業がある場合は、人工数または請負金額を入力。
+        </li>
+        <li>
+          <strong>「確定」ボタンで保存</strong>
+          日報が確定され、原価に反映されます。
+        </li>
+      </ol>
+
+      <h3>出面の種類</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>種類</th>
+              <th>人工数</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>終日</td><td>1.0</td><td>通常の1日勤務</td></tr>
+            <tr><td>半日</td><td>0.5</td><td>午前または午後のみ</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-warning">
+        <strong>日報の修正について</strong>
+        <p>確定済みの日報を修正する場合は「修正」ボタンから行います。修正履歴は監査ログに記録されます。</p>
+      </div>
+    </section>
+
+    <!-- 請求管理 -->
+    <section id="invoice" class="section">
+      <h2>請求管理</h2>
+      <p>工事完了後（または出来高に応じて）、請求書を発行します。</p>
+
+      <h3>請求書の作成</h3>
+      <ol class="steps">
+        <li>
+          <strong>案件詳細画面から「請求」タブを選択</strong>
+          請求一覧が表示されます。
+        </li>
+        <li>
+          <strong>「新規請求書」ボタンをクリック</strong>
+          請求書作成フォームが表示されます。
+        </li>
+        <li>
+          <strong>請求情報を入力</strong>
+          請求金額、消費税、支払期日などを入力します。
+        </li>
+        <li>
+          <strong>請求明細を追加</strong>
+          見積項目を参照して明細を追加できます。
+        </li>
+        <li>
+          <strong>プレビュー・発行</strong>
+          請求書をプレビューし、「発行」ボタンでステータスを更新。
+        </li>
+      </ol>
+
+      <h3>請求パターン</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>パターン</th>
+              <th>説明</th>
+              <th>用途</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>一括請求</td>
+              <td>工事完了後に全額請求</td>
+              <td>小規模工事</td>
+            </tr>
+            <tr>
+              <td>出来高請求</td>
+              <td>進捗に応じて分割請求</td>
+              <td>大規模・長期工事</td>
+            </tr>
+            <tr>
+              <td>着手金+残金</td>
+              <td>着手時と完了時の2回</td>
+              <td>一般的な中規模工事</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 入金管理 -->
+    <section id="payment" class="section">
+      <h2>入金管理</h2>
+      <p>請求に対する入金を記録し、債権管理を行います。</p>
+
+      <h3>入金の記録</h3>
+      <ol class="steps">
+        <li>
+          <strong>請求詳細画面から「入金登録」をクリック</strong>
+          入金登録フォームが表示されます。
+        </li>
+        <li>
+          <strong>入金情報を入力</strong>
+          入金日、入金額を入力します。
+        </li>
+        <li>
+          <strong>「登録」ボタンで保存</strong>
+          入金が記録され、請求残高が更新されます。
+        </li>
+      </ol>
+
+      <h3>入金ステータス</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>状態</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>未入金</td><td>請求済みだが入金なし</td></tr>
+            <tr><td>一部入金</td><td>請求額の一部が入金済み</td></tr>
+            <tr><td>入金完了</td><td>全額入金済み</td></tr>
+            <tr><td>入金遅延</td><td>支払期日を過ぎて未入金</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-info">
+        <strong>入金遅延アラート</strong>
+        <p>支払期日を過ぎた未入金請求は、ダッシュボードにアラート表示されます。</p>
+      </div>
+    </section>
+
+    <!-- 月次処理 -->
+    <section id="monthly" class="section">
+      <h2>月次処理</h2>
+      <p>月次での帳票作成、仮社員相殺処理を行います。</p>
+
+      <h3>月次出来高</h3>
+      <p>各案件の月ごとの出来高（進捗金額）を記録します。</p>
+      <ol class="steps">
+        <li>
+          <strong>案件詳細から「月次出来高」を選択</strong>
+          月次出来高一覧が表示されます。
+        </li>
+        <li>
+          <strong>対象月と出来高金額を入力</strong>
+          その月に計上する出来高金額を入力します。
+        </li>
+        <li>
+          <strong>登録</strong>
+          出来高が記録され、仕掛かり管理に反映されます。
+        </li>
+      </ol>
+
+      <h3>仮社員相殺</h3>
+      <p>協力会社から派遣された仮社員について、給与と売上を相殺計算します。</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>支払側（給与）</h4>
+          <p>仮社員の給与 + 社会保険料を計算</p>
+        </div>
+        <div class="feature-card">
+          <h4>売上側（人工売上）</h4>
+          <p>仮社員の人工数 × 単価で売上を計算</p>
+        </div>
+        <div class="feature-card">
+          <h4>相殺金額</h4>
+          <p>支払額と売上額を相殺した差額</p>
+        </div>
+      </div>
+
+      <h3>相殺処理手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>「月次処理」→「仮社員相殺」を選択</strong>
+          相殺対象の協力会社一覧が表示されます。
+        </li>
+        <li>
+          <strong>対象月・協力会社を選択</strong>
+          相殺計算対象を選択します。
+        </li>
+        <li>
+          <strong>給与・社会保険を入力</strong>
+          支払側の金額を入力します。
+        </li>
+        <li>
+          <strong>人工数を確認</strong>
+          日報から集計された人工数を確認します。
+        </li>
+        <li>
+          <strong>相殺確定</strong>
+          差額が計算され、相殺処理が完了します。
+        </li>
+      </ol>
+    </section>
+
+    <!-- 経営ダッシュボード -->
+    <section id="dashboard" class="section">
+      <h2>経営ダッシュボード</h2>
+      <p>経営状況をリアルタイムで可視化します。経営層・管理者のみアクセス可能です。</p>
+
+      <h3>表示項目</h3>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>売上サマリー</h4>
+          <p>月次・年次の売上推移、前年比較</p>
+        </div>
+        <div class="feature-card">
+          <h4>粗利管理</h4>
+          <p>案件別・全体の粗利額・粗利率</p>
+        </div>
+        <div class="feature-card">
+          <h4>資金繰り</h4>
+          <p>入金予定、支払予定、キャッシュフロー</p>
+        </div>
+        <div class="feature-card">
+          <h4>仕掛かり</h4>
+          <p>未請求の出来高、工事進捗</p>
+        </div>
+        <div class="feature-card">
+          <h4>債権管理</h4>
+          <p>未入金一覧、入金遅延アラート</p>
+        </div>
+        <div class="feature-card">
+          <h4>案件状況</h4>
+          <p>ステータス別の案件数、進行中案件</p>
+        </div>
+      </div>
+
+      <h3>アラート機能</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>アラート</th>
+              <th>条件</th>
+              <th>対応</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-danger">入金遅延</span></td>
+              <td>支払期日超過</td>
+              <td>顧客への督促</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">予算超過</span></td>
+              <td>実績原価 > 予算</td>
+              <td>原価管理の見直し</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">粗利低下</span></td>
+              <td>粗利率 < 目標</td>
+              <td>原因分析・対策</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-primary">注文書未受領</span></td>
+              <td>口頭受注後14日超過</td>
+              <td>注文書の督促</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 役割別マニュアル -->
+    <section id="role-manuals" class="section">
+      <h2>役割別マニュアル</h2>
+      <p>ご自身の役割に合わせたマニュアルをご覧ください。</p>
+
+      <div class="feature-grid">
+        <div class="feature-card" style="border-left: 4px solid #2563eb;">
+          <h4><a href="role-sales.html">営業担当マニュアル</a></h4>
+          <p>案件獲得・見積作成・4点チェック・受注確定</p>
+        </div>
+        <div class="feature-card" style="border-left: 4px solid #16a34a;">
+          <h4><a href="role-engineering.html">工務担当マニュアル</a></h4>
+          <p>実行予算・原価管理・現場台帳・完工処理</p>
+        </div>
+        <div class="feature-card" style="border-left: 4px solid #9333ea;">
+          <h4><a href="role-sales-admin.html">営業事務マニュアル</a></h4>
+          <p>見積書作成・顧客管理・書類登録・データ入力</p>
+        </div>
+        <div class="feature-card" style="border-left: 4px solid #ea580c;">
+          <h4><a href="role-accounting.html">経理担当マニュアル</a></h4>
+          <p>請求・入金・経費処理・仮社員相殺・会計連携</p>
+        </div>
+        <div class="feature-card" style="border-left: 4px solid #64748b;">
+          <h4><a href="role-worker.html">作業員マニュアル</a></h4>
+          <p>勤怠確認・現場情報・安全書類の確認</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 機能別マニュアル -->
+    <section class="section">
+      <h2>機能別マニュアル</h2>
+      <p>各機能の詳細な操作方法は、以下の個別マニュアルをご覧ください。</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4><a href="master.html">マスタ管理</a></h4>
+          <p>顧客・協力会社・社員の登録・管理方法</p>
+        </div>
+        <div class="feature-card">
+          <h4><a href="project.html">案件管理</a></h4>
+          <p>案件の登録から完了までの一元管理</p>
+        </div>
+        <div class="feature-card">
+          <h4><a href="estimate.html">見積作成</a></h4>
+          <p>見積書の作成・カテゴリ管理・PDF出力</p>
+        </div>
+        <div class="feature-card">
+          <h4><a href="daily-report.html">日報入力</a></h4>
+          <p>出面・経費・外注の記録と原価管理</p>
+        </div>
+        <div class="feature-card">
+          <h4><a href="invoice-payment.html">請求・入金</a></h4>
+          <p>請求書発行から入金確認までの債権管理</p>
+        </div>
+        <div class="feature-card">
+          <h4><a href="dashboard.html">経営ダッシュボード</a></h4>
+          <p>売上・粗利・資金繰りのリアルタイム可視化</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>SanyuTech DX Platform - 操作マニュアル</p>
+    <p>Last Updated: 2026-01-31</p>
+  </footer>
+</body>
+</html>

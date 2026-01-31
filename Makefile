@@ -162,11 +162,90 @@ postgres-logs: ## PostgreSQL: ログ表示
 postgres-shell: ## PostgreSQL: psql接続
 	docker compose exec postgres psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
 
+# ===========================================
+# バックアップ/リストア
+# ===========================================
+
+.PHONY: backup
+backup: ## バックアップ: DB + n8n（世代管理付き）
+	@chmod +x scripts/backup.sh
+	@scripts/backup.sh --all --cleanup
+
+.PHONY: backup-db
+backup-db: ## バックアップ: DBのみ
+	@chmod +x scripts/backup.sh
+	@scripts/backup.sh --db
+
+.PHONY: backup-list
+backup-list: ## バックアップ: 一覧表示
+	@chmod +x scripts/backup.sh
+	@scripts/backup.sh --list
+
+.PHONY: restore
+restore: ## リストア: 対話モード
+	@chmod +x scripts/restore.sh
+	@scripts/restore.sh --interactive
+
+.PHONY: restore-list
+restore-list: ## リストア: バックアップ一覧表示
+	@chmod +x scripts/restore.sh
+	@scripts/restore.sh --list
+
 .PHONY: postgres-backup
-postgres-backup: ## PostgreSQL: バックアップ作成
-	@mkdir -p backups
-	docker compose exec postgres pg_dump -U $(POSTGRES_USER) $(POSTGRES_DB) | gzip > backups/db_$$(date +%Y%m%d_%H%M%S).sql.gz
-	@echo "$(GREEN)Backup created: backups/db_$$(date +%Y%m%d_%H%M%S).sql.gz$(NC)"
+postgres-backup: backup-db ## PostgreSQL: バックアップ（backup-dbのエイリアス）
+
+.PHONY: backup-cron
+backup-cron: ## バックアップ: 自動バックアップ設定（cron）
+	@chmod +x scripts/setup-cron.sh
+	@scripts/setup-cron.sh
+
+.PHONY: backup-gdrive
+backup-gdrive: ## バックアップ: Google Drive連携設定
+	@chmod +x scripts/setup-gdrive.sh
+	@scripts/setup-gdrive.sh
+
+.PHONY: backup-sync
+backup-sync: ## バックアップ: Google Driveに今すぐ同期
+	@if [ -f scripts/sync-gdrive.sh ]; then \
+		scripts/sync-gdrive.sh; \
+	else \
+		echo "Google Drive連携が設定されていません。make backup-gdrive を実行してください"; \
+	fi
+
+# ===========================================
+# Google Drive書類管理
+# ===========================================
+
+.PHONY: gdrive-status
+gdrive-status: ## Google Drive: 連携状態確認
+	@echo "=== rclone リモート一覧 ==="
+	@rclone listremotes 2>/dev/null || echo "rcloneが見つかりません"
+	@echo ""
+	@echo "=== gdrive 接続テスト ==="
+	@rclone lsd gdrive: 2>/dev/null | head -5 || echo "gdrive接続失敗"
+
+.PHONY: gdrive-setup
+gdrive-setup: ## Google Drive: フォルダ構造を初期作成
+	@chmod +x scripts/gdrive-setup.sh
+	@scripts/gdrive-setup.sh
+
+.PHONY: gdrive-test
+gdrive-test: ## Google Drive: テストアップロード
+	@chmod +x scripts/gdrive-test.sh
+	@scripts/gdrive-test.sh
+
+.PHONY: gdrive-list
+gdrive-list: ## Google Drive: フォルダ内容を表示
+	@rclone lsd gdrive:SanyuTech_DX/ 2>/dev/null || echo "フォルダが見つかりません"
+
+# ===========================================
+# セキュリティ
+# ===========================================
+
+.PHONY: security-check
+security-check: ## セキュリティ: 設定ファイルのパーミッションをチェック・修正
+	@chmod +x scripts/security-check.sh
+	@scripts/security-check.sh
 
 # ===========================================
 # n8n

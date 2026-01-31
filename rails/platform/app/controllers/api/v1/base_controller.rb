@@ -15,7 +15,11 @@ module Api
       end
 
       def api_secret_key
-        ENV.fetch("N8N_API_KEY", "development_api_key_change_in_production")
+        if Rails.env.production?
+          ENV.fetch("N8N_API_KEY") { raise "N8N_API_KEY environment variable is required in production" }
+        else
+          ENV.fetch("N8N_API_KEY", "development_api_key_for_local_only")
+        end
       end
     end
   end

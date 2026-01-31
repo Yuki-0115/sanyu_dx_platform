@@ -32,6 +32,7 @@ class LineWorksNotifier
              :pre_construction_completed, :construction_started, :project_completed,
              :budget_confirmed, :daily_report_submitted, :daily_report_confirmed,
              :invoice_issued, :payment_received, :offset_confirmed,
+             :test_connection, :send_test_message,
              to: :instance
   end
 
@@ -49,6 +50,27 @@ class LineWorksNotifier
   # 汎用通知メソッド
   def notify(type:, message:, data: {})
     return mock_response(type, message) unless enabled?
+
+    send_message(message)
+  end
+
+  # 接続テスト
+  def test_connection
+    return { success: false, error: "通知が無効です", enabled: false } unless enabled?
+
+    token = get_access_token
+    if token
+      { success: true, message: "トークン取得成功" }
+    else
+      { success: false, error: "トークン取得失敗" }
+    end
+  end
+
+  # テストメッセージ送信
+  def send_test_message(custom_message = nil)
+    message = custom_message || "[テスト通知]\n\nSanyuTech DX Platform からのテスト通知です。\n送信日時: #{Time.current.strftime('%Y/%m/%d %H:%M:%S')}"
+
+    return mock_response(:test, message) unless enabled?
 
     send_message(message)
   end
@@ -91,7 +113,7 @@ class LineWorksNotifier
       type: :construction_started,
       message: build_message(:construction_started, [
         "案件名: #{project.name}",
-        "着工日: #{project.construction_started_at&.strftime('%Y/%m/%d')}"
+        "着工日: #{project.actual_start_date&.strftime('%Y/%m/%d') || '未設定'}"
       ])
     )
   end
@@ -101,7 +123,7 @@ class LineWorksNotifier
       type: :project_completed,
       message: build_message(:project_completed, [
         "案件名: #{project.name}",
-        "完工日: #{project.completed_at&.strftime('%Y/%m/%d')}"
+        "完工日: #{project.actual_end_date&.strftime('%Y/%m/%d') || '未設定'}"
       ])
     )
   end
@@ -135,9 +157,9 @@ class LineWorksNotifier
     notify(
       type: :daily_report_confirmed,
       message: build_message(:daily_report_confirmed, [
-        "案件: #{report.project&.name}",
+        "案件: #{report.project&.name || report.external_site_name || '外部現場'}",
         "日付: #{report.report_date}",
-        "確認者: #{report.confirmed_by&.name}"
+        "職長: #{report.foreman&.name || '不明'}"
       ])
     )
   end

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>作業員マニュアル - SanyuTech DX Platform</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* 作業員向けの大きめのボタン・文字 */
+    .big-card {
+      padding: 2rem;
+      text-align: center;
+    }
+    .big-card h4 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .big-card p {
+      font-size: 1.1rem;
+    }
+    .big-step {
+      font-size: 1.1rem;
+      padding: 1.5rem 1rem 1.5rem 4rem;
+    }
+    .big-step strong {
+      font-size: 1.2rem;
+    }
+    .caution-box {
+      background: #fef3c7;
+      border: 2px solid #f59e0b;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .caution-box h4 {
+      color: #d97706;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="header header-sub">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← マニュアルトップへ</a>
+      <h1>作業員マニュアル</h1>
+      <p>現場作業・安全管理・情報確認ガイド</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 作業員の役割 -->
+    <section class="section">
+      <h2>作業員ができること</h2>
+      <p>作業員は、自分の勤怠情報や案件情報を確認できます。</p>
+
+      <div class="feature-grid">
+        <div class="feature-card big-card">
+          <h4>勤怠確認</h4>
+          <p>自分がどの現場に何日出勤したか確認できます</p>
+        </div>
+        <div class="feature-card big-card">
+          <h4>案件情報</h4>
+          <p>担当している現場の情報を確認できます</p>
+        </div>
+        <div class="feature-card big-card">
+          <h4>安全書類</h4>
+          <p>現場の安全書類を確認できます</p>
+        </div>
+      </div>
+
+      <div class="caution-box">
+        <h4>日報は職長が入力します</h4>
+        <p>日報（出面・経費など）は職長がまとめて入力します。自分で入力する必要はありません。</p>
+      </div>
+    </section>
+
+    <!-- 勤怠の確認 -->
+    <section class="section">
+      <h2>勤怠の確認方法</h2>
+      <p>自分の出勤記録を確認できます。</p>
+
+      <ol class="steps">
+        <li class="big-step">
+          <strong>「マイページ」をクリック</strong>
+          画面上部のメニューから「マイページ」を選びます。
+        </li>
+        <li class="big-step">
+          <strong>「勤怠履歴」を確認</strong>
+          いつ、どの現場に出勤したかが一覧で表示されます。
+        </li>
+        <li class="big-step">
+          <strong>月を選択して確認</strong>
+          月を選ぶと、その月の出勤日数が確認できます。
+        </li>
+      </ol>
+
+      <h3>表示される情報</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>日付</td>
+              <td>出勤した日</td>
+            </tr>
+            <tr>
+              <td>現場名</td>
+              <td>作業した現場の名前</td>
+            </tr>
+            <tr>
+              <td>勤務区分</td>
+              <td>終日（1日）または 半日（0.5日）</td>
+            </tr>
+            <tr>
+              <td>人工数</td>
+              <td>終日＝1.0、半日＝0.5</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="caution-box">
+        <h4>記録が間違っている場合</h4>
+        <p>出勤記録に間違いがあれば、職長または事務所に連絡してください。</p>
+      </div>
+    </section>
+
+    <!-- 案件情報の確認 -->
+    <section class="section">
+      <h2>現場情報の確認</h2>
+      <p>担当している現場の情報を確認できます。</p>
+
+      <ol class="steps">
+        <li class="big-step">
+          <strong>「案件一覧」をクリック</strong>
+          メニューから「案件一覧」を選びます。
+        </li>
+        <li class="big-step">
+          <strong>現場を選択</strong>
+          確認したい現場をクリックします。
+        </li>
+        <li class="big-step">
+          <strong>現場情報を確認</strong>
+          現場名、住所、担当者などが表示されます。
+        </li>
+      </ol>
+
+      <h3>確認できる情報</h3>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>現場名</h4>
+          <p>工事の名称</p>
+        </div>
+        <div class="feature-card">
+          <h4>現場住所</h4>
+          <p>作業場所の住所</p>
+        </div>
+        <div class="feature-card">
+          <h4>顧客名</h4>
+          <p>発注元の会社名</p>
+        </div>
+        <div class="feature-card">
+          <h4>担当者</h4>
+          <p>営業担当・施工担当の名前</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 安全について -->
+    <section class="section">
+      <h2>安全について</h2>
+      <p>現場での安全は最も大切です。</p>
+
+      <div class="caution-box">
+        <h4>安全第一</h4>
+        <ul style="margin: 0.5rem 0 0 1.5rem; font-size: 1.1rem;">
+          <li>作業前に必ずKY（危険予知）活動を行う</li>
+          <li>保護具（ヘルメット、安全帯など）を必ず着用</li>
+          <li>危険を感じたらすぐに作業を中止して報告</li>
+          <li>体調不良の場合は無理をせず申告</li>
+        </ul>
+      </div>
+
+      <h3>安全書類の確認</h3>
+      <p>現場の安全書類（グリーンファイル）を確認できます。</p>
+      <ol class="steps">
+        <li class="big-step">
+          <strong>案件詳細から「安全書類」タブを選択</strong>
+          安全書類の一覧が表示されます。
+        </li>
+        <li class="big-step">
+          <strong>書類を確認</strong>
+          必要な書類をクリックして内容を確認します。
+        </li>
+      </ol>
+    </section>
+
+    <!-- 連絡先 -->
+    <section class="section">
+      <h2>困ったときは</h2>
+
+      <div class="feature-grid">
+        <div class="feature-card big-card">
+          <h4>勤怠の間違い</h4>
+          <p>職長または事務所に連絡</p>
+        </div>
+        <div class="feature-card big-card">
+          <h4>システムの使い方</h4>
+          <p>事務所に連絡</p>
+        </div>
+        <div class="feature-card big-card">
+          <h4>現場でのトラブル</h4>
+          <p>職長に報告</p>
+        </div>
+        <div class="feature-card big-card">
+          <h4>怪我・事故</h4>
+          <p>すぐに職長・事務所に報告</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Worker Web -->
+    <section class="section">
+      <h2>Worker Web について</h2>
+      <p>スマートフォンからも情報を確認できます。</p>
+
+      <div class="info-box">
+        <h4>Worker Web でできること</h4>
+        <ul>
+          <li>自分の勤怠履歴の確認</li>
+          <li>今月の出勤日数の確認</li>
+          <li>担当現場の情報確認</li>
+        </ul>
+      </div>
+
+      <h3>アクセス方法</h3>
+      <ol class="steps">
+        <li class="big-step">
+          <strong>スマートフォンでアクセス</strong>
+          案内されたURLにアクセスします。
+        </li>
+        <li class="big-step">
+          <strong>ログイン</strong>
+          社員番号とパスワードでログインします。
+        </li>
+        <li class="big-step">
+          <strong>情報を確認</strong>
+          勤怠や現場情報を確認します。
+        </li>
+      </ol>
+
+      <div class="caution-box">
+        <h4>パスワードを忘れた場合</h4>
+        <p>事務所に連絡して、パスワードのリセットを依頼してください。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p><a href="index.html">← マニュアルトップへ戻る</a></p>
+    <p>SanyuTech DX Platform - 作業員マニュアル</p>
+  </footer>
+</body>
+</html>

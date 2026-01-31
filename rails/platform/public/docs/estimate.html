@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>見積作成 - SanyuTech DX Platform</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header header-sub">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← マニュアルトップへ</a>
+      <h1>見積作成</h1>
+      <p>見積書の作成・管理・PDF出力</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 概要 -->
+    <section class="section">
+      <h2>見積作成とは</h2>
+      <p>見積機能では、案件に対する見積書を作成・管理します。カテゴリ別に項目を整理し、諸経費・福利厚生費を含めた見積書を作成できます。</p>
+
+      <div class="info-box">
+        <h4>見積書の構成</h4>
+        <ul>
+          <li><strong>見積カテゴリ</strong> - 工種別にグループ化（外壁工事、足場工事など）</li>
+          <li><strong>見積項目</strong> - 品名、仕様、数量、単価を入力</li>
+          <li><strong>諸経費</strong> - カテゴリ合計に対する諸経費率</li>
+          <li><strong>福利厚生費</strong> - 人件費に対する福利厚生費率</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 見積の作成 -->
+    <section class="section">
+      <h2>見積書の作成</h2>
+
+      <h3>作成手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>案件詳細画面から「見積」タブを選択</strong>
+          見積一覧が表示されます。
+        </li>
+        <li>
+          <strong>「新規見積」ボタンをクリック</strong>
+          見積作成フォームが表示されます。
+        </li>
+        <li>
+          <strong>基本情報を入力</strong>
+          見積番号（自動）、有効期限、宛先を入力します。
+        </li>
+        <li>
+          <strong>カテゴリを追加</strong>
+          「カテゴリ追加」で工種別のカテゴリを作成します。
+        </li>
+        <li>
+          <strong>見積項目を追加</strong>
+          各カテゴリに品名・仕様・数量・単価を入力します。
+        </li>
+        <li>
+          <strong>諸経費・福利厚生費を設定</strong>
+          必要に応じて率を設定します。
+        </li>
+        <li>
+          <strong>保存・プレビュー</strong>
+          保存してPDFをプレビューします。
+        </li>
+      </ol>
+    </section>
+
+    <!-- 見積項目 -->
+    <section class="section">
+      <h2>見積項目の入力</h2>
+
+      <h3>項目詳細</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目名</th>
+              <th>必須</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>品名</td>
+              <td>◯</td>
+              <td>見積項目の名称（例：足場設置・解体）</td>
+            </tr>
+            <tr>
+              <td>仕様</td>
+              <td>-</td>
+              <td>規格や仕様の詳細（例：枠組足場 H=15m）</td>
+            </tr>
+            <tr>
+              <td>数量</td>
+              <td>◯</td>
+              <td>数量（小数点可）</td>
+            </tr>
+            <tr>
+              <td>単位</td>
+              <td>◯</td>
+              <td>m、㎡、式、人工など</td>
+            </tr>
+            <tr>
+              <td>単価</td>
+              <td>◯</td>
+              <td>1単位あたりの金額</td>
+            </tr>
+            <tr>
+              <td>金額</td>
+              <td>-</td>
+              <td>自動計算（数量×単価）</td>
+            </tr>
+            <tr>
+              <td>備考</td>
+              <td>-</td>
+              <td>補足事項</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>よく使う単位</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>単位</th>
+              <th>読み方</th>
+              <th>用途</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>m</td><td>メートル</td><td>長さ（シーリング、配管など）</td></tr>
+            <tr><td>㎡</td><td>平方メートル</td><td>面積（塗装、足場など）</td></tr>
+            <tr><td>式</td><td>しき</td><td>一式計上</td></tr>
+            <tr><td>人工</td><td>にんく</td><td>人件費</td></tr>
+            <tr><td>台</td><td>だい</td><td>機材・機器</td></tr>
+            <tr><td>箇所</td><td>かしょ</td><td>作業箇所</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 諸経費 -->
+    <section class="section">
+      <h2>諸経費・福利厚生費</h2>
+
+      <h3>諸経費率</h3>
+      <p>カテゴリ合計金額に対して、現場管理費などの諸経費を上乗せします。</p>
+      <div class="code-block">
+カテゴリ小計 × 諸経費率(%) = 諸経費
+例：1,000,000円 × 10% = 100,000円
+      </div>
+
+      <h3>福利厚生費率</h3>
+      <p>人件費に対して、社会保険料等の福利厚生費を計上します。</p>
+      <div class="code-block">
+人件費 × 福利厚生費率(%) = 福利厚生費
+例：500,000円 × 5% = 25,000円
+      </div>
+
+      <h3>金額計算の流れ</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>計算</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>カテゴリ小計</td>
+              <td>各項目金額の合計</td>
+            </tr>
+            <tr>
+              <td>諸経費</td>
+              <td>カテゴリ小計 × 諸経費率</td>
+            </tr>
+            <tr>
+              <td>福利厚生費</td>
+              <td>カテゴリ小計 × 福利厚生費率</td>
+            </tr>
+            <tr>
+              <td>カテゴリ合計</td>
+              <td>小計 + 諸経費 + 福利厚生費</td>
+            </tr>
+            <tr>
+              <td>見積小計</td>
+              <td>全カテゴリ合計の合計</td>
+            </tr>
+            <tr>
+              <td>消費税</td>
+              <td>見積小計 × 10%</td>
+            </tr>
+            <tr>
+              <td>見積合計</td>
+              <td>見積小計 + 消費税</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ステータス管理 -->
+    <section class="section">
+      <h2>見積ステータス</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ステータス</th>
+              <th>説明</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-secondary">draft</span></td>
+              <td>下書き - 編集中</td>
+              <td>編集、提出、削除</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-primary">submitted</span></td>
+              <td>提出済 - 顧客に提出</td>
+              <td>承認、却下</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-success">approved</span></td>
+              <td>承認済 - 顧客が承認</td>
+              <td>閲覧のみ</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-danger">rejected</span></td>
+              <td>却下 - 不採用</td>
+              <td>閲覧のみ</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-info">
+        <strong>見積の改訂</strong>
+        <p>提出後に修正が必要な場合は、新しいバージョンを作成します。履歴として以前の見積も保存されます。</p>
+      </div>
+    </section>
+
+    <!-- PDF出力 -->
+    <section class="section">
+      <h2>PDF出力</h2>
+      <p>見積書をPDF形式で出力し、印刷やメール送付に使用できます。</p>
+
+      <h3>出力内容</h3>
+      <ul>
+        <li>会社ロゴ・社名・住所</li>
+        <li>宛先（顧客名）</li>
+        <li>見積番号・日付・有効期限</li>
+        <li>工事名・現場住所</li>
+        <li>カテゴリ別の明細</li>
+        <li>諸経費・福利厚生費</li>
+        <li>消費税・合計金額</li>
+        <li>備考・支払条件</li>
+      </ul>
+
+      <h3>出力形式</h3>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>詳細版</h4>
+          <p>すべての項目を詳細に記載した見積書。顧客提出用。</p>
+        </div>
+        <div class="feature-card">
+          <h4>概要版</h4>
+          <p>カテゴリ単位の金額のみを記載した簡略版。</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p><a href="index.html">← マニュアルトップへ戻る</a></p>
+    <p>SanyuTech DX Platform - 見積作成マニュアル</p>
+  </footer>
+</body>
+</html>

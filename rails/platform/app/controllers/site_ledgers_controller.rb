@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class SiteLedgersController < ApplicationController
+  include ProjectScoped
+
   authorize_with :projects
-  before_action :set_project
 
   def show
     @budget = @project.budget
@@ -15,10 +16,6 @@ class SiteLedgersController < ApplicationController
   end
 
   private
-
-  def set_project
-    @project = Project.find(params[:project_id])
-  end
 
   def build_daily_summary
     @daily_reports.map do |report|

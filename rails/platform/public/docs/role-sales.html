@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>営業担当マニュアル - SanyuTech DX Platform</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header header-sub">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← マニュアルトップへ</a>
+      <h1>営業担当マニュアル</h1>
+      <p>案件獲得から受注確定までの業務ガイド</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 営業担当の役割 -->
+    <section class="section">
+      <h2>営業担当の主な業務</h2>
+      <p>営業担当は、案件の獲得から受注確定までを担当します。</p>
+
+      <div class="flow-diagram">
+        <div class="flow-steps">
+          <div class="flow-step">引合い対応</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">案件登録</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">見積作成</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">見積提出</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">4点チェック</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">受注確定</div>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>案件登録</h4>
+          <p>顧客からの引合いを案件として登録し、基本情報を入力します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>見積作成</h4>
+          <p>工事内容に基づいた見積書を作成し、顧客に提出します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>4点チェック</h4>
+          <p>受注確定のための4つのチェック項目を管理します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>顧客管理</h4>
+          <p>顧客情報の登録・更新を行います。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 新規案件の登録 -->
+    <section class="section">
+      <h2>新規案件の登録</h2>
+
+      <h3>登録手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>「案件一覧」→「新規案件」をクリック</strong>
+          案件登録フォームが表示されます。
+        </li>
+        <li>
+          <strong>顧客を選択</strong>
+          既存顧客を選択、または新規顧客を登録します。
+        </li>
+        <li>
+          <strong>案件名を入力</strong>
+          工事名称を入力します（例：〇〇ビル外壁改修工事）
+        </li>
+        <li>
+          <strong>現場情報を入力</strong>
+          現場住所、工期予定などを入力します。
+        </li>
+        <li>
+          <strong>担当者を設定</strong>
+          自分を営業担当として設定します。
+        </li>
+        <li>
+          <strong>「登録」ボタンで保存</strong>
+          案件コードが自動採番されます。
+        </li>
+      </ol>
+
+      <div class="alert alert-info">
+        <strong>案件コードについて</strong>
+        <p>案件コードは「PJ + 年月 + 連番」で自動採番されます（例：PJ202601001）。このコードで案件を管理します。</p>
+      </div>
+    </section>
+
+    <!-- 見積作成 -->
+    <section class="section">
+      <h2>見積書の作成</h2>
+
+      <h3>見積の構成</h3>
+      <div class="info-box">
+        <ul>
+          <li><strong>カテゴリ</strong> - 工種別にグループ化（外壁工事、足場工事など）</li>
+          <li><strong>明細項目</strong> - 品名、仕様、数量、単価を入力</li>
+          <li><strong>諸経費</strong> - 現場管理費などの上乗せ</li>
+          <li><strong>消費税</strong> - 自動計算（10%）</li>
+        </ul>
+      </div>
+
+      <h3>作成手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>案件詳細画面で「見積」タブを選択</strong>
+          「新規見積」ボタンをクリックします。
+        </li>
+        <li>
+          <strong>基本情報を入力</strong>
+          有効期限、宛先（顧客名）を確認します。
+        </li>
+        <li>
+          <strong>カテゴリを追加</strong>
+          「カテゴリ追加」で工種を追加します。
+        </li>
+        <li>
+          <strong>明細項目を入力</strong>
+          品名・仕様・数量・単価を入力します。
+        </li>
+        <li>
+          <strong>諸経費率を設定</strong>
+          必要に応じて諸経費率（10%等）を設定します。
+        </li>
+        <li>
+          <strong>プレビュー確認</strong>
+          見積金額を確認し、必要に応じて調整します。
+        </li>
+        <li>
+          <strong>PDF出力</strong>
+          見積書をPDFで出力し、顧客に提出します。
+        </li>
+      </ol>
+
+      <h3>見積のコツ</h3>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>適正な粗利確保</h4>
+          <p>会社の目標粗利率（通常20〜30%）を確保できる金額設定を心がけます。</p>
+        </div>
+        <div class="feature-card">
+          <h4>競合との差別化</h4>
+          <p>価格だけでなく、品質・工期・アフターサービスも訴求ポイントに。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4点チェック -->
+    <section class="section">
+      <h2>4点チェック（受注確定）</h2>
+      <p>見積承認後、受注確定のために以下の4項目をチェックします。</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>1. 契約書</h4>
+          <p>契約書または基本契約の締結確認</p>
+          <ul>
+            <li>契約書の取り交わし</li>
+            <li>契約内容の確認</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>2. 注文書</h4>
+          <p>正式な注文書の受領</p>
+          <ul>
+            <li>注文書の受領確認</li>
+            <li>金額・条件の照合</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>3. 支払条件</h4>
+          <p>支払条件の確認・合意</p>
+          <ul>
+            <li>支払サイトの確認</li>
+            <li>資金繰りへの影響確認</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>4. 顧客承認</h4>
+          <p>顧客側決裁者の承認</p>
+          <ul>
+            <li>決裁権限者の確認</li>
+            <li>着工許可の取得</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="alert alert-success">
+        <strong>4点すべて完了で受注確定</strong>
+        <p>4つのチェックがすべて完了すると、案件ステータスが「受注済」に変更され、工務担当に引き継がれます。</p>
+      </div>
+    </section>
+
+    <!-- 口頭先行フロー -->
+    <section class="section">
+      <h2>口頭先行フローの場合</h2>
+      <p>急ぎの案件で、口頭で受注を受けてから後で注文書を受領するケースです。</p>
+
+      <h3>操作手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>案件登録時に「口頭先行」を選択</strong>
+          受注フローを「口頭先行」に設定します。
+        </li>
+        <li>
+          <strong>口頭受注を記録</strong>
+          口頭受注金額と日時を記録します。
+        </li>
+        <li>
+          <strong>着工を進める</strong>
+          注文書なしでも着工できます。
+        </li>
+        <li>
+          <strong>後日、注文書を受領</strong>
+          注文書を受領したら「注文書受領」ボタンで記録します。
+        </li>
+      </ol>
+
+      <div class="alert alert-warning">
+        <strong>注意：14日ルール</strong>
+        <p>口頭受注から14日を超えて注文書が未受領の場合、アラートが表示されます。早めの注文書取得を心がけてください。</p>
+      </div>
+    </section>
+
+    <!-- 顧客管理 -->
+    <section class="section">
+      <h2>顧客の登録・管理</h2>
+
+      <h3>新規顧客の登録</h3>
+      <ol class="steps">
+        <li>
+          <strong>「マスタ管理」→「顧客」を選択</strong>
+          顧客一覧画面が表示されます。
+        </li>
+        <li>
+          <strong>「新規顧客」ボタンをクリック</strong>
+          顧客登録フォームが表示されます。
+        </li>
+        <li>
+          <strong>顧客情報を入力</strong>
+          会社名、担当者、連絡先を入力します。
+        </li>
+        <li>
+          <strong>与信限度額を設定（推奨）</strong>
+          新規取引先は与信限度額の設定を推奨します。
+        </li>
+        <li>
+          <strong>「登録」ボタンで保存</strong>
+          顧客コードが自動採番されます。
+        </li>
+      </ol>
+
+      <h3>登録すべき情報</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>重要度</th>
+              <th>用途</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>会社名</td>
+              <td><span class="badge badge-danger">必須</span></td>
+              <td>見積書・請求書の宛先</td>
+            </tr>
+            <tr>
+              <td>担当者名・連絡先</td>
+              <td><span class="badge badge-warning">重要</span></td>
+              <td>日常の連絡に使用</td>
+            </tr>
+            <tr>
+              <td>住所</td>
+              <td><span class="badge badge-warning">重要</span></td>
+              <td>書類の送付先</td>
+            </tr>
+            <tr>
+              <td>支払条件</td>
+              <td><span class="badge badge-warning">重要</span></td>
+              <td>請求・入金管理に使用</td>
+            </tr>
+            <tr>
+              <td>与信限度額</td>
+              <td><span class="badge badge-primary">推奨</span></td>
+              <td>債権管理のアラートに使用</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 日常の確認事項 -->
+    <section class="section">
+      <h2>日常の確認事項</h2>
+
+      <h3>毎日確認すること</h3>
+      <ul>
+        <li>案件一覧で進行中案件のステータス確認</li>
+        <li>見積の承認状況確認</li>
+        <li>4点チェックの進捗確認</li>
+      </ul>
+
+      <h3>週次で確認すること</h3>
+      <ul>
+        <li>見積中案件のフォローアップ</li>
+        <li>口頭受注案件の注文書フォロー</li>
+        <li>新規引合いの案件登録漏れチェック</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p><a href="index.html">← マニュアルトップへ戻る</a></p>
+    <p>SanyuTech DX Platform - 営業担当マニュアル</p>
+  </footer>
+</body>
+</html>

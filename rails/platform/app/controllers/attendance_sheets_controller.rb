@@ -88,6 +88,22 @@ class AttendanceSheetsController < ApplicationController
     end
   end
 
+  def project_detail
+    @project = Project.find(params[:project_id])
+    setup_project_data
+  end
+
+  def export_project
+    @project = Project.find(params[:project_id])
+    setup_project_data
+
+    respond_to do |format|
+      format.csv do
+        send_data generate_project_csv, filename: "現場別勤怠_#{@project.name.gsub(/[\/\\]/, '_')}_#{@current_month.strftime('%Y%m')}.csv", type: "text/csv; charset=utf-8"
+      end
+    end
+  end
+
   def employee_detail
     @employee = Employee.find(params[:employee_id])
     setup_employee_data
@@ -163,6 +179,72 @@ class AttendanceSheetsController < ApplicationController
 
     # 月間集計
     @summary = calculate_employee_summary
+  end
+
+  def setup_project_data
+    # 表示月（デフォルトは今月）
+    @current_month = if params[:month].present?
+                       Date.parse("#{params[:month]}-01")
+                     else
+                       Date.current.beginning_of_month
+                     end
+
+    @start_date = @current_month.beginning_of_month
+    @end_date = @current_month.end_of_month
+    @days = (@start_date..@end_date).to_a
+
+    # この現場のこの月の出面データを取得
+    @attendances = Attendance.joins(:daily_report)
+                             .where(daily_reports: { project_id: @project.id, report_date: @start_date..@end_date })
+                             .includes(:employee, daily_report: :foreman)
+                             .order("daily_reports.report_date", "employees.name")
+
+    # この現場で稼働した社員一覧
+    @employees = @attendances.map(&:employee).compact.uniq.sort_by(&:name)
+
+    # 社員ID → 日付 → 出面データ のマッピング
+    @attendance_map = {}
+    @attendances.each do |att|
+      next unless att.employee
+
+      @attendance_map[att.employee_id] ||= {}
+      @attendance_map[att.employee_id][att.daily_report.report_date] ||= []
+      @attendance_map[att.employee_id][att.daily_report.report_date] << att
+    end
+
+    # 社員ごとの集計
+    @employee_summary = calculate_summary(@employees)
+
+    # 外注稼働データ（この現場のみ）
+    @outsourcing_entries = OutsourcingEntry
+                            .joins(:daily_report)
+                            .where(daily_reports: { project_id: @project.id, report_date: @start_date..@end_date })
+                            .includes(:partner, :daily_report)
+
+    # 外注会社別 → 日付 → データ のマッピング
+    @outsourcing_map = {}
+    @outsourcing_entries.each do |entry|
+      company = entry.company_name
+      next if company.blank?
+
+      @outsourcing_map[company] ||= { days: {}, total_man_days: 0 }
+      date = entry.daily_report.report_date
+      @outsourcing_map[company][:days][date] ||= { headcount: 0, man_days: 0 }
+      @outsourcing_map[company][:days][date][:headcount] += entry.headcount
+      @outsourcing_map[company][:days][date][:man_days] += entry.man_days
+    end
+
+    @outsourcing_map.each do |_company, data|
+      data[:total_man_days] = data[:days].values.sum { |d| d[:man_days] }
+    end
+
+    # 現場合計
+    @project_summary = {
+      employee_count: @employees.count,
+      employee_man_days: @employee_summary.values.sum { |s| s[:total_days] },
+      outsourcing_companies: @outsourcing_map.size,
+      outsourcing_man_days: @outsourcing_map.values.sum { |d| d[:total_man_days] }
+    }
   end
 
   def setup_index_data
@@ -293,6 +375,62 @@ class AttendanceSheetsController < ApplicationController
         s = @temporary_summary[emp.id] || { full_days: 0, half_days: 0, total_days: 0 }
         row += [s[:full_days], s[:half_days], s[:total_days]]
         csv << row
+      end
+    end
+    bom + csv_data
+  end
+
+  def generate_project_csv
+    bom = "\uFEFF"
+    csv_data = CSV.generate do |csv|
+      # ヘッダー情報
+      csv << ["現場別勤怠", @project.name, @current_month.strftime("%Y年%m月")]
+      csv << ["案件コード", @project.code]
+      csv << ["顧客", @project.client&.name]
+      csv << []
+
+      # サマリー
+      csv << ["集計"]
+      csv << ["社員稼働人数", @project_summary[:employee_count], "名"]
+      csv << ["社員合計人日", @project_summary[:employee_man_days], "人日"]
+      csv << ["外注会社数", @project_summary[:outsourcing_companies], "社"]
+      csv << ["外注合計人日", @project_summary[:outsourcing_man_days], "人日"]
+      csv << []
+
+      # 社員セクション
+      csv << ["社員出面"]
+      header = ["氏名", "雇用区分"] + @days.map(&:day) + %w[出勤 半日 人日]
+      csv << header
+
+      @employees.each do |emp|
+        row = [emp.name, emp.employment_type == "regular" ? "正社員" : "仮社員"]
+        @days.each do |day|
+          atts = @attendance_map.dig(emp.id, day) || []
+          status = day_attendance_status(atts)
+          row << (status == "full" ? "1" : (status == "half" ? "0.5" : ""))
+        end
+        s = @employee_summary[emp.id] || { full_days: 0, half_days: 0, total_days: 0 }
+        row += [s[:full_days], s[:half_days], s[:total_days]]
+        csv << row
+      end
+
+      csv << []
+
+      # 外注セクション
+      if @outsourcing_map.any?
+        csv << ["外注稼働"]
+        outsourcing_header = ["協力会社"] + @days.map(&:day) + ["合計人日"]
+        csv << outsourcing_header
+
+        @outsourcing_map.each do |company, data|
+          row = [company]
+          @days.each do |day|
+            day_data = data[:days][day]
+            row << (day_data ? day_data[:man_days] : "")
+          end
+          row << data[:total_man_days]
+          csv << row
+        end
       end
     end
     bom + csv_data

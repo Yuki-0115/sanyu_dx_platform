@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日報入力 - SanyuTech DX Platform</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header header-sub">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← マニュアルトップへ</a>
+      <h1>日報入力</h1>
+      <p>現場作業の記録・出面・経費・外注管理</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 概要 -->
+    <section class="section">
+      <h2>日報入力とは</h2>
+      <p>日報は、現場での作業内容・作業員の出勤状況（出面）・経費・外注作業を日次で記録するものです。職長が一括して入力し、原価管理の基礎データとなります。</p>
+
+      <div class="flow-diagram">
+        <div class="flow-steps">
+          <div class="flow-step">現場作業</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">職長が日報作成</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">出面・経費入力</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">確定</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">原価反映</div>
+        </div>
+      </div>
+
+      <div class="alert alert-info">
+        <strong>職長一括入力方式</strong>
+        <p>作業員が個別に入力するのではなく、職長が全員分をまとめて入力します。これにより入力ミスを減らし、効率的に原価を把握できます。</p>
+      </div>
+    </section>
+
+    <!-- 日報の構成 -->
+    <section class="section">
+      <h2>日報の構成要素</h2>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>1. 基本情報</h4>
+          <p>日付、天候、作業内容、安全事項など作業の概要を記録します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>2. 出面（勤怠）</h4>
+          <p>作業員ごとの出勤状況を記録。終日または半日で人工数を計算します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>3. 経費</h4>
+          <p>材料費、燃料費、高速代など現場で発生した経費を記録します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>4. 外注作業</h4>
+          <p>協力会社の作業内容・人工数を記録します。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 基本情報の入力 -->
+    <section class="section">
+      <h2>基本情報の入力</h2>
+
+      <h3>入力項目</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目名</th>
+              <th>必須</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>報告日</td>
+              <td>◯</td>
+              <td>作業を行った日付（デフォルト：当日）</td>
+            </tr>
+            <tr>
+              <td>天候</td>
+              <td>◯</td>
+              <td>晴れ / 曇り / 雨 / 雪 から選択</td>
+            </tr>
+            <tr>
+              <td>作業内容</td>
+              <td>◯</td>
+              <td>その日に行った作業の概要</td>
+            </tr>
+            <tr>
+              <td>安全事項</td>
+              <td>-</td>
+              <td>安全に関する特記事項、KY活動の記録など</td>
+            </tr>
+            <tr>
+              <td>備考</td>
+              <td>-</td>
+              <td>その他の連絡事項</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 出面入力 -->
+    <section class="section">
+      <h2>出面（勤怠）の入力</h2>
+      <p>その日に現場で作業した社員の勤務状況を記録します。</p>
+
+      <h3>入力手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>「出面追加」ボタンをクリック</strong>
+          出面入力行が追加されます。
+        </li>
+        <li>
+          <strong>社員を選択</strong>
+          ドロップダウンから作業した社員を選択します。
+        </li>
+        <li>
+          <strong>勤務区分を選択</strong>
+          「終日」または「半日」を選択します。
+        </li>
+        <li>
+          <strong>勤務時間を入力（任意）</strong>
+          開始時間・終了時間・休憩時間を入力できます。
+        </li>
+        <li>
+          <strong>複数名の場合は繰り返し</strong>
+          必要な人数分、出面を追加します。
+        </li>
+      </ol>
+
+      <h3>勤務区分と人工数</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>勤務区分</th>
+              <th>人工数</th>
+              <th>原価計算</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-primary">終日（full）</span></td>
+              <td>1.0人工</td>
+              <td>人工単価 × 1.0</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">半日（half）</span></td>
+              <td>0.5人工</td>
+              <td>人工単価 × 0.5</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>雇用形態と単価</h3>
+      <p>社員の雇用形態により、適用される単価が異なります。単価は実行予算で設定されます。</p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>雇用形態</th>
+              <th>デフォルト単価</th>
+              <th>原価区分</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>正社員</td>
+              <td>¥18,000/人日</td>
+              <td>労務費</td>
+            </tr>
+            <tr>
+              <td>臨時社員</td>
+              <td>¥15,000/人日</td>
+              <td>労務費</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-warning">
+        <strong>出面の重複登録に注意</strong>
+        <p>同じ社員を同日の日報に重複登録しないでください。複数案件に従事した場合は、作業時間で按分してください。</p>
+      </div>
+    </section>
+
+    <!-- 経費入力 -->
+    <section class="section">
+      <h2>経費の入力</h2>
+      <p>現場で発生した経費を記録します。レシートの添付も可能です。</p>
+
+      <h3>経費カテゴリ</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>カテゴリ</th>
+              <th>勘定科目</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-primary">material</span></td>
+              <td>仕入高</td>
+              <td>材料費（塗料、資材など）</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-primary">transport</span></td>
+              <td>運搬費</td>
+              <td>運搬・配送にかかる費用</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-primary">equipment</span></td>
+              <td>機材費</td>
+              <td>工具・機材の購入・レンタル</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">fuel</span></td>
+              <td>車両費</td>
+              <td>ガソリン代（給油リットル数も記録）</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">highway_toll</span></td>
+              <td>旅費交通費</td>
+              <td>高速道路料金（ETC利用も含む）</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-secondary">consumable</span></td>
+              <td>消耗品費</td>
+              <td>軍手、養生テープなど消耗品</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-secondary">meal</span></td>
+              <td>会議費</td>
+              <td>現場での飲食費（弁当代等）</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-secondary">other</span></td>
+              <td>雑費</td>
+              <td>その他経費</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>入力項目</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>必須</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>カテゴリ</td>
+              <td>◯</td>
+              <td>上記カテゴリから選択</td>
+            </tr>
+            <tr>
+              <td>金額</td>
+              <td>◯</td>
+              <td>税込金額</td>
+            </tr>
+            <tr>
+              <td>支払方法</td>
+              <td>-</td>
+              <td>現金 / 会社カード / 立替 / ガソリンカード / ETCカード</td>
+            </tr>
+            <tr>
+              <td>数量</td>
+              <td>-</td>
+              <td>燃料のリットル数など</td>
+            </tr>
+            <tr>
+              <td>摘要</td>
+              <td>-</td>
+              <td>経費の詳細説明</td>
+            </tr>
+            <tr>
+              <td>領収書</td>
+              <td>-</td>
+              <td>レシート・領収書の画像添付</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-info">
+        <strong>燃料費・高速代の自動設定</strong>
+        <p>燃料費は自動で「ガソリンカード」、高速代は「ETCカード」が支払方法としてセットされます。後日カード明細で確定処理を行います。</p>
+      </div>
+    </section>
+
+    <!-- 外注入力 -->
+    <section class="section">
+      <h2>外注作業の入力</h2>
+      <p>協力会社の作業を記録します。人工払い（人工数×単価）と請負（出来高払い）の2種類があります。</p>
+
+      <h3>請求区分</h3>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>人工払い（man_days）</h4>
+          <p>人工数 × 単価で計算。日報ごとに人数と勤務区分を入力します。</p>
+          <ul>
+            <li>人数：作業した外注作業員数</li>
+            <li>勤務区分：終日 or 半日</li>
+            <li>作業内容：作業の説明</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>請負（contract）</h4>
+          <p>出来高で一括払い。請負金額を直接入力します。</p>
+          <ul>
+            <li>請負金額：その日の出来高</li>
+            <li>数量：作業量（任意）</li>
+            <li>単位：m、㎡など（任意）</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>入力項目</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>人工払い</th>
+              <th>請負</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>協力会社</td>
+              <td>◯</td>
+              <td>◯</td>
+              <td>協力会社マスタから選択</td>
+            </tr>
+            <tr>
+              <td>請求区分</td>
+              <td>◯</td>
+              <td>◯</td>
+              <td>人工払い or 請負</td>
+            </tr>
+            <tr>
+              <td>人数</td>
+              <td>◯</td>
+              <td>-</td>
+              <td>作業した人数</td>
+            </tr>
+            <tr>
+              <td>勤務区分</td>
+              <td>◯</td>
+              <td>-</td>
+              <td>終日 or 半日</td>
+            </tr>
+            <tr>
+              <td>請負金額</td>
+              <td>-</td>
+              <td>◯</td>
+              <td>その日の出来高金額</td>
+            </tr>
+            <tr>
+              <td>作業内容</td>
+              <td>◯</td>
+              <td>◯</td>
+              <td>作業の説明</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 日報の確定 -->
+    <section class="section">
+      <h2>日報の確定</h2>
+
+      <h3>確定前のチェック</h3>
+      <ul>
+        <li>すべての作業員の出面が入力されているか</li>
+        <li>経費の金額・カテゴリが正しいか</li>
+        <li>外注作業の人数・金額が正しいか</li>
+        <li>作業内容が具体的に記載されているか</li>
+      </ul>
+
+      <h3>確定の流れ</h3>
+      <ol class="steps">
+        <li>
+          <strong>入力内容を確認</strong>
+          入力した内容を確認します。
+        </li>
+        <li>
+          <strong>「確定」ボタンをクリック</strong>
+          日報のステータスが「確定」に変更されます。
+        </li>
+        <li>
+          <strong>原価に自動反映</strong>
+          確定された日報のデータが案件の原価に反映されます。
+        </li>
+      </ol>
+
+      <h3>日報ステータス</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ステータス</th>
+              <th>説明</th>
+              <th>原価反映</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-secondary">draft</span></td>
+              <td>下書き - 編集中</td>
+              <td>反映されない</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-success">confirmed</span></td>
+              <td>確定 - 入力完了</td>
+              <td>反映される</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">revised</span></td>
+              <td>修正 - 確定後に修正</td>
+              <td>反映される</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-warning">
+        <strong>確定後の修正</strong>
+        <p>確定後の日報を修正する場合は「修正」ボタンから行います。修正履歴は監査ログに記録され、いつ誰が修正したかが残ります。</p>
+      </div>
+    </section>
+
+    <!-- 日報集計 -->
+    <section class="section">
+      <h2>日報の集計</h2>
+      <p>入力された日報は自動的に集計され、案件の原価管理に反映されます。</p>
+
+      <h3>現場台帳での集計</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>計算方法</th>
+              <th>データソース</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>労務費</td>
+              <td>正社員人工数 × 正社員単価</td>
+              <td>出面（正社員）</td>
+            </tr>
+            <tr>
+              <td>外注費（人工）</td>
+              <td>外注人工数 × 外注単価</td>
+              <td>外注作業（人工払い）</td>
+            </tr>
+            <tr>
+              <td>外注費（請負）</td>
+              <td>請負金額の合計</td>
+              <td>外注作業（請負）</td>
+            </tr>
+            <tr>
+              <td>材料費</td>
+              <td>材料費経費の合計</td>
+              <td>経費（material）</td>
+            </tr>
+            <tr>
+              <td>運搬費</td>
+              <td>運搬費経費の合計</td>
+              <td>経費（transport）</td>
+            </tr>
+            <tr>
+              <td>その他経費</td>
+              <td>燃料費 + 高速代</td>
+              <td>経費（fuel, highway_toll）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-info">
+        <strong>リアルタイム集計</strong>
+        <p>日報が確定されると、即座に案件の現場台帳・予算対比に反映されます。予算超過時はアラートが表示されます。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p><a href="index.html">← マニュアルトップへ戻る</a></p>
+    <p>SanyuTech DX Platform - 日報入力マニュアル</p>
+  </footer>
+</body>
+</html>

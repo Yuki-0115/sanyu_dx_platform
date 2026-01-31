@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>営業事務マニュアル - SanyuTech DX Platform</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header header-sub">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← マニュアルトップへ</a>
+      <h1>営業事務マニュアル</h1>
+      <p>見積書・書類管理・データ入力の業務ガイド</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 営業事務の役割 -->
+    <section class="section">
+      <h2>営業事務の主な業務</h2>
+      <p>営業事務は、営業担当のサポートとして書類作成・管理を担当します。</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>見積書作成サポート</h4>
+          <p>営業担当の指示に基づき、見積書のデータ入力・作成を行います。</p>
+        </div>
+        <div class="feature-card">
+          <h4>顧客データ管理</h4>
+          <p>顧客情報の登録・更新・整理を行います。</p>
+        </div>
+        <div class="feature-card">
+          <h4>書類管理</h4>
+          <p>契約書・注文書などの書類をシステムに登録・管理します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>案件データ入力</h4>
+          <p>案件情報の入力・更新を行います。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 見積書の作成 -->
+    <section class="section">
+      <h2>見積書の作成</h2>
+      <p>営業担当から依頼された見積書を作成します。</p>
+
+      <h3>作成の流れ</h3>
+      <ol class="steps">
+        <li>
+          <strong>営業担当から見積依頼を受ける</strong>
+          案件情報、見積内容（項目・数量・単価）を確認します。
+        </li>
+        <li>
+          <strong>案件詳細画面で「見積」タブを開く</strong>
+          対象案件の見積画面を開きます。
+        </li>
+        <li>
+          <strong>「新規見積」をクリック</strong>
+          見積作成フォームが表示されます。
+        </li>
+        <li>
+          <strong>基本情報を入力</strong>
+          有効期限、件名を入力します。
+        </li>
+        <li>
+          <strong>カテゴリ・明細を入力</strong>
+          指示書に基づいて、カテゴリと明細項目を入力します。
+        </li>
+        <li>
+          <strong>金額を確認</strong>
+          合計金額が指示通りか確認します。
+        </li>
+        <li>
+          <strong>下書き保存</strong>
+          営業担当の確認を受けるため、下書き保存します。
+        </li>
+        <li>
+          <strong>確認後、PDF出力</strong>
+          承認を得たらPDFを出力します。
+        </li>
+      </ol>
+
+      <h3>入力時の注意点</h3>
+      <div class="alert alert-warning">
+        <strong>入力ミスを防ぐために</strong>
+        <ul>
+          <li>数量・単価は必ず指示書と照合</li>
+          <li>単位（m、㎡、式など）を間違えない</li>
+          <li>顧客名の表記を正確に（株式会社 or (株) など）</li>
+          <li>金額は保存前に必ず再確認</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 顧客データ管理 -->
+    <section class="section">
+      <h2>顧客データの管理</h2>
+
+      <h3>新規顧客の登録</h3>
+      <ol class="steps">
+        <li>
+          <strong>「マスタ管理」→「顧客」を選択</strong>
+          顧客一覧画面を開きます。
+        </li>
+        <li>
+          <strong>重複がないか確認</strong>
+          同じ顧客が登録されていないか検索で確認します。
+        </li>
+        <li>
+          <strong>「新規顧客」をクリック</strong>
+          登録フォームが表示されます。
+        </li>
+        <li>
+          <strong>必要情報を入力</strong>
+          会社名、担当者、連絡先などを入力します。
+        </li>
+        <li>
+          <strong>登録</strong>
+          顧客コードが自動で付与されます。
+        </li>
+      </ol>
+
+      <h3>顧客情報の更新</h3>
+      <p>担当者変更、住所変更などがあった場合は速やかに更新します。</p>
+      <ul>
+        <li>顧客一覧から対象顧客を検索</li>
+        <li>「編集」ボタンをクリック</li>
+        <li>変更内容を入力して保存</li>
+      </ul>
+
+      <h3>登録時の注意点</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>注意点</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>会社名</td>
+              <td>正式名称で登録（略称は使わない）</td>
+            </tr>
+            <tr>
+              <td>フリガナ</td>
+              <td>検索しやすいよう正確に入力</td>
+            </tr>
+            <tr>
+              <td>住所</td>
+              <td>郵便番号から自動入力を活用</td>
+            </tr>
+            <tr>
+              <td>電話番号</td>
+              <td>ハイフン区切りで統一</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 書類管理 -->
+    <section class="section">
+      <h2>書類の登録・管理</h2>
+      <p>案件に関連する書類（契約書、注文書など）をシステムに登録します。</p>
+
+      <h3>書類の種類</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>カテゴリ</th>
+              <th>書類例</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>契約・注文</td>
+              <td>契約書、注文書、注文請書</td>
+            </tr>
+            <tr>
+              <td>見積関連</td>
+              <td>見積書（控え）、見積依頼書</td>
+            </tr>
+            <tr>
+              <td>図面</td>
+              <td>設計図、施工図</td>
+            </tr>
+            <tr>
+              <td>その他</td>
+              <td>打合せ議事録、現場写真</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>登録手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>案件詳細画面で「書類」タブを選択</strong>
+          書類一覧が表示されます。
+        </li>
+        <li>
+          <strong>「書類アップロード」をクリック</strong>
+          アップロードフォームが表示されます。
+        </li>
+        <li>
+          <strong>カテゴリを選択</strong>
+          書類の種類を選択します。
+        </li>
+        <li>
+          <strong>書類名を入力</strong>
+          分かりやすい名前を付けます。
+        </li>
+        <li>
+          <strong>ファイルを選択してアップロード</strong>
+          PDF、画像、Word、Excelがアップロード可能です。
+        </li>
+      </ol>
+
+      <div class="alert alert-info">
+        <strong>Google Drive連携</strong>
+        <p>アップロードした書類は自動的にGoogle Driveにもバックアップされます。</p>
+      </div>
+    </section>
+
+    <!-- 案件データ入力 -->
+    <section class="section">
+      <h2>案件データの入力・更新</h2>
+      <p>営業担当の指示に基づき、案件情報を入力・更新します。</p>
+
+      <h3>新規案件の登録</h3>
+      <ol class="steps">
+        <li>
+          <strong>「案件一覧」→「新規案件」をクリック</strong>
+          案件登録フォームが表示されます。
+        </li>
+        <li>
+          <strong>顧客を選択</strong>
+          プルダウンから顧客を選択（なければ先に顧客登録）。
+        </li>
+        <li>
+          <strong>案件名を入力</strong>
+          工事名称を正確に入力します。
+        </li>
+        <li>
+          <strong>現場住所を入力</strong>
+          工事現場の住所を入力します。
+        </li>
+        <li>
+          <strong>担当者を設定</strong>
+          営業担当、工務担当を設定します。
+        </li>
+        <li>
+          <strong>登録</strong>
+          案件コードが自動採番されます。
+        </li>
+      </ol>
+
+      <h3>案件情報の更新</h3>
+      <ul>
+        <li>工期変更があれば予定日を更新</li>
+        <li>担当者変更があれば担当者を更新</li>
+        <li>顧客情報変更があれば顧客マスタを更新</li>
+      </ul>
+    </section>
+
+    <!-- 日常の業務 -->
+    <section class="section">
+      <h2>日常の確認事項</h2>
+
+      <h3>毎日確認すること</h3>
+      <ul>
+        <li>見積作成依頼の有無</li>
+        <li>書類登録依頼の有無</li>
+        <li>データ入力・修正依頼の有無</li>
+      </ul>
+
+      <h3>週次で確認すること</h3>
+      <ul>
+        <li>顧客データの重複・誤りチェック</li>
+        <li>書類の登録漏れチェック</li>
+        <li>案件データの更新漏れチェック</li>
+      </ul>
+
+      <h3>月次で確認すること</h3>
+      <ul>
+        <li>顧客マスタの棚卸し（連絡先の更新など）</li>
+        <li>古い下書き見積の整理</li>
+      </ul>
+    </section>
+
+    <!-- よくある質問 -->
+    <section class="section">
+      <h2>よくある質問</h2>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>Q: 見積書の金額を間違えた</h4>
+          <p>A: 下書き状態なら編集で修正可能。提出済みの場合は新しいバージョンを作成します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>Q: 顧客が重複登録されていた</h4>
+          <p>A: 管理者に連絡して統合処理を依頼してください。</p>
+        </div>
+        <div class="feature-card">
+          <h4>Q: アップロードできるファイル形式は？</h4>
+          <p>A: PDF、画像（PNG/JPEG）、Word、Excelがアップロード可能です。</p>
+        </div>
+        <div class="feature-card">
+          <h4>Q: 書類を間違えてアップロードした</h4>
+          <p>A: 削除して正しいファイルを再アップロードしてください。</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p><a href="index.html">← マニュアルトップへ戻る</a></p>
+    <p>SanyuTech DX Platform - 営業事務マニュアル</p>
+  </footer>
+</body>
+</html>

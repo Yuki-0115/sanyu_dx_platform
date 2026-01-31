@@ -1,0 +1,318 @@
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="px-4 py-6 sm:px-0">
+    <!-- ヘッダー -->
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <%= link_to "← 勤怠管理表に戻る", attendance_sheets_path(month: @current_month.strftime("%Y-%m")), class: "text-blue-600 hover:underline text-sm" %>
+        <h2 class="text-2xl font-bold text-gray-900 mt-2">現場別勤怠詳細</h2>
+      </div>
+      <div class="flex items-center space-x-2">
+        <%= link_to project_detail_attendance_sheets_path(project_id: @project.id, month: @current_month.prev_month.strftime("%Y-%m")),
+            class: "p-2 rounded-md hover:bg-gray-200" do %>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        <% end %>
+        <span class="text-lg font-medium"><%= l(@current_month, format: "%Y年%m月") %></span>
+        <%= link_to project_detail_attendance_sheets_path(project_id: @project.id, month: @current_month.next_month.strftime("%Y-%m")),
+            class: "p-2 rounded-md hover:bg-gray-200" do %>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 現場情報ヘッダー -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="flex items-center space-x-4">
+            <div class="h-16 w-16 rounded-lg bg-indigo-100 flex items-center justify-center">
+              <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900"><%= @project.name %></h3>
+              <p class="text-sm text-gray-500">
+                <%= @project.code %>
+                <% if @project.client.present? %>
+                  ・ <%= @project.client.name %>
+                <% end %>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-sm text-gray-500 mb-2">
+            <p>ステータス: <%= @project.status %></p>
+            <% if @project.respond_to?(:construction_started_at) && @project.construction_started_at.present? %>
+              <p>着工日: <%= l(@project.construction_started_at.to_date) %></p>
+            <% end %>
+          </div>
+          <%= link_to export_project_attendance_sheets_path(project_id: @project.id, month: @current_month.strftime("%Y-%m"), format: :csv),
+              class: "inline-flex items-center px-3 py-2 border border-green-600 text-sm font-medium rounded-md text-green-600 bg-white hover:bg-green-50" do %>
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            CSV出力
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 月間集計サマリー -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+      <h4 class="text-lg font-medium text-gray-900 mb-4">月間集計</h4>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-blue-50 rounded-lg p-4 text-center">
+          <div class="text-2xl font-bold text-blue-600"><%= @project_summary[:employee_count] %></div>
+          <div class="text-xs text-gray-600">稼働人員</div>
+        </div>
+        <div class="bg-green-50 rounded-lg p-4 text-center">
+          <div class="text-2xl font-bold text-green-600"><%= @project_summary[:employee_man_days] %></div>
+          <div class="text-xs text-gray-600">社員人日</div>
+        </div>
+        <div class="bg-purple-50 rounded-lg p-4 text-center">
+          <div class="text-2xl font-bold text-purple-600"><%= @project_summary[:outsourcing_companies] %></div>
+          <div class="text-xs text-gray-600">外注会社数</div>
+        </div>
+        <div class="bg-purple-50 rounded-lg p-4 text-center">
+          <div class="text-2xl font-bold text-purple-700"><%= @project_summary[:outsourcing_man_days] %></div>
+          <div class="text-xs text-gray-600">外注人工</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 社員出面表 -->
+    <% if @employees.any? %>
+      <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+        <div class="px-4 py-3 bg-blue-50 border-b border-blue-200">
+          <h3 class="text-lg font-medium text-blue-900">社員出面表</h3>
+          <p class="text-sm text-blue-600"><%= @employees.count %>名</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="sticky left-0 z-20 bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 border-r min-w-36">
+                  社員名
+                </th>
+                <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 border-r w-16">
+                  区分
+                </th>
+                <% @days.each do |day| %>
+                  <%
+                    is_today = day == Date.current
+                    is_sunday = day.wday == 0
+                    is_saturday = day.wday == 6
+                  %>
+                  <th class="px-0.5 py-2 text-center text-xs font-medium w-8 <%= is_today ? 'bg-blue-100' : '' %> <%= is_sunday ? 'text-red-500 bg-red-50' : (is_saturday ? 'text-blue-500 bg-blue-50' : 'text-gray-500') %>">
+                    <div class="text-xs"><%= %w[日 月 火 水 木 金 土][day.wday] %></div>
+                    <div><%= day.day %></div>
+                  </th>
+                <% end %>
+                <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 bg-green-50 border-l w-10">出勤</th>
+                <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 bg-yellow-50 w-10">半日</th>
+                <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 bg-blue-50 w-12">人日</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <% @employees.each do |employee| %>
+                <tr class="hover:bg-gray-50">
+                  <td class="sticky left-0 z-10 bg-white px-3 py-1.5 font-medium border-r whitespace-nowrap">
+                    <%= link_to employee.name, employee_detail_attendance_sheets_path(employee_id: employee.id, month: @current_month.strftime("%Y-%m")), class: "text-blue-600 hover:underline" %>
+                  </td>
+                  <td class="px-2 py-1.5 text-center text-xs border-r">
+                    <span class="<%= employee.employment_type == 'regular' ? 'text-blue-600' : 'text-yellow-600' %>">
+                      <%= employee.employment_type == 'regular' ? '正' : '仮' %>
+                    </span>
+                  </td>
+                  <% @days.each do |day| %>
+                    <%
+                      is_today = day == Date.current
+                      is_sunday = day.wday == 0
+                      is_saturday = day.wday == 6
+                      day_attendances = @attendance_map.dig(employee.id, day) || []
+                      status = day_attendance_status(day_attendances)
+                    %>
+                    <td class="px-0.5 py-1 text-center <%= is_today ? 'bg-blue-50' : (is_sunday ? 'bg-red-50/50' : (is_saturday ? 'bg-blue-50/50' : '')) %>">
+                      <% case status %>
+                      <% when "full" %>
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded bg-green-500 text-white text-xs font-bold">1</span>
+                      <% when "half" %>
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded bg-yellow-500 text-white text-xs font-bold">.5</span>
+                      <% else %>
+                        <span class="text-gray-300">-</span>
+                      <% end %>
+                    </td>
+                  <% end %>
+                  <% summary = @employee_summary[employee.id] || { full_days: 0, half_days: 0, total_days: 0 } %>
+                  <td class="px-2 py-1.5 text-center font-medium text-green-700 bg-green-50 border-l"><%= summary[:full_days] %></td>
+                  <td class="px-2 py-1.5 text-center font-medium text-yellow-700 bg-yellow-50"><%= summary[:half_days] %></td>
+                  <td class="px-2 py-1.5 text-center font-bold text-blue-700 bg-blue-50"><%= summary[:total_days] %></td>
+                </tr>
+              <% end %>
+            </tbody>
+            <tfoot class="bg-gray-100">
+              <tr class="font-medium">
+                <td class="sticky left-0 z-10 bg-gray-100 px-3 py-2 text-gray-700 border-r" colspan="2">
+                  社員合計
+                </td>
+                <% @days.each do |day| %>
+                  <%
+                    day_count = @employees.count do |emp|
+                      atts = @attendance_map.dig(emp.id, day) || []
+                      day_attendance_status(atts) == "full"
+                    end
+                    half_count = @employees.count do |emp|
+                      atts = @attendance_map.dig(emp.id, day) || []
+                      day_attendance_status(atts) == "half"
+                    end
+                    total = day_count + half_count
+                  %>
+                  <td class="px-0.5 py-2 text-center text-xs <%= total > 0 ? 'text-gray-700' : 'text-gray-300' %>">
+                    <%= total > 0 ? total : '-' %>
+                  </td>
+                <% end %>
+                <td class="px-2 py-2 text-center text-green-700 bg-green-100 border-l">
+                  <%= @employee_summary.values.sum { |s| s[:full_days] } %>
+                </td>
+                <td class="px-2 py-2 text-center text-yellow-700 bg-yellow-100">
+                  <%= @employee_summary.values.sum { |s| s[:half_days] } %>
+                </td>
+                <td class="px-2 py-2 text-center text-blue-700 bg-blue-100 font-bold">
+                  <%= @project_summary[:employee_man_days] %>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    <% else %>
+      <div class="bg-white shadow rounded-lg p-8 mb-6 text-center text-gray-500">
+        この月に社員の出面データはありません
+      </div>
+    <% end %>
+
+    <!-- 外注稼働表 -->
+    <% if @outsourcing_map.any? %>
+      <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+        <div class="px-4 py-3 bg-purple-50 border-b border-purple-200">
+          <h3 class="text-lg font-medium text-purple-900">外注稼働表</h3>
+          <p class="text-sm text-purple-600"><%= @outsourcing_map.size %>社</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="sticky left-0 z-20 bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 border-r min-w-36">
+                  外注会社
+                </th>
+                <% @days.each do |day| %>
+                  <%
+                    is_today = day == Date.current
+                    is_sunday = day.wday == 0
+                    is_saturday = day.wday == 6
+                  %>
+                  <th class="px-0.5 py-2 text-center text-xs font-medium w-8 <%= is_today ? 'bg-blue-100' : '' %> <%= is_sunday ? 'text-red-500 bg-red-50' : (is_saturday ? 'text-blue-500 bg-blue-50' : 'text-gray-500') %>">
+                    <div class="text-xs"><%= %w[日 月 火 水 木 金 土][day.wday] %></div>
+                    <div><%= day.day %></div>
+                  </th>
+                <% end %>
+                <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 bg-purple-50 border-l w-14">
+                  延べ人工
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <% @outsourcing_map.each do |company, data| %>
+                <tr class="hover:bg-gray-50">
+                  <td class="sticky left-0 z-10 bg-white px-3 py-1.5 font-medium text-gray-900 border-r whitespace-nowrap">
+                    <%= company %>
+                  </td>
+                  <% @days.each do |day| %>
+                    <%
+                      is_today = day == Date.current
+                      is_sunday = day.wday == 0
+                      is_saturday = day.wday == 6
+                      day_data = data[:days][day]
+                      man_days = day_data ? day_data[:man_days] : 0
+                    %>
+                    <td class="px-0.5 py-1 text-center <%= is_today ? 'bg-blue-50' : (is_sunday ? 'bg-red-50/50' : (is_saturday ? 'bg-blue-50/50' : '')) %>">
+                      <% if man_days > 0 %>
+                        <span class="inline-flex items-center justify-center min-w-6 h-6 px-1 rounded bg-purple-500 text-white text-xs font-bold">
+                          <%= man_days == man_days.to_i ? man_days.to_i : man_days %>
+                        </span>
+                      <% else %>
+                        <span class="text-gray-300">-</span>
+                      <% end %>
+                    </td>
+                  <% end %>
+                  <td class="px-2 py-1.5 text-center font-bold text-purple-700 bg-purple-50 border-l">
+                    <%= data[:total_man_days] %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+            <tfoot class="bg-gray-100">
+              <tr class="font-medium">
+                <td class="sticky left-0 z-10 bg-gray-100 px-3 py-2 text-gray-700 border-r">
+                  外注合計
+                </td>
+                <% @days.each do |day| %>
+                  <%
+                    day_total = @outsourcing_map.values.sum do |data|
+                      day_data = data[:days][day]
+                      day_data ? day_data[:man_days] : 0
+                    end
+                  %>
+                  <td class="px-0.5 py-2 text-center text-xs <%= day_total > 0 ? 'text-gray-700' : 'text-gray-300' %>">
+                    <%= day_total > 0 ? (day_total == day_total.to_i ? day_total.to_i : day_total) : '-' %>
+                  </td>
+                <% end %>
+                <td class="px-2 py-2 text-center text-purple-700 bg-purple-100 font-bold border-l">
+                  <%= @project_summary[:outsourcing_man_days] %>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 凡例 -->
+    <div class="mt-4 flex flex-wrap items-center gap-4 text-sm">
+      <span class="font-medium text-gray-700">凡例:</span>
+      <span class="inline-flex items-center gap-1">
+        <span class="w-6 h-6 rounded bg-green-500 text-white text-xs font-bold flex items-center justify-center">1</span>
+        <span class="text-gray-600">1日出勤</span>
+      </span>
+      <span class="inline-flex items-center gap-1">
+        <span class="w-6 h-6 rounded bg-yellow-500 text-white text-xs font-bold flex items-center justify-center">.5</span>
+        <span class="text-gray-600">半日出勤</span>
+      </span>
+      <span class="inline-flex items-center gap-1">
+        <span class="w-6 h-6 rounded bg-purple-500 text-white text-xs font-bold flex items-center justify-center">N</span>
+        <span class="text-gray-600">外注人工</span>
+      </span>
+    </div>
+
+    <!-- 関連リンク -->
+    <div class="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+      <h4 class="text-sm font-medium text-gray-800 mb-2">関連リンク</h4>
+      <div class="flex flex-wrap gap-4 text-sm">
+        <%= link_to project_path(@project), class: "text-blue-600 hover:underline" do %>
+          案件詳細
+        <% end %>
+        <%= link_to project_site_ledger_path(@project), class: "text-blue-600 hover:underline" do %>
+          現場台帳
+        <% end %>
+        <%= link_to project_daily_reports_path(@project), class: "text-blue-600 hover:underline" do %>
+          日報一覧
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

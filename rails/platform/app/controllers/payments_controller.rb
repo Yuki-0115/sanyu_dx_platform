@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class PaymentsController < ApplicationController
+  include ProjectScoped
+
   authorize_with :payments
-  before_action :set_project
   before_action :set_invoice
   before_action :set_payment, only: %i[destroy]
 
@@ -28,10 +29,6 @@ class PaymentsController < ApplicationController
   end
 
   private
-
-  def set_project
-    @project = Project.find(params[:project_id])
-  end
 
   def set_invoice
     @invoice = @project.invoices.find(params[:invoice_id])

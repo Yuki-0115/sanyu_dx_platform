@@ -28,9 +28,14 @@ Thumbs.db
 
 # Backups
 backups/*.sql.gz
+backups/*.tar.gz
+
+# Logs
+logs/
 
 # Credentials (DO NOT COMMIT)
 *.pem
 *.key
 service_account*.json
 secrets/
+rclone.conf

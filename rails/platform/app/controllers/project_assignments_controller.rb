@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class ProjectAssignmentsController < ApplicationController
+  include ProjectScoped
+
   authorize_with :projects
-  before_action :set_project
 
   def create
     @assignment = @project.project_assignments.build(assignment_params)
@@ -29,10 +30,6 @@ class ProjectAssignmentsController < ApplicationController
   end
 
   private
-
-  def set_project
-    @project = Project.find(params[:project_id])
-  end
 
   def assignment_params
     params.require(:project_assignment).permit(:employee_id, :role, :start_date, :end_date, :notes)

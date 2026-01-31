@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マスタ管理 - SanyuTech DX Platform</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header header-sub">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← マニュアルトップへ</a>
+      <h1>マスタ管理</h1>
+      <p>顧客・協力会社・社員の基本データ管理</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 概要 -->
+    <section class="section">
+      <h2>マスタ管理とは</h2>
+      <p>マスタデータは、システム全体で共通して使用される基本データです。案件登録や日報入力の際に参照されるため、事前に正確なデータを登録しておくことが重要です。</p>
+
+      <div class="info-box">
+        <h4>マスタデータの種類</h4>
+        <ul>
+          <li><strong>顧客マスタ</strong> - 発注元の顧客情報</li>
+          <li><strong>協力会社マスタ</strong> - 外注先・協力会社情報</li>
+          <li><strong>社員マスタ</strong> - 自社社員の情報</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 顧客マスタ -->
+    <section class="section">
+      <h2>顧客マスタ</h2>
+      <p>発注元となる顧客の情報を管理します。案件登録時に顧客を選択するため、事前登録が必要です。</p>
+
+      <h3>登録項目</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目名</th>
+              <th>必須</th>
+              <th>入力形式</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>顧客コード</td>
+              <td>-</td>
+              <td>自動採番</td>
+              <td>CL + 連番で自動生成（例：CL001）</td>
+            </tr>
+            <tr>
+              <td>顧客名</td>
+              <td>◯</td>
+              <td>テキスト</td>
+              <td>正式な会社名または個人名</td>
+            </tr>
+            <tr>
+              <td>顧客名（カナ）</td>
+              <td>-</td>
+              <td>カタカナ</td>
+              <td>検索・並び替え用のフリガナ</td>
+            </tr>
+            <tr>
+              <td>担当者名</td>
+              <td>-</td>
+              <td>テキスト</td>
+              <td>主要連絡先となる担当者名</td>
+            </tr>
+            <tr>
+              <td>電話番号</td>
+              <td>-</td>
+              <td>電話番号</td>
+              <td>ハイフン区切り（例：03-1234-5678）</td>
+            </tr>
+            <tr>
+              <td>FAX番号</td>
+              <td>-</td>
+              <td>電話番号</td>
+              <td>FAX番号</td>
+            </tr>
+            <tr>
+              <td>メールアドレス</td>
+              <td>-</td>
+              <td>メール</td>
+              <td>連絡先メールアドレス</td>
+            </tr>
+            <tr>
+              <td>郵便番号</td>
+              <td>-</td>
+              <td>郵便番号</td>
+              <td>7桁（例：123-4567）</td>
+            </tr>
+            <tr>
+              <td>住所</td>
+              <td>-</td>
+              <td>テキスト</td>
+              <td>請求書送付先等の住所</td>
+            </tr>
+            <tr>
+              <td>与信限度額</td>
+              <td>-</td>
+              <td>金額</td>
+              <td>取引上限金額（円）</td>
+            </tr>
+            <tr>
+              <td>支払条件</td>
+              <td>-</td>
+              <td>選択</td>
+              <td>月末締め翌月払い等</td>
+            </tr>
+            <tr>
+              <td>備考</td>
+              <td>-</td>
+              <td>テキスト</td>
+              <td>特記事項など</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>登録手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>メニューから「マスタ管理」→「顧客」を選択</strong>
+          顧客一覧画面が表示されます。
+        </li>
+        <li>
+          <strong>「新規顧客」ボタンをクリック</strong>
+          顧客登録フォームが表示されます。
+        </li>
+        <li>
+          <strong>顧客情報を入力</strong>
+          必須項目（顧客名）は必ず入力してください。
+        </li>
+        <li>
+          <strong>「登録」ボタンで保存</strong>
+          顧客コードが自動採番され、登録完了です。
+        </li>
+      </ol>
+
+      <div class="alert alert-info">
+        <strong>与信限度額について</strong>
+        <p>与信限度額を設定すると、その顧客への未入金請求額が限度額を超えた場合にアラートが表示されます。新規取引先は必ず設定することを推奨します。</p>
+      </div>
+    </section>
+
+    <!-- 協力会社マスタ -->
+    <section class="section">
+      <h2>協力会社マスタ</h2>
+      <p>外注先・協力会社の情報を管理します。日報での外注入力や仮社員相殺で使用します。</p>
+
+      <h3>登録項目</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目名</th>
+              <th>必須</th>
+              <th>入力形式</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>会社コード</td>
+              <td>-</td>
+              <td>自動採番</td>
+              <td>PT + 連番で自動生成</td>
+            </tr>
+            <tr>
+              <td>会社名</td>
+              <td>◯</td>
+              <td>テキスト</td>
+              <td>協力会社の正式名称</td>
+            </tr>
+            <tr>
+              <td>代表者名</td>
+              <td>-</td>
+              <td>テキスト</td>
+              <td>代表者または担当者名</td>
+            </tr>
+            <tr>
+              <td>電話番号</td>
+              <td>-</td>
+              <td>電話番号</td>
+              <td>連絡先電話番号</td>
+            </tr>
+            <tr>
+              <td>メールアドレス</td>
+              <td>-</td>
+              <td>メール</td>
+              <td>連絡先メール</td>
+            </tr>
+            <tr>
+              <td>仮社員有無</td>
+              <td>-</td>
+              <td>チェック</td>
+              <td>仮社員がいる場合はチェック</td>
+            </tr>
+            <tr>
+              <td>相殺ルール</td>
+              <td>-</td>
+              <td>選択</td>
+              <td>相殺計算のルール</td>
+            </tr>
+            <tr>
+              <td>標準人工単価</td>
+              <td>-</td>
+              <td>金額</td>
+              <td>日報入力時のデフォルト単価</td>
+            </tr>
+            <tr>
+              <td>銀行口座</td>
+              <td>-</td>
+              <td>テキスト</td>
+              <td>振込先口座情報</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>仮社員がいる場合の設定</h3>
+      <p>協力会社から派遣された仮社員がいる場合、相殺処理のための追加設定が必要です。</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>相殺ルール</h4>
+          <ul>
+            <li><strong>標準</strong> - 給与＋社保を支払い、人工売上と相殺</li>
+            <li><strong>固定額</strong> - 毎月固定額での相殺</li>
+            <li><strong>なし</strong> - 相殺なし（通常の外注扱い）</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>社会保険率</h4>
+          <p>給与に対する社会保険料の負担率を設定します。デフォルトは15%です。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 社員マスタ -->
+    <section class="section">
+      <h2>社員マスタ</h2>
+      <p>自社社員の情報を管理します。日報の出面入力、案件担当者の設定、システムログインに使用します。</p>
+
+      <h3>登録項目</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目名</th>
+              <th>必須</th>
+              <th>入力形式</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>社員番号</td>
+              <td>-</td>
+              <td>自動採番</td>
+              <td>EMP + 連番で自動生成</td>
+            </tr>
+            <tr>
+              <td>氏名</td>
+              <td>◯</td>
+              <td>テキスト</td>
+              <td>社員の氏名</td>
+            </tr>
+            <tr>
+              <td>氏名（カナ）</td>
+              <td>-</td>
+              <td>カタカナ</td>
+              <td>フリガナ</td>
+            </tr>
+            <tr>
+              <td>雇用形態</td>
+              <td>◯</td>
+              <td>選択</td>
+              <td>正社員 / 臨時社員</td>
+            </tr>
+            <tr>
+              <td>役職</td>
+              <td>-</td>
+              <td>選択</td>
+              <td>職長 / 作業員 / 事務 等</td>
+            </tr>
+            <tr>
+              <td>部署</td>
+              <td>-</td>
+              <td>選択</td>
+              <td>所属部署</td>
+            </tr>
+            <tr>
+              <td>入社日</td>
+              <td>-</td>
+              <td>日付</td>
+              <td>入社年月日</td>
+            </tr>
+            <tr>
+              <td>メールアドレス</td>
+              <td>◯*</td>
+              <td>メール</td>
+              <td>ログイン用（システム利用者のみ）</td>
+            </tr>
+            <tr>
+              <td>権限</td>
+              <td>◯*</td>
+              <td>選択</td>
+              <td>システム権限（システム利用者のみ）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p><small>* システムにログインする社員のみ必須</small></p>
+
+      <h3>雇用形態と原価計算</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>雇用形態</th>
+              <th>原価計上</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-primary">正社員</span></td>
+              <td>労務費として計上</td>
+              <td>人工数 × 正社員単価で原価計算</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">臨時社員</span></td>
+              <td>労務費として計上</td>
+              <td>人工数 × 臨時社員単価で原価計算</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>権限について</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>権限</th>
+              <th>閲覧</th>
+              <th>編集</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-danger">admin</span></td>
+              <td>全機能</td>
+              <td>全機能</td>
+              <td>システム管理者。すべての機能にアクセス可能</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-primary">management</span></td>
+              <td>全機能</td>
+              <td>制限あり</td>
+              <td>経営層。ダッシュボード閲覧、承認機能</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-success">accounting</span></td>
+              <td>経理関連</td>
+              <td>経理関連</td>
+              <td>経理担当。請求・入金・経費処理</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">sales</span></td>
+              <td>営業関連</td>
+              <td>営業関連</td>
+              <td>営業担当。案件・見積作成</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-primary">engineering</span></td>
+              <td>工務関連</td>
+              <td>工務関連</td>
+              <td>工務担当。実行予算・原価管理</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-success">construction</span></td>
+              <td>施工関連</td>
+              <td>日報入力</td>
+              <td>施工担当。日報入力・現場管理</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-secondary">worker</span></td>
+              <td>自分の情報</td>
+              <td>-</td>
+              <td>作業員。閲覧のみ（Worker Web用）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-warning">
+        <strong>権限設定の注意</strong>
+        <p>権限は慎重に設定してください。特に「admin」権限は必要最小限の人数に留めることを推奨します。</p>
+      </div>
+    </section>
+
+    <!-- データ管理 -->
+    <section class="section">
+      <h2>データ管理のポイント</h2>
+
+      <h3>データの正確性</h3>
+      <ul>
+        <li>会社名・氏名は正式名称で登録する</li>
+        <li>連絡先は最新の情報を維持する</li>
+        <li>退職者・取引終了先は「無効」にして履歴を残す</li>
+      </ul>
+
+      <h3>重複登録の防止</h3>
+      <ul>
+        <li>登録前に既存データを検索して確認する</li>
+        <li>略称や表記揺れに注意（例：(株) と 株式会社）</li>
+        <li>重複が見つかった場合は統合処理を行う</li>
+      </ul>
+
+      <h3>定期的なメンテナンス</h3>
+      <ul>
+        <li>連絡先の変更があれば速やかに更新</li>
+        <li>年1回は全データの棚卸しを推奨</li>
+        <li>使用していないデータは「無効」に設定</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p><a href="index.html">← マニュアルトップへ戻る</a></p>
+    <p>SanyuTech DX Platform - マスタ管理マニュアル</p>
+  </footer>
+</body>
+</html>

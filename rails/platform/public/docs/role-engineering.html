@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工務担当マニュアル - SanyuTech DX Platform</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header header-sub">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← マニュアルトップへ</a>
+      <h1>工務担当マニュアル</h1>
+      <p>実行予算・原価管理・現場管理の業務ガイド</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 工務担当の役割 -->
+    <section class="section">
+      <h2>工務担当の主な業務</h2>
+      <p>工務担当は、受注後の実行予算作成から施工完了までの原価管理を担当します。</p>
+
+      <div class="flow-diagram">
+        <div class="flow-steps">
+          <div class="flow-step">受注確定</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">実行予算作成</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">着工準備</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">日報確認</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">原価管理</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">完工</div>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>実行予算作成</h4>
+          <p>受注金額に対する原価計画を立て、目標粗利を設定します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>原価管理</h4>
+          <p>日報データを基に実績原価を把握し、予算との差異を管理します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>現場台帳管理</h4>
+          <p>案件ごとの原価集計、粗利状況を確認します。</p>
+        </div>
+        <div class="feature-card">
+          <h4>協力会社管理</h4>
+          <p>外注先の登録、人工単価の設定を行います。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 実行予算の作成 -->
+    <section class="section">
+      <h2>実行予算の作成</h2>
+      <p>受注確定後、工事を開始する前に実行予算を作成します。</p>
+
+      <h3>予算項目</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>内容</th>
+              <th>入力のポイント</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>労務費</td>
+              <td>自社社員の人件費</td>
+              <td>想定人工数 × 単価で計算</td>
+            </tr>
+            <tr>
+              <td>材料費</td>
+              <td>資材・材料の購入費</td>
+              <td>見積の材料費を参考に</td>
+            </tr>
+            <tr>
+              <td>外注費</td>
+              <td>協力会社への支払い</td>
+              <td>人工払い + 請負金額</td>
+            </tr>
+            <tr>
+              <td>経費</td>
+              <td>その他経費</td>
+              <td>運搬費、消耗品など</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>作成手順</h3>
+      <ol class="steps">
+        <li>
+          <strong>案件詳細画面で「実行予算」タブを選択</strong>
+          実行予算画面が表示されます。
+        </li>
+        <li>
+          <strong>各原価項目を入力</strong>
+          労務費、材料費、外注費、経費を入力します。
+        </li>
+        <li>
+          <strong>人工単価を設定</strong>
+          正社員単価、臨時社員単価、外注単価を設定します。
+        </li>
+        <li>
+          <strong>目標粗利率を確認</strong>
+          受注金額に対する粗利率を確認します。
+        </li>
+        <li>
+          <strong>「予算確定」ボタンで確定</strong>
+          確定後、日報入力が可能になります。
+        </li>
+      </ol>
+
+      <h3>人工単価の目安</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>区分</th>
+              <th>デフォルト単価</th>
+              <th>備考</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>正社員</td>
+              <td>¥18,000/人日</td>
+              <td>社員の平均人件費から算出</td>
+            </tr>
+            <tr>
+              <td>臨時社員</td>
+              <td>¥15,000/人日</td>
+              <td>日給＋社会保険按分</td>
+            </tr>
+            <tr>
+              <td>外注</td>
+              <td>¥20,000/人日</td>
+              <td>協力会社との取り決めによる</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-warning">
+        <strong>予算確定後の変更</strong>
+        <p>予算確定後に大幅な変更が必要な場合は、管理者に相談してください。履歴として記録されます。</p>
+      </div>
+    </section>
+
+    <!-- 着工前5点ゲート -->
+    <section class="section">
+      <h2>着工前5点ゲート</h2>
+      <p>着工前に確認すべき5つのチェック項目です。</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>1. 現場条件確認</h4>
+          <p>現場の状況、搬入経路、電源・水道の確認</p>
+        </div>
+        <div class="feature-card">
+          <h4>2. 夜間作業確認</h4>
+          <p>夜間作業の有無、必要な届出の確認</p>
+        </div>
+        <div class="feature-card">
+          <h4>3. 規制確認</h4>
+          <p>道路使用許可、近隣への告知の確認</p>
+        </div>
+        <div class="feature-card">
+          <h4>4. 安全書類確認</h4>
+          <p>安全書類（グリーンファイル）の準備確認</p>
+        </div>
+        <div class="feature-card">
+          <h4>5. 納品確認</h4>
+          <p>材料・機材の手配・納品予定の確認</p>
+        </div>
+      </div>
+
+      <div class="alert alert-success">
+        <strong>5点すべて完了で着工可能</strong>
+        <p>5つのチェックがすべて完了すると、着工準備完了となり、施工を開始できます。</p>
+      </div>
+    </section>
+
+    <!-- 日報の確認 -->
+    <section class="section">
+      <h2>日報の確認・管理</h2>
+      <p>職長が入力した日報を確認し、原価を把握します。</p>
+
+      <h3>確認ポイント</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>確認項目</th>
+              <th>チェック内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>出面（人工）</td>
+              <td>作業員数が適正か、過剰投入はないか</td>
+            </tr>
+            <tr>
+              <td>作業内容</td>
+              <td>予定通りの進捗か、遅れはないか</td>
+            </tr>
+            <tr>
+              <td>材料費</td>
+              <td>想定内の金額か、予算超過はないか</td>
+            </tr>
+            <tr>
+              <td>外注作業</td>
+              <td>外注人工数が適正か</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>日報一覧での確認</h3>
+      <ol class="steps">
+        <li>
+          <strong>案件詳細画面で「日報」タブを選択</strong>
+          日報一覧が表示されます。
+        </li>
+        <li>
+          <strong>日付順に確認</strong>
+          各日報の内容を確認します。
+        </li>
+        <li>
+          <strong>問題があれば職長に確認</strong>
+          不明点や異常値があれば、職長に確認します。
+        </li>
+      </ol>
+    </section>
+
+    <!-- 現場台帳 -->
+    <section class="section">
+      <h2>現場台帳での原価確認</h2>
+      <p>現場台帳では、案件の原価集計と予算対比を確認できます。</p>
+
+      <h3>表示内容</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>予算</th>
+              <th>実績</th>
+              <th>差異</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>労務費</td>
+              <td>予算で設定した金額</td>
+              <td>日報から自動集計</td>
+              <td>自動計算</td>
+            </tr>
+            <tr>
+              <td>材料費</td>
+              <td>予算で設定した金額</td>
+              <td>日報から自動集計</td>
+              <td>自動計算</td>
+            </tr>
+            <tr>
+              <td>外注費</td>
+              <td>予算で設定した金額</td>
+              <td>日報から自動集計</td>
+              <td>自動計算</td>
+            </tr>
+            <tr>
+              <td>経費</td>
+              <td>予算で設定した金額</td>
+              <td>日報から自動集計</td>
+              <td>自動計算</td>
+            </tr>
+            <tr>
+              <td><strong>合計</strong></td>
+              <td>予算原価合計</td>
+              <td>実績原価合計</td>
+              <td>差異合計</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>アラート</h3>
+      <div class="alert alert-warning">
+        <strong>予算超過アラート</strong>
+        <p>実績原価が予算を超過すると、現場台帳にアラートが表示されます。早めに対策を検討してください。</p>
+      </div>
+    </section>
+
+    <!-- 協力会社管理 -->
+    <section class="section">
+      <h2>協力会社の管理</h2>
+      <p>外注先の協力会社情報を登録・管理します。</p>
+
+      <h3>登録項目</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>会社名</td>
+              <td>協力会社の正式名称</td>
+            </tr>
+            <tr>
+              <td>代表者・担当者</td>
+              <td>連絡先となる担当者</td>
+            </tr>
+            <tr>
+              <td>標準人工単価</td>
+              <td>日報入力時のデフォルト単価</td>
+            </tr>
+            <tr>
+              <td>仮社員有無</td>
+              <td>仮社員がいる場合はチェック</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 完工処理 -->
+    <section class="section">
+      <h2>完工処理</h2>
+      <p>工事が完了したら、完工処理を行います。</p>
+
+      <ol class="steps">
+        <li>
+          <strong>すべての日報が確定済みか確認</strong>
+          未確定の日報がないか確認します。
+        </li>
+        <li>
+          <strong>最終原価を確認</strong>
+          現場台帳で最終的な原価を確認します。
+        </li>
+        <li>
+          <strong>完工日を記録</strong>
+          案件の完工日を入力します。
+        </li>
+        <li>
+          <strong>ステータスを「完工」に変更</strong>
+          これにより、経理担当が請求処理を開始できます。
+        </li>
+      </ol>
+    </section>
+
+    <!-- 日常の確認事項 -->
+    <section class="section">
+      <h2>日常の確認事項</h2>
+
+      <h3>毎日確認すること</h3>
+      <ul>
+        <li>進行中案件の日報入力状況</li>
+        <li>予算超過アラートの有無</li>
+        <li>完工間近の案件の進捗</li>
+      </ul>
+
+      <h3>週次で確認すること</h3>
+      <ul>
+        <li>全案件の現場台帳チェック（予算対比）</li>
+        <li>協力会社への発注状況確認</li>
+        <li>材料・機材の手配状況</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p><a href="index.html">← マニュアルトップへ戻る</a></p>
+    <p>SanyuTech DX Platform - 工務担当マニュアル</p>
+  </footer>
+</body>
+</html>

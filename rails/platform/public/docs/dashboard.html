@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>経営ダッシュボード - SanyuTech DX Platform</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header header-sub">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← マニュアルトップへ</a>
+      <h1>経営ダッシュボード</h1>
+      <p>経営状況のリアルタイム可視化</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 概要 -->
+    <section class="section">
+      <h2>経営ダッシュボードとは</h2>
+      <p>経営ダッシュボードは、会社の経営状況をリアルタイムで可視化する機能です。売上・粗利・資金繰り・案件状況など、意思決定に必要な情報を一画面で確認できます。</p>
+
+      <div class="alert alert-info">
+        <strong>アクセス権限</strong>
+        <p>経営ダッシュボードは「admin（管理者）」「management（経営）」権限を持つユーザーのみアクセス可能です。</p>
+      </div>
+    </section>
+
+    <!-- 表示項目 -->
+    <section class="section">
+      <h2>ダッシュボード表示項目</h2>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>売上サマリー</h4>
+          <ul>
+            <li>月次売上（請求ベース）</li>
+            <li>年度累計売上</li>
+            <li>前年同月比</li>
+            <li>月別推移グラフ</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>粗利管理</h4>
+          <ul>
+            <li>月次粗利額・粗利率</li>
+            <li>案件別粗利ランキング</li>
+            <li>目標対比</li>
+            <li>粗利率低下アラート</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>資金繰り</h4>
+          <ul>
+            <li>入金予定（今月・来月）</li>
+            <li>支払予定（外注・経費）</li>
+            <li>月末資金残高予測</li>
+            <li>キャッシュフローグラフ</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>仕掛かり管理</h4>
+          <ul>
+            <li>仕掛かり総額</li>
+            <li>案件別仕掛かり</li>
+            <li>未請求出来高</li>
+            <li>進捗率別一覧</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>債権管理</h4>
+          <ul>
+            <li>未入金総額</li>
+            <li>入金遅延アラート</li>
+            <li>顧客別残高</li>
+            <li>回収率</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>案件状況</h4>
+          <ul>
+            <li>ステータス別件数</li>
+            <li>進行中案件一覧</li>
+            <li>受注予定案件</li>
+            <li>完工予定案件</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 売上サマリー詳細 -->
+    <section class="section">
+      <h2>売上サマリー</h2>
+
+      <h3>表示内容</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>指標</th>
+              <th>計算方法</th>
+              <th>更新タイミング</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>月次売上</td>
+              <td>当月発行請求書の合計（税抜）</td>
+              <td>請求書発行時</td>
+            </tr>
+            <tr>
+              <td>年度累計</td>
+              <td>年度開始からの売上合計</td>
+              <td>請求書発行時</td>
+            </tr>
+            <tr>
+              <td>前年同月比</td>
+              <td>当月売上 ÷ 前年同月売上 × 100</td>
+              <td>月次</td>
+            </tr>
+            <tr>
+              <td>月別推移</td>
+              <td>直近12ヶ月の月別売上グラフ</td>
+              <td>リアルタイム</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>活用方法</h3>
+      <ul>
+        <li>月次の売上目標達成状況の確認</li>
+        <li>季節変動の把握と対策立案</li>
+        <li>前年比較による成長率の確認</li>
+      </ul>
+    </section>
+
+    <!-- 粗利管理詳細 -->
+    <section class="section">
+      <h2>粗利管理</h2>
+
+      <h3>粗利の計算</h3>
+      <div class="code-block">
+粗利額 = 受注金額 - 実績原価
+
+粗利率 = 粗利額 ÷ 受注金額 × 100
+
+実績原価 = 労務費 + 材料費 + 外注費 + 経費
+      </div>
+
+      <h3>アラート条件</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>アラート</th>
+              <th>条件</th>
+              <th>対応</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-warning">粗利率低下</span></td>
+              <td>粗利率 < 目標粗利率 - 5%</td>
+              <td>原価分析・対策検討</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-danger">粗利赤字</span></td>
+              <td>粗利額 < 0</td>
+              <td>緊急対応・原因究明</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">予算超過</span></td>
+              <td>実績原価 > 予算原価</td>
+              <td>追加費用の精査</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 資金繰り -->
+    <section class="section">
+      <h2>資金繰り</h2>
+      <p>入金予定と支払予定から、資金繰りの見通しを確認できます。</p>
+
+      <h3>入金予定</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>期間</th>
+              <th>内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>今週入金予定</td>
+              <td>支払期日が今週の請求書</td>
+            </tr>
+            <tr>
+              <td>今月入金予定</td>
+              <td>支払期日が今月の請求書</td>
+            </tr>
+            <tr>
+              <td>来月入金予定</td>
+              <td>支払期日が来月の請求書</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>支払予定</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>外注支払</td>
+              <td>協力会社への支払い（相殺後）</td>
+            </tr>
+            <tr>
+              <td>経費支払</td>
+              <td>掛け払い経費の支払い</td>
+            </tr>
+            <tr>
+              <td>固定費</td>
+              <td>家賃、リース料等の固定費</td>
+            </tr>
+            <tr>
+              <td>給与</td>
+              <td>月次給与の支払い</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 仕掛かり管理 -->
+    <section class="section">
+      <h2>仕掛かり管理</h2>
+      <p>施工中で未請求の出来高（仕掛かり）を管理します。</p>
+
+      <h3>仕掛かりの計算</h3>
+      <div class="code-block">
+仕掛かり金額 = 累計出来高 - 累計請求額
+
+累計出来高 = 月次出来高の合計
+累計請求額 = 発行済み請求書の合計
+      </div>
+
+      <h3>表示内容</h3>
+      <ul>
+        <li>仕掛かり総額（全案件合計）</li>
+        <li>案件別仕掛かり一覧</li>
+        <li>進捗率別の分布</li>
+        <li>長期仕掛かりアラート</li>
+      </ul>
+
+      <div class="alert alert-warning">
+        <strong>長期仕掛かりに注意</strong>
+        <p>出来高が計上されているのに請求が遅れている案件は、資金繰りに影響します。速やかに請求処理を行ってください。</p>
+      </div>
+    </section>
+
+    <!-- アラート機能 -->
+    <section class="section">
+      <h2>アラート機能</h2>
+      <p>経営上注意が必要な状況を自動的に検知し、アラートを表示します。</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>アラート種別</th>
+              <th>条件</th>
+              <th>重要度</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>入金遅延</td>
+              <td>支払期日を過ぎた未入金請求</td>
+              <td><span class="badge badge-danger">高</span></td>
+            </tr>
+            <tr>
+              <td>粗利赤字</td>
+              <td>実績原価が受注金額を超過</td>
+              <td><span class="badge badge-danger">高</span></td>
+            </tr>
+            <tr>
+              <td>予算超過</td>
+              <td>実績原価が予算を超過</td>
+              <td><span class="badge badge-warning">中</span></td>
+            </tr>
+            <tr>
+              <td>粗利率低下</td>
+              <td>粗利率が目標を下回る</td>
+              <td><span class="badge badge-warning">中</span></td>
+            </tr>
+            <tr>
+              <td>注文書未受領</td>
+              <td>口頭受注後14日以上未受領</td>
+              <td><span class="badge badge-primary">低</span></td>
+            </tr>
+            <tr>
+              <td>長期仕掛かり</td>
+              <td>30日以上請求されていない出来高</td>
+              <td><span class="badge badge-primary">低</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 期間選択 -->
+    <section class="section">
+      <h2>期間・フィルター</h2>
+
+      <h3>表示期間の切り替え</h3>
+      <ul>
+        <li><strong>今月</strong> - 当月のデータを表示</li>
+        <li><strong>前月</strong> - 前月のデータを表示</li>
+        <li><strong>今年度</strong> - 年度累計を表示</li>
+        <li><strong>カスタム</strong> - 任意の期間を指定</li>
+      </ul>
+
+      <h3>フィルター</h3>
+      <ul>
+        <li><strong>担当者別</strong> - 営業担当、施工担当で絞り込み</li>
+        <li><strong>顧客別</strong> - 特定の顧客のみ表示</li>
+        <li><strong>案件種別</strong> - 通常案件、その他で絞り込み</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p><a href="index.html">← マニュアルトップへ戻る</a></p>
+    <p>SanyuTech DX Platform - 経営ダッシュボードマニュアル</p>
+  </footer>
+</body>
+</html>
