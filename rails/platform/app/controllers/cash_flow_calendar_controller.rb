@@ -11,8 +11,9 @@ class CashFlowCalendarController < ApplicationController
     @dates = (@start_date..@end_date).to_a
 
     # Load all entries for the month
+    # Note: :source is polymorphic and cannot be eagerly loaded
     @entries = CashFlowEntry.for_date_range(@start_date..@end_date)
-                            .includes(:client, :partner, :project, :source)
+                            .includes(:client, :partner, :project)
                             .order(:expected_date, :category)
 
     # Group by date for matrix display
@@ -22,17 +23,19 @@ class CashFlowCalendarController < ApplicationController
     @opening_balance = calculate_opening_balance(@start_date)
     @daily_balances = calculate_daily_balances(@dates, @entries_by_date, @opening_balance)
 
-    # Category totals
-    @income_total = @entries.income.sum(:expected_amount)
-    @expense_total = @entries.expense.sum(:expected_amount)
-    @income_by_category = @entries.income.group(:category).sum(:expected_amount)
-    @expense_by_category = @entries.expense.group(:category).sum(:expected_amount)
+    # Category totals (use fresh query without includes to avoid join issues)
+    base_query = CashFlowEntry.for_date_range(@start_date..@end_date)
+    @income_total = base_query.income.sum(:expected_amount)
+    @expense_total = base_query.expense.sum(:expected_amount)
+    @income_by_category = base_query.income.group(:category).sum(:expected_amount)
+    @expense_by_category = base_query.expense.group(:category).sum(:expected_amount)
   end
 
   def show
     @date = Date.parse(params[:date])
+    # Note: :source is polymorphic and cannot be eagerly loaded
     @entries = CashFlowEntry.for_date(@date)
-                            .includes(:client, :partner, :project, :source)
+                            .includes(:client, :partner, :project)
                             .order(:entry_type, :category)
 
     @income_entries = @entries.income
