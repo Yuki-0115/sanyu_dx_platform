@@ -29,6 +29,11 @@ class CashFlowCalendarController < ApplicationController
     @expense_total = base_query.expense.sum(:expected_amount)
     @income_by_category = base_query.income.group(:category).sum(:expected_amount)
     @expense_by_category = base_query.expense.group(:category).sum(:expected_amount)
+
+    # 会社休日（祝日含む）を取得
+    @holidays = CompanyHoliday.where(calendar_type: "office")
+                              .for_date_range(@start_date..@end_date)
+                              .index_by(&:holiday_date)
   end
 
   def show

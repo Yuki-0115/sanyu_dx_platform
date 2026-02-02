@@ -20,11 +20,6 @@
       </div>
       <div class="flex gap-2">
         <%= link_to "今月", cash_flow_calendar_path, class: "px-3 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200" %>
-        <%= button_to "データ生成",
-            generate_cash_flow_entries_path(year: @current_month.year, month: @current_month.month),
-            method: :post,
-            class: "px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700",
-            data: { turbo_confirm: "#{@current_month.strftime('%Y年%m月')}の資金繰りデータを生成しますか？" } %>
       </div>
     </div>
   </div>
@@ -75,13 +70,18 @@
             <% day_entries = @entries_by_date[date] || [] %>
             <% has_entries = day_entries.any? %>
             <% weekend = date.saturday? || date.sunday? %>
-            <tr class="<%= weekend ? 'bg-gray-50' : '' %> <%= has_entries ? 'hover:bg-yellow-50 cursor-pointer' : '' %>"
+            <% holiday = @holidays[date] %>
+            <% is_holiday = weekend || holiday.present? %>
+            <tr class="<%= is_holiday ? 'bg-gray-50' : '' %> <%= has_entries ? 'hover:bg-yellow-50 cursor-pointer' : '' %>"
                 <% if has_entries %>onclick="window.location='<%= cash_flow_date_path(date: date) %>'"<% end %>>
-              <td class="px-3 py-2 sticky left-0 <%= weekend ? 'bg-gray-50' : 'bg-white' %> z-10">
-                <span class="<%= date.sunday? ? 'text-red-500' : date.saturday? ? 'text-blue-500' : '' %>">
+              <td class="px-3 py-2 sticky left-0 <%= is_holiday ? 'bg-gray-50' : 'bg-white' %> z-10">
+                <div class="<%= date.sunday? || holiday.present? ? 'text-red-500' : date.saturday? ? 'text-blue-500' : '' %>">
                   <%= date.strftime("%m/%d") %>
                   <span class="text-xs">(<%= %w[日 月 火 水 木 金 土][date.wday] %>)</span>
-                </span>
+                  <% if holiday.present? %>
+                    <span class="ml-1 px-1 text-xs bg-red-100 text-red-600 rounded"><%= holiday.name %></span>
+                  <% end %>
+                </div>
               </td>
               <td class="px-3 py-2 text-right text-gray-500"><%= number_with_delimiter(prev_balance.to_i) %></td>
               <%
@@ -137,12 +137,9 @@
   </div>
 
   <% if @entries.empty? %>
-    <div class="mt-6 p-8 bg-yellow-50 rounded-lg text-center">
-      <p class="text-yellow-700 mb-4">この月のデータがありません</p>
-      <%= button_to "データを生成する",
-          generate_cash_flow_entries_path(year: @current_month.year, month: @current_month.month),
-          method: :post,
-          class: "px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700" %>
+    <div class="mt-6 p-8 bg-blue-50 rounded-lg text-center">
+      <p class="text-blue-700">この月の入出金予定はありません</p>
+      <p class="text-sm text-blue-600 mt-2">請求書発行・外注費確定時に自動で登録されます</p>
     </div>
   <% end %>
 </div>
