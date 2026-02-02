@@ -47,7 +47,7 @@ module Master
 
     def schedule_params
       params.require(:fixed_expense_schedule).permit(
-        :name, :category, :payment_day, :amount, :is_variable, :active, :notes
+        :name, :category, :payment_type, :payment_day, :amount, :amount_variable, :active, :notes
       )
     end
   end

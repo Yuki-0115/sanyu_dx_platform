@@ -10,6 +10,39 @@
     </div>
   </div>
 
+  <% # 月額金額の入力漏れアラート %>
+  <% variable_schedules = @schedules.select(&:amount_variable?) %>
+  <% danger_schedules = variable_schedules.select { |s| s.monthly_amount_status == :danger } %>
+  <% warning_schedules = variable_schedules.select { |s| s.monthly_amount_status == :warning } %>
+
+  <% if danger_schedules.any? %>
+    <div class="mb-4 p-4 bg-red-100 border border-red-400 rounded-lg">
+      <h3 class="font-bold text-red-800 mb-2">今月の金額が未入力です</h3>
+      <ul class="text-sm text-red-700 space-y-1">
+        <% danger_schedules.each do |schedule| %>
+          <li class="flex items-center gap-2">
+            <span><%= schedule.name %></span>
+            <%= link_to "入力する", master_fixed_expense_schedule_monthly_amounts_path(schedule), class: "px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700" %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if warning_schedules.any? %>
+    <div class="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
+      <h3 class="font-bold text-yellow-800 mb-2">翌月の金額が未入力です</h3>
+      <ul class="text-sm text-yellow-700 space-y-1">
+        <% warning_schedules.each do |schedule| %>
+          <li class="flex items-center gap-2">
+            <span><%= schedule.name %></span>
+            <%= link_to "入力する", master_fixed_expense_schedule_monthly_amounts_path(schedule), class: "px-2 py-1 bg-yellow-600 text-white rounded text-xs hover:bg-yellow-700" %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
   <div class="bg-white rounded-lg shadow overflow-hidden">
     <% if @schedules.any? %>
       <table class="w-full">
@@ -18,7 +51,9 @@
             <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">名称</th>
             <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">カテゴリ</th>
             <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">支払日</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">金額タイプ</th>
             <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">入力状況</th>
             <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">ステータス</th>
             <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">操作</th>
           </tr>
@@ -30,14 +65,45 @@
               <td class="px-4 py-3 text-center">
                 <span class="px-2 py-1 text-xs rounded bg-gray-100"><%= schedule.category_label %></span>
               </td>
-              <td class="px-4 py-3 text-center text-sm"><%= schedule.payment_day_label %></td>
+              <td class="px-4 py-3 text-center text-sm">
+                <span class="px-2 py-1 text-xs rounded <%= schedule.payment_type == 'variable' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800' %>">
+                  <%= schedule.payment_type_label %>
+                </span>
+                <span class="ml-1"><%= schedule.payment_day_label %></span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <span class="px-2 py-1 text-xs rounded <%= schedule.amount_variable? ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800' %>">
+                  <%= schedule.amount_type_label %>
+                </span>
+              </td>
               <td class="px-4 py-3 text-right text-sm">
-                <% if schedule.variable? %>
-                  <span class="text-gray-400">毎月変動</span>
-                <% elsif schedule.amount.present? %>
+                <% if schedule.amount.present? && schedule.amount > 0 %>
                   <%= number_with_delimiter(schedule.amount.to_i) %>円
+                  <% if schedule.amount_variable? %>
+                    <span class="text-xs text-gray-400">(目安)</span>
+                  <% end %>
                 <% else %>
-                  <span class="text-gray-400">未設定</span>
+                  <span class="text-gray-400">-</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-center text-sm">
+                <% if schedule.amount_variable? %>
+                  <% status = schedule.monthly_amount_status %>
+                  <% status_class = case status
+                       when :danger then 'bg-red-100 text-red-800'
+                       when :warning then 'bg-yellow-100 text-yellow-800'
+                       else 'bg-green-100 text-green-800'
+                     end %>
+                  <span class="px-2 py-1 text-xs rounded <%= status_class %>">
+                    <%= schedule.last_entered_month_label %>
+                  </span>
+                  <% if schedule.monthly_amount_status_message %>
+                    <div class="text-xs mt-1 <%= status == :danger ? 'text-red-600' : 'text-yellow-600' %>">
+                      <%= schedule.monthly_amount_status_message %>
+                    </div>
+                  <% end %>
+                <% else %>
+                  <span class="text-gray-400">-</span>
                 <% end %>
               </td>
               <td class="px-4 py-3 text-center">
@@ -45,11 +111,14 @@
                   <%= schedule.active? ? "有効" : "無効" %>
                 </span>
               </td>
-              <td class="px-4 py-3 text-center">
-                <%= link_to "編集", edit_master_fixed_expense_schedule_path(schedule), class: "px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm mr-1" %>
+              <td class="px-4 py-3 text-center space-x-1">
+                <% if schedule.amount_variable? %>
+                  <%= link_to "月別金額", master_fixed_expense_schedule_monthly_amounts_path(schedule), class: "px-3 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 text-sm" %>
+                <% end %>
+                <%= link_to "編集", edit_master_fixed_expense_schedule_path(schedule), class: "px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm" %>
                 <%= button_to "削除", master_fixed_expense_schedule_path(schedule), method: :delete,
                     class: "px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 text-sm",
-                    data: { turbo_confirm: "削除しますか？" } %>
+                    data: { turbo: false, turbo_confirm: "削除しますか？" } %>
               </td>
             </tr>
           <% end %>
@@ -63,13 +132,32 @@
     <% end %>
   </div>
 
-  <!-- カテゴリ説明 -->
-  <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-    <h3 class="font-bold text-blue-800 mb-2">カテゴリ一覧</h3>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-blue-700">
-      <% FixedExpenseSchedule::CATEGORIES.each do |key, label| %>
-        <div>・<%= label %></div>
-      <% end %>
+  <!-- 凡例 -->
+  <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="p-4 bg-blue-50 rounded-lg">
+      <h3 class="font-bold text-blue-800 mb-2">支払日タイプ</h3>
+      <div class="text-sm text-blue-700 space-y-1">
+        <div><span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">固定</span> 毎月同じ日に支払い</div>
+        <div><span class="px-2 py-0.5 bg-orange-100 text-orange-800 rounded text-xs">変動</span> 月によって支払日が変わる</div>
+      </div>
     </div>
+    <div class="p-4 bg-green-50 rounded-lg">
+      <h3 class="font-bold text-green-800 mb-2">金額タイプ</h3>
+      <div class="text-sm text-green-700 space-y-1">
+        <div><span class="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs">固定</span> 毎月同じ金額</div>
+        <div><span class="px-2 py-0.5 bg-orange-100 text-orange-800 rounded text-xs">変動</span> 月によって金額が変わる</div>
+      </div>
+      <p class="mt-2 text-xs text-green-600">変動の場合は「月別金額」から年月ごとの金額を登録できます</p>
+    </div>
+  </div>
+
+  <!-- 補足説明 -->
+  <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+    <h3 class="font-bold text-gray-700 mb-2">使い方</h3>
+    <ul class="text-sm text-gray-600 space-y-1">
+      <li>・固定費スケジュールを登録すると、毎月の資金繰り表に自動反映されます</li>
+      <li>・土日祝日の場合は前営業日に自動調整されます</li>
+      <li>・単発の出金は資金繰り表の日付詳細ページから直接入力できます</li>
+    </ul>
   </div>
 </div>

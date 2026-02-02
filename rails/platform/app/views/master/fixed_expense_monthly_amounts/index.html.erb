@@ -1,0 +1,111 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold"><%= @schedule.name %> - 月別金額</h1>
+      <p class="text-gray-500">
+        <%= @schedule.category_label %> /
+        金額タイプ: <span class="<%= @schedule.amount_variable? ? 'text-orange-600' : 'text-green-600' %>"><%= @schedule.amount_type_label %></span>
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "固定費一覧", master_fixed_expense_schedules_path, class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+    </div>
+  </div>
+
+  <% unless @schedule.amount_variable? %>
+    <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+      <p class="text-yellow-800">
+        この固定費は「固定金額」タイプです。月別金額を登録しても使用されません。<br>
+        月ごとに金額が変わる場合は、固定費設定で「変動金額」に変更してください。
+      </p>
+    </div>
+  <% end %>
+
+  <!-- 新規登録フォーム -->
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h2 class="font-bold text-gray-700 mb-4">月別金額を登録</h2>
+    <%= form_with model: [@schedule, @new_amount], url: master_fixed_expense_schedule_monthly_amounts_path(@schedule), method: :post, class: "grid grid-cols-1 md:grid-cols-5 gap-4 items-end" do |f| %>
+      <% if @new_amount.errors.any? %>
+        <div class="md:col-span-5 p-3 bg-red-50 text-red-600 rounded text-sm">
+          <% @new_amount.errors.full_messages.each do |msg| %>
+            <div><%= msg %></div>
+          <% end %>
+        </div>
+      <% end %>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">年</label>
+        <%= f.select :year,
+            (Date.current.year - 1..Date.current.year + 2).map { |y| [y, y] },
+            { selected: @new_amount.year || Date.current.year },
+            class: "w-full border rounded px-3 py-2" %>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">月</label>
+        <%= f.select :month,
+            (1..12).map { |m| ["#{m}月", m] },
+            { selected: @new_amount.month || Date.current.month },
+            class: "w-full border rounded px-3 py-2" %>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">金額</label>
+        <div class="flex items-center gap-1">
+          <%= f.number_field :amount, class: "w-full border rounded px-3 py-2", min: 0, required: true %>
+          <span class="text-gray-500">円</span>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">備考</label>
+        <%= f.text_field :notes, class: "w-full border rounded px-3 py-2", placeholder: "メモ" %>
+      </div>
+      <div>
+        <%= f.submit "登録", class: "w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 登録済み一覧 -->
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <% if @monthly_amounts.any? %>
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">年月</th>
+            <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">備考</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">操作</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% @monthly_amounts.each do |ma| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3 text-sm font-medium"><%= ma.month_label %></td>
+              <td class="px-4 py-3 text-sm text-right font-bold"><%= number_with_delimiter(ma.amount.to_i) %>円</td>
+              <td class="px-4 py-3 text-sm text-gray-500"><%= ma.notes || "-" %></td>
+              <td class="px-4 py-3 text-center">
+                <%= button_to "削除", master_fixed_expense_schedule_monthly_amount_path(@schedule, ma), method: :delete,
+                    class: "px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 text-sm",
+                    data: { turbo: false, turbo_confirm: "#{ma.month_label}の金額を削除しますか？" } %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="p-8 text-center text-gray-500">
+        <p class="mb-2">月別金額が登録されていません</p>
+        <p class="text-sm">上のフォームから登録してください</p>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- デフォルト金額の説明 -->
+  <div class="mt-6 p-4 bg-blue-50 rounded-lg text-sm text-blue-700">
+    <h3 class="font-bold mb-2">月別金額の仕組み</h3>
+    <ul class="list-disc list-inside space-y-1">
+      <li>金額タイプが「変動」の固定費で使用されます</li>
+      <li>登録した年月のみ、その金額が資金繰り表に反映されます</li>
+      <li>登録がない月は、デフォルト金額（<%= @schedule.amount.present? ? "#{number_with_delimiter(@schedule.amount.to_i)}円" : "未設定" %>）が使用されます</li>
+      <li>金額を削除すると、その月はデフォルト金額に戻ります</li>
+    </ul>
+  </div>
+</div>

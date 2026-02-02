@@ -1,4 +1,4 @@
-<div class="bg-white shadow rounded-lg p-6">
+<div class="bg-white shadow rounded-lg p-6" data-controller="estimate-budget">
   <div class="flex justify-between items-center mb-4">
     <h3 class="text-lg font-medium text-gray-900">予算明細</h3>
     <p class="text-sm text-gray-500">※ 内訳明細タブで追加した工種・項目が自動で表示されます</p>
@@ -10,7 +10,7 @@
         <div class="budget-category-section mb-4" data-category-id="<%= category.id %>">
           <!-- 工種ヘッダー（クリックで展開/折りたたみ） -->
           <div class="bg-green-100 px-4 py-3 flex justify-between items-center rounded-t-lg cursor-pointer budget-category-header"
-               onclick="toggleBudgetCategory(this)">
+               data-action="click->estimate-budget#toggleCategory">
             <div class="flex items-center gap-2">
               <svg class="w-5 h-5 text-green-700 transform transition-transform budget-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -67,7 +67,8 @@
                              value="<%= item.budget_unit_price %>"
                              step="1"
                              placeholder="<%= item.unit_price %>"
-                             class="block w-full rounded border-gray-300 text-sm text-right budget-price">
+                             class="block w-full rounded border-gray-300 text-sm text-right budget-price"
+                             data-action="input->estimate-budget#calculateRow">
                     </td>
                     <td class="px-2 py-2 text-right font-medium budget-amount">
                       <% if item.budget_amount.to_i > 0 %>
@@ -150,7 +151,8 @@
                            value="<%= item.budget_unit_price %>"
                            step="1"
                            placeholder="<%= item.unit_price %>"
-                           class="block w-full rounded border-gray-300 text-sm text-right budget-price">
+                           class="block w-full rounded border-gray-300 text-sm text-right budget-price"
+                           data-action="input->estimate-budget#calculateRow">
                   </td>
                   <td class="px-2 py-2 text-right font-medium budget-amount">
                     <% if item.budget_amount.to_i > 0 %>
@@ -177,7 +179,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
         </svg>
         <p class="mt-4 text-gray-500">内訳明細タブで工種・項目を追加してください</p>
-        <button type="button" onclick="window.switchEstimateTab('items')"
+        <button type="button" data-action="click->estimate-budget#goToItems"
                 class="mt-4 text-green-600 hover:text-green-800 font-medium">
           → 内訳明細タブへ移動
         </button>
@@ -189,144 +191,27 @@
   <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-green-50 rounded-lg">
     <div class="text-center">
       <p class="text-sm text-gray-600">見積金額（税抜）</p>
-      <p class="text-xl font-bold text-gray-900" id="budget-direct-cost">
+      <p class="text-xl font-bold text-gray-900" data-estimate-budget-target="directCost">
         <%= number_to_currency(@estimate.subtotal, unit: "¥", precision: 0) %>
       </p>
     </div>
     <div class="text-center">
       <p class="text-sm text-gray-600">予算合計</p>
-      <p class="text-xl font-bold text-gray-900" id="budget-total-display">
+      <p class="text-xl font-bold text-gray-900" data-estimate-budget-target="budgetTotal">
         <%= number_to_currency(@estimate.budget_total, unit: "¥", precision: 0) %>
       </p>
     </div>
     <div class="text-center">
       <p class="text-sm text-gray-600">粗利</p>
-      <p class="text-xl font-bold <%= @estimate.gross_profit >= 0 ? 'text-green-600' : 'text-red-600' %>" id="budget-gross-profit">
+      <p class="text-xl font-bold <%= @estimate.gross_profit >= 0 ? 'text-green-600' : 'text-red-600' %>" data-estimate-budget-target="grossProfit">
         <%= number_to_currency(@estimate.gross_profit, unit: "¥", precision: 0) %>
       </p>
     </div>
     <div class="text-center">
       <p class="text-sm text-gray-600">粗利率</p>
-      <p class="text-xl font-bold <%= @estimate.gross_profit >= 0 ? 'text-green-600' : 'text-red-600' %>" id="budget-profit-rate">
+      <p class="text-xl font-bold <%= @estimate.gross_profit >= 0 ? 'text-green-600' : 'text-red-600' %>" data-estimate-budget-target="profitRate">
         <%= @estimate.profit_rate %>%
       </p>
     </div>
   </div>
 </div>
-
-<script>
-(function() {
-  function formatCurrency(amount) {
-    return '¥' + Math.round(amount).toLocaleString();
-  }
-
-  // 工種セクションの展開/折りたたみ
-  window.toggleBudgetCategory = function(header) {
-    const section = header.closest('.budget-category-section');
-    const content = section.querySelector('.budget-category-content');
-    const chevron = header.querySelector('.budget-chevron');
-
-    if (content.style.display === 'none') {
-      content.style.display = 'block';
-      chevron.style.transform = 'rotate(0deg)';
-    } else {
-      content.style.display = 'none';
-      chevron.style.transform = 'rotate(-90deg)';
-    }
-  };
-
-  function calculateBudgetTotals() {
-    let budgetTotal = 0;
-
-    // 各カテゴリの小計を計算
-    document.querySelectorAll('.budget-category-section').forEach(section => {
-      let categoryTotal = 0;
-
-      section.querySelectorAll('.budget-item-row').forEach(row => {
-        if (row.style.display !== 'none') {
-          const qty = parseFloat(row.dataset.estimateQty) || 0;
-          const price = parseFloat(row.querySelector('.budget-price')?.value) || 0;
-          const amount = Math.round(qty * price);
-          categoryTotal += amount;
-
-          const amountCell = row.querySelector('.budget-amount');
-          if (amountCell) {
-            amountCell.textContent = amount > 0 ? formatCurrency(amount) : '-';
-          }
-        }
-      });
-
-      // カテゴリヘッダーの予算表示を更新
-      const categoryTotalEl = section.querySelector('.budget-category-total');
-      if (categoryTotalEl) {
-        categoryTotalEl.textContent = '予算: ' + formatCurrency(categoryTotal);
-      }
-
-      // カテゴリフッターの小計を更新
-      const categorySubtotalEl = section.querySelector('.budget-category-subtotal');
-      if (categorySubtotalEl) {
-        categorySubtotalEl.textContent = formatCurrency(categoryTotal);
-      }
-
-      budgetTotal += categoryTotal;
-    });
-
-    // 全体の予算表示を更新
-    const budgetTotalDisplay = document.getElementById('budget-total-display');
-    if (budgetTotalDisplay) {
-      budgetTotalDisplay.textContent = formatCurrency(budgetTotal);
-    }
-
-    // 見積金額を取得
-    const directCostEl = document.getElementById('budget-direct-cost');
-    const directCost = parseInt(directCostEl?.textContent.replace(/[¥,]/g, '')) || 0;
-
-    // 粗利計算
-    const grossProfit = directCost - budgetTotal;
-    const profitRate = directCost > 0 ? (grossProfit / directCost * 100).toFixed(1) : 0;
-
-    const profitEl = document.getElementById('budget-gross-profit');
-    if (profitEl) {
-      profitEl.textContent = formatCurrency(grossProfit);
-      profitEl.className = 'text-xl font-bold ' + (grossProfit >= 0 ? 'text-green-600' : 'text-red-600');
-    }
-
-    const profitRateEl = document.getElementById('budget-profit-rate');
-    if (profitRateEl) {
-      profitRateEl.textContent = profitRate + '%';
-      profitRateEl.className = 'text-xl font-bold ' + (grossProfit >= 0 ? 'text-green-600' : 'text-red-600');
-    }
-
-    // 表紙タブの予算情報も更新
-    const coverBudgetTotal = document.getElementById('cover-budget-total');
-    if (coverBudgetTotal) {
-      coverBudgetTotal.textContent = formatCurrency(budgetTotal);
-    }
-    const coverGrossProfit = document.getElementById('cover-gross-profit');
-    if (coverGrossProfit) {
-      coverGrossProfit.textContent = formatCurrency(grossProfit) + '（' + profitRate + '%）';
-      coverGrossProfit.className = 'font-medium ' + (grossProfit >= 0 ? 'text-green-600' : 'text-red-600');
-    }
-  }
-
-  // 予算入力イベント
-  document.querySelectorAll('.budget-price').forEach(input => {
-    input.addEventListener('input', calculateBudgetTotals);
-  });
-
-  // 内訳明細タブからの更新イベントを受信
-  window.addEventListener('estimateUpdated', function(e) {
-    const directCostEl = document.getElementById('budget-direct-cost');
-    if (directCostEl && e.detail.subtotal !== undefined) {
-      directCostEl.textContent = formatCurrency(e.detail.subtotal);
-      calculateBudgetTotals();
-    }
-  });
-
-  // グローバルに公開（タブ切り替え時に再計算）
-  window.recalculateBudgetTotals = calculateBudgetTotals;
-
-  // 初期計算
-  calculateBudgetTotals();
-})();
-</script>

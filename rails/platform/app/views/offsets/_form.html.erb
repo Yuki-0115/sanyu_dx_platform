@@ -1,4 +1,8 @@
-<%= form_with model: offset, class: "space-y-6", data: { controller: "offset-form" } do |f| %>
+<%= form_with model: offset, class: "space-y-6", data: {
+  controller: "offset-form",
+  offset_form_total_salary_value: @attendance_total&.dig(:total_salary) || 0,
+  offset_form_total_insurance_value: @attendance_total&.dig(:total_social_insurance) || 0
+} do |f| %>
   <% if offset.errors.any? %>
     <div class="rounded-md bg-red-50 p-4">
       <div class="flex">
@@ -113,7 +117,7 @@
         <% if offset.status != "confirmed" %>
           <div class="mt-4 flex justify-end">
             <button type="button"
-                    onclick="document.getElementById('offset_total_salary').value = <%= @attendance_total[:total_salary] %>; document.getElementById('offset_social_insurance').value = <%= @attendance_total[:total_social_insurance] %>;"
+                    data-action="click->offset-form#autoFill"
                     class="inline-flex items-center px-3 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50">
               集計値を入力欄に反映
             </button>

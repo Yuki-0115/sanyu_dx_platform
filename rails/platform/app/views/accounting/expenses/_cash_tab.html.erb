@@ -15,13 +15,13 @@
 </div>
 
 <!-- 処理待ち経費一覧 -->
-<%= form_with url: bulk_process_accounting_expenses_path, method: :post, id: "bulk-form" do %>
+<%= form_with url: bulk_process_accounting_expenses_path, method: :post, id: "bulk-form", data: { controller: "select-all" } do %>
   <input type="hidden" name="tab" value="cash">
   <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
     <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
       <div class="flex items-center gap-2">
-        <input type="checkbox" id="select-all" class="w-4 h-4">
-        <label for="select-all" class="text-sm text-gray-600">すべて選択</label>
+        <input type="checkbox" data-select-all-target="all" data-action="change->select-all#toggle" class="w-4 h-4">
+        <label class="text-sm text-gray-600">すべて選択</label>
         <span class="text-sm text-gray-500 ml-4">レシート確認 → 勘定科目確定</span>
       </div>
       <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
@@ -48,7 +48,7 @@
         <% @expenses.each do |expense| %>
           <tr class="hover:bg-gray-50">
             <td class="px-4 py-3">
-              <input type="checkbox" name="expense_ids[]" value="<%= expense.id %>" class="expense-checkbox w-4 h-4">
+              <input type="checkbox" name="expense_ids[]" value="<%= expense.id %>" data-select-all-target="checkbox" data-action="change->select-all#updateAll" class="w-4 h-4">
             </td>
             <td class="px-4 py-3 text-sm">
               <%= expense.daily_report&.report_date&.strftime("%m/%d") || "-" %>
@@ -101,12 +101,12 @@
       <p class="text-sm text-yellow-600 mt-1">経理処理済みで、社員への精算が必要な経費</p>
     </div>
 
-    <%= form_with url: bulk_reimburse_accounting_expenses_path, method: :post do %>
+    <%= form_with url: bulk_reimburse_accounting_expenses_path, method: :post, data: { controller: "select-all" } do %>
       <table class="w-full">
         <thead class="bg-gray-50">
           <tr>
             <th class="px-4 py-3 text-left text-sm font-medium text-gray-500 w-10">
-              <input type="checkbox" id="select-all-reimburse" class="w-4 h-4">
+              <input type="checkbox" data-select-all-target="all" data-action="change->select-all#toggle" class="w-4 h-4">
             </th>
             <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">日付</th>
             <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">案件</th>
@@ -120,7 +120,7 @@
           <% @needs_reimbursement.each do |expense| %>
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-3">
-                <input type="checkbox" name="expense_ids[]" value="<%= expense.id %>" class="reimburse-checkbox w-4 h-4">
+                <input type="checkbox" name="expense_ids[]" value="<%= expense.id %>" data-select-all-target="checkbox" data-action="change->select-all#updateAll" class="w-4 h-4">
               </td>
               <td class="px-4 py-3 text-sm">
                 <%= expense.daily_report&.report_date&.strftime("%m/%d") || "-" %>
@@ -149,11 +149,3 @@
   </div>
 <% end %>
 
-<script>
-  document.getElementById('select-all')?.addEventListener('change', function() {
-    document.querySelectorAll('.expense-checkbox').forEach(cb => cb.checked = this.checked);
-  });
-  document.getElementById('select-all-reimburse')?.addEventListener('change', function() {
-    document.querySelectorAll('.reimburse-checkbox').forEach(cb => cb.checked = this.checked);
-  });
-</script>

@@ -163,6 +163,7 @@ Rails.application.routes.draw do
   post "cash_flow_calendar/generate", to: "cash_flow_calendar#generate_entries", as: :generate_cash_flow_entries
   post "cash_flow_entries", to: "cash_flow_calendar#create_entry", as: :cash_flow_entries
   patch "cash_flow_entries/:id/confirm", to: "cash_flow_calendar#confirm", as: :confirm_cash_flow_entry
+  get "cash_flow_entries/:id/edit", to: "cash_flow_calendar#edit_entry", as: :edit_cash_flow_entry
   patch "cash_flow_entries/:id", to: "cash_flow_calendar#update_entry", as: :cash_flow_entry
   delete "cash_flow_entries/:id", to: "cash_flow_calendar#destroy_entry"
 
@@ -172,7 +173,9 @@ Rails.application.routes.draw do
     resources :partners
     resources :employees
     resources :payment_terms, except: [:show]
-    resources :fixed_expense_schedules, except: [:show]
+    resources :fixed_expense_schedules, except: [:show] do
+      resources :monthly_amounts, controller: "fixed_expense_monthly_amounts", only: %i[index create destroy]
+    end
     resources :company_holidays, only: [:index, :create, :destroy] do
       collection do
         post :add_holiday

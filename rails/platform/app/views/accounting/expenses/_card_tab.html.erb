@@ -29,13 +29,13 @@
 </div>
 
 <!-- カード経費一覧 -->
-<%= form_with url: bulk_process_accounting_expenses_path, method: :post, id: "bulk-form-card" do %>
+<%= form_with url: bulk_process_accounting_expenses_path, method: :post, id: "bulk-form-card", data: { controller: "select-all" } do %>
   <input type="hidden" name="tab" value="card">
   <div class="bg-white rounded-lg shadow overflow-hidden">
     <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
       <div class="flex items-center gap-2">
-        <input type="checkbox" id="select-all-card" class="w-4 h-4">
-        <label for="select-all-card" class="text-sm text-gray-600">すべて選択</label>
+        <input type="checkbox" data-select-all-target="all" data-action="change->select-all#toggle" class="w-4 h-4">
+        <label class="text-sm text-gray-600">すべて選択</label>
       </div>
       <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
         選択した経費を処理
@@ -61,7 +61,7 @@
         <% @expenses.each do |expense| %>
           <tr class="hover:bg-gray-50">
             <td class="px-4 py-3">
-              <input type="checkbox" name="expense_ids[]" value="<%= expense.id %>" class="card-checkbox w-4 h-4">
+              <input type="checkbox" name="expense_ids[]" value="<%= expense.id %>" data-select-all-target="checkbox" data-action="change->select-all#updateAll" class="w-4 h-4">
             </td>
             <td class="px-4 py-3 text-sm">
               <%= expense.daily_report&.report_date&.strftime("%m/%d") || "-" %>
@@ -114,8 +114,3 @@
   </div>
 <% end %>
 
-<script>
-  document.getElementById('select-all-card')?.addEventListener('change', function() {
-    document.querySelectorAll('.card-checkbox').forEach(cb => cb.checked = this.checked);
-  });
-</script>

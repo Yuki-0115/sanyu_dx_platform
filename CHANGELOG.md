@@ -7,6 +7,16 @@
 ## [Unreleased]
 
 ### Added
+- ADR-002: JavaScript開発ルール（Stimulus必須）を追加
+- Stimulusコントローラー追加
+  - tabs_controller（タブ切り替え）
+  - estimate_items_controller（見積明細）
+  - estimate_budget_controller（予算計算）
+  - template_select_controller（テンプレート挿入）
+  - select_all_controller（一括選択）
+  - conditional_field_controller（条件表示切替）
+  - toggle_controller（表示切替）
+  - redirect_select_controller（選択後リダイレクト）
 - LINE WORKS通知システム（Bot API直接連携）
   - LineWorksNotifier サービス（JWT認証）
   - NotificationJob 非同期ジョブ
@@ -25,6 +35,9 @@
   - Google Driveへの自動保存
 
 ### Changed
+- CLAUDE.md: JavaScript開発ルールセクションを追加
+- CSP設定: unsafe-inline削除、nonce有効化
+- 全ビューのインラインスクリプトをStimulusに移行
 
 ### Removed
 

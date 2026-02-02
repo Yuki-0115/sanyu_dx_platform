@@ -25,6 +25,20 @@
           class: "w-full border rounded px-3 py-2" %>
     </div>
 
+    <!-- 支払日タイプ -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">支払日タイプ <span class="text-red-500">*</span></label>
+      <div class="flex gap-4">
+        <% FixedExpenseSchedule::PAYMENT_TYPES.each do |key, label| %>
+          <label class="flex items-center gap-2">
+            <%= f.radio_button :payment_type, key, checked: schedule.payment_type == key || (schedule.new_record? && key == "fixed"), class: "w-4 h-4" %>
+            <span class="text-sm"><%= label %></span>
+          </label>
+        <% end %>
+      </div>
+      <p class="mt-1 text-xs text-gray-500">固定：毎月同じ日 / 変動：月によって支払日が変わる</p>
+    </div>
+
     <!-- 支払日 -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">支払日 <span class="text-red-500">*</span></label>
@@ -32,6 +46,7 @@
           [["末日", 0]] + (1..31).map { |d| ["#{d}日", d] },
           {},
           class: "w-full border rounded px-3 py-2" %>
+      <p class="mt-1 text-xs text-gray-500">土日祝日の場合は前営業日に自動調整されます</p>
     </div>
 
     <!-- 金額タイプ -->
@@ -39,23 +54,25 @@
       <label class="block text-sm font-medium text-gray-700 mb-1">金額タイプ</label>
       <div class="flex gap-4">
         <label class="flex items-center gap-2">
-          <%= f.radio_button :is_variable, false, checked: !schedule.is_variable?, class: "w-4 h-4" %>
+          <%= f.radio_button :amount_variable, false, checked: !schedule.amount_variable?, class: "w-4 h-4" %>
           <span class="text-sm">固定金額</span>
         </label>
         <label class="flex items-center gap-2">
-          <%= f.radio_button :is_variable, true, checked: schedule.is_variable?, class: "w-4 h-4" %>
-          <span class="text-sm">毎月変動</span>
+          <%= f.radio_button :amount_variable, true, checked: schedule.amount_variable?, class: "w-4 h-4" %>
+          <span class="text-sm">変動金額</span>
         </label>
       </div>
+      <p class="mt-1 text-xs text-gray-500">変動金額の場合は「月別金額」から年月ごとの金額を設定できます</p>
     </div>
 
     <!-- 金額 -->
-    <div id="amount_field" class="<%= schedule.is_variable? ? 'hidden' : '' %>">
+    <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">金額</label>
       <div class="flex items-center gap-2">
         <%= f.number_field :amount, class: "w-full border rounded px-3 py-2", min: 0, step: 1 %>
         <span class="text-gray-500">円</span>
       </div>
+      <p class="mt-1 text-xs text-gray-500">変動金額の場合はデフォルト金額（月別金額が未設定の場合に使用）</p>
     </div>
 
     <!-- 有効/無効 -->
@@ -70,17 +87,10 @@
       <%= f.text_area :notes, rows: 2, class: "w-full border rounded px-3 py-2" %>
     </div>
 
-    <div class="pt-4">
+    <div class="pt-4 flex gap-3">
       <%= f.submit schedule.new_record? ? "登録" : "更新",
-          class: "w-full px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
+          class: "flex-1 px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
+      <%= link_to "キャンセル", master_fixed_expense_schedules_path, class: "flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-center" %>
     </div>
   </div>
 <% end %>
-
-<script>
-  document.querySelectorAll('input[name="fixed_expense_schedule[is_variable]"]').forEach(function(radio) {
-    radio.addEventListener('change', function() {
-      document.getElementById('amount_field').classList.toggle('hidden', this.value === 'true');
-    });
-  });
-</script>

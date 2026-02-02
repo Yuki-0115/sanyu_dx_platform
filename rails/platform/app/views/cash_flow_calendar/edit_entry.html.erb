@@ -1,0 +1,83 @@
+<div class="container mx-auto px-4 py-6 max-w-2xl">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold">資金繰りエントリ編集</h1>
+    <p class="text-gray-500"><%= @entry.expected_date.strftime("%Y年%m月%d日") %> - <%= @entry.category_label %></p>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <%= form_with url: cash_flow_entry_path(@entry), method: :patch, data: { turbo: false } do |f| %>
+      <%= f.hidden_field :return_to, value: @return_to %>
+
+      <div class="space-y-4">
+        <!-- 科目（読み取り専用） -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">科目</label>
+          <div class="px-3 py-2 bg-gray-100 rounded"><%= @entry.category_label %></div>
+        </div>
+
+        <!-- 顧客/支払先（読み取り専用） -->
+        <% if @entry.income? && @entry.client %>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">顧客</label>
+            <div class="px-3 py-2 bg-gray-100 rounded"><%= @entry.client.name %></div>
+          </div>
+        <% elsif @entry.expense? && (@entry.partner || @entry.subcategory) %>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">支払先</label>
+            <div class="px-3 py-2 bg-gray-100 rounded"><%= @entry.partner&.name || @entry.subcategory %></div>
+          </div>
+        <% end %>
+
+        <!-- 予定日 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">予定日</label>
+          <%= f.date_field :expected_date, value: @entry.expected_date, class: "w-full border rounded px-3 py-2" %>
+        </div>
+
+        <!-- 金額 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">金額</label>
+          <div class="flex items-center gap-2">
+            <%= f.number_field :expected_amount, value: @entry.expected_amount.to_i, class: "w-full border rounded px-3 py-2", min: 0 %>
+            <span class="text-gray-500">円</span>
+          </div>
+        </div>
+
+        <% if @entry.income? %>
+          <!-- 相殺額（入金のみ） -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">相殺額</label>
+            <div class="flex items-center gap-2">
+              <%= f.number_field :adjustment_amount, value: @entry.adjustment_amount.to_i, class: "w-full border rounded px-3 py-2", min: 0 %>
+              <span class="text-gray-500">円</span>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">相殺がある場合に入力（差引金額 = 金額 - 相殺額）</p>
+          </div>
+        <% end %>
+
+        <!-- 備考 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">備考</label>
+          <%= f.text_area :notes, value: @entry.notes, rows: 3, class: "w-full border rounded px-3 py-2", placeholder: "備考を入力" %>
+        </div>
+
+        <!-- ステータス表示 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">ステータス</label>
+          <div class="px-3 py-2">
+            <% if @entry.status == 'expected' %>
+              <span class="px-2 py-1 text-sm bg-red-100 text-red-600 rounded">概算（未確定）</span>
+            <% else %>
+              <span class="px-2 py-1 text-sm bg-green-100 text-green-800 rounded">確定済</span>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="pt-4 flex gap-3">
+          <%= f.submit "保存", class: "flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
+          <%= link_to "キャンセル", @return_to.presence || cash_flow_date_path(date: @entry.expected_date), class: "flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-center", data: { turbo: false } %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

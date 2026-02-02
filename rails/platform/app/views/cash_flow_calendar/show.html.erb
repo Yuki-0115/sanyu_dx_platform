@@ -5,9 +5,9 @@
       <p class="text-gray-500">資金繰り詳細</p>
     </div>
     <div class="flex gap-2">
-      <%= link_to "< 前日", cash_flow_date_path(date: @date - 1.day), class: "px-3 py-2 bg-gray-200 rounded hover:bg-gray-300" %>
-      <%= link_to "カレンダーに戻る", cash_flow_calendar_path(month: @date.strftime("%Y-%m")), class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
-      <%= link_to "翌日 >", cash_flow_date_path(date: @date + 1.day), class: "px-3 py-2 bg-gray-200 rounded hover:bg-gray-300" %>
+      <%= link_to "< 前日", cash_flow_date_path(date: @date - 1.day), class: "px-3 py-2 bg-gray-200 rounded hover:bg-gray-300", data: { turbo: false } %>
+      <%= link_to "カレンダーに戻る", cash_flow_calendar_path(month: @date.strftime("%Y-%m")), class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700", data: { turbo: false } %>
+      <%= link_to "翌日 >", cash_flow_date_path(date: @date + 1.day), class: "px-3 py-2 bg-gray-200 rounded hover:bg-gray-300", data: { turbo: false } %>
     </div>
   </div>
 
@@ -34,88 +34,84 @@
 
   <!-- 入金一覧 -->
   <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
-    <div class="px-4 py-3 border-b bg-green-50 flex justify-between items-center">
+    <div class="px-4 py-3 border-b bg-green-50">
       <h2 class="font-bold text-green-800">入金</h2>
-      <button type="button" onclick="document.getElementById('income-form').classList.toggle('hidden')"
-              class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">+ 入金追加</button>
     </div>
 
     <!-- 入金追加フォーム -->
-    <div id="income-form" class="hidden p-4 bg-green-50 border-b">
-      <%= form_with url: cash_flow_entries_path, method: :post, class: "grid grid-cols-1 md:grid-cols-6 gap-3 items-end" do |f| %>
-        <%= f.hidden_field :entry_type, value: "income" %>
-        <%= f.hidden_field :expected_date, value: @date %>
-        <%= f.hidden_field :status, value: "expected" %>
-        <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">科目</label>
-          <%= f.select :category,
-              [["工事入金", "receivable"], ["その他入金", "other_income"]],
-              {}, class: "w-full border rounded px-2 py-1.5 text-sm" %>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">金額</label>
-          <%= f.number_field :expected_amount, class: "w-full border rounded px-2 py-1.5 text-sm", min: 0, required: true %>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">顧客</label>
-          <%= f.collection_select :client_id, Client.order(:name), :id, :name, { include_blank: "選択" }, class: "w-full border rounded px-2 py-1.5 text-sm" %>
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-xs font-medium text-gray-700 mb-1">メモ</label>
-          <%= f.text_field :notes, class: "w-full border rounded px-2 py-1.5 text-sm", placeholder: "メモ" %>
-        </div>
-        <div>
-          <%= f.submit "追加", class: "w-full px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 cursor-pointer" %>
-        </div>
-      <% end %>
-    </div>
+    <details class="border-b">
+      <summary class="px-4 py-2 bg-green-100 cursor-pointer hover:bg-green-200 text-green-800 font-medium">+ 入金追加</summary>
+      <div class="p-4 bg-green-50">
+        <%= form_with url: cash_flow_entries_path, method: :post, scope: :cash_flow_entry, data: { turbo: false }, class: "grid grid-cols-1 md:grid-cols-5 gap-3 items-end" do |f| %>
+          <%= f.hidden_field :entry_type, value: "income" %>
+          <%= f.hidden_field :expected_date, value: @date %>
+          <%= f.hidden_field :status, value: "expected" %>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">科目</label>
+            <%= f.select :category,
+                [["工事入金", "receivable"], ["その他入金", "other_income"]],
+                {}, class: "w-full border rounded px-2 py-1.5 text-sm" %>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">金額</label>
+            <%= f.number_field :expected_amount, class: "w-full border rounded px-2 py-1.5 text-sm", min: 0, required: true %>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">顧客</label>
+            <%= f.collection_select :client_id, Client.order(:name), :id, :name, { include_blank: "選択" }, class: "w-full border rounded px-2 py-1.5 text-sm" %>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">備考</label>
+            <%= f.text_field :notes, class: "w-full border rounded px-2 py-1.5 text-sm", placeholder: "備考" %>
+          </div>
+          <div>
+            <%= f.submit "追加", class: "w-full px-3 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 cursor-pointer" %>
+          </div>
+        <% end %>
+      </div>
+    </details>
 
     <% if @income_entries.any? %>
       <table class="w-full">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">科目</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">顧客/案件</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">メモ</th>
-            <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
-            <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">相殺</th>
-            <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">差引</th>
-            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">操作</th>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">科目</th>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">顧客</th>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">備考</th>
+            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">金額</th>
+            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">差引</th>
+            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">操作</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
           <% @income_entries.each do |entry| %>
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-3 text-sm"><%= entry.category_label %></td>
-              <td class="px-4 py-3 text-sm">
-                <%= entry.client&.name %>
-                <% if entry.project %>
-                  <br><span class="text-xs text-gray-500"><%= entry.project.name %></span>
-                <% end %>
-              </td>
-              <td class="px-4 py-3 text-sm text-gray-500"><%= entry.notes || "-" %></td>
+              <td class="px-4 py-3 text-sm"><%= entry.client&.name || "-" %></td>
+              <td class="px-4 py-3 text-sm text-gray-500"><%= entry.notes.present? ? entry.notes : "-" %></td>
               <td class="px-4 py-3 text-sm text-right font-medium <%= entry.status == 'expected' ? 'text-red-600' : 'text-gray-900' %>">
                 <%= number_with_delimiter(entry.expected_amount.to_i) %>円
                 <% if entry.status == 'expected' %><span class="text-xs">（概算）</span><% end %>
               </td>
-              <td class="px-4 py-3 text-sm text-right text-red-500">
-                <%= entry.adjustment_amount.to_i > 0 ? "-#{number_with_delimiter(entry.adjustment_amount.to_i)}" : "-" %>
-              </td>
               <td class="px-4 py-3 text-sm text-right font-bold text-green-600">
                 <%= number_with_delimiter(entry.net_amount.to_i) %>円
               </td>
-              <td class="px-4 py-3 text-center space-x-1">
-                <% if entry.status == "expected" %>
-                  <%= button_to "確定", confirm_cash_flow_entry_path(entry), method: :patch,
-                      class: "px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700" %>
-                <% else %>
-                  <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">確定済</span>
-                <% end %>
-                <% unless entry.source.present? %>
-                  <%= button_to "削除", cash_flow_entry_path(entry), method: :delete,
-                      class: "px-2 py-1 bg-red-100 text-red-600 text-xs rounded hover:bg-red-200",
-                      data: { turbo_confirm: "削除しますか？" } %>
-                <% end %>
+              <td class="px-4 py-3 text-center">
+                <div class="flex gap-1 justify-center flex-wrap">
+                  <% if entry.status == "expected" %>
+                    <%= form_with url: confirm_cash_flow_entry_path(entry, return_to: request.fullpath), method: :patch, data: { turbo: false }, class: "inline" do %>
+                      <button type="submit" class="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">確定</button>
+                    <% end %>
+                  <% else %>
+                    <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">確定済</span>
+                  <% end %>
+                  <%= link_to "編集", edit_cash_flow_entry_path(entry, return_to: request.fullpath), class: "px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300", data: { turbo: false } %>
+                  <% unless entry.source.present? %>
+                    <%= form_with url: cash_flow_entry_path(entry), method: :delete, data: { turbo: false, turbo_confirm: "削除しますか？" }, class: "inline" do %>
+                      <button type="submit" class="px-2 py-1 bg-red-100 text-red-600 text-xs rounded hover:bg-red-200">削除</button>
+                    <% end %>
+                  <% end %>
+                </div>
               </td>
             </tr>
           <% end %>
@@ -128,51 +124,52 @@
 
   <!-- 出金一覧 -->
   <div class="bg-white rounded-lg shadow overflow-hidden">
-    <div class="px-4 py-3 border-b bg-red-50 flex justify-between items-center">
+    <div class="px-4 py-3 border-b bg-red-50">
       <h2 class="font-bold text-red-800">出金</h2>
-      <button type="button" onclick="document.getElementById('expense-form').classList.toggle('hidden')"
-              class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700">+ 出金追加</button>
     </div>
 
     <!-- 出金追加フォーム -->
-    <div id="expense-form" class="hidden p-4 bg-red-50 border-b">
-      <%= form_with url: cash_flow_entries_path, method: :post, class: "grid grid-cols-1 md:grid-cols-6 gap-3 items-end" do |f| %>
-        <%= f.hidden_field :entry_type, value: "expense" %>
-        <%= f.hidden_field :expected_date, value: @date %>
-        <%= f.hidden_field :status, value: "expected" %>
-        <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">科目</label>
-          <%= f.select :category,
-              CashFlowEntry::EXPENSE_CATEGORIES.map { |c| [CashFlowEntry::CATEGORY_LABELS[c], c] },
-              {}, class: "w-full border rounded px-2 py-1.5 text-sm" %>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">金額</label>
-          <%= f.number_field :expected_amount, class: "w-full border rounded px-2 py-1.5 text-sm", min: 0, required: true %>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">支払先</label>
-          <%= f.text_field :subcategory, class: "w-full border rounded px-2 py-1.5 text-sm", placeholder: "支払先名" %>
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-xs font-medium text-gray-700 mb-1">メモ</label>
-          <%= f.text_field :notes, class: "w-full border rounded px-2 py-1.5 text-sm", placeholder: "メモ" %>
-        </div>
-        <div>
-          <%= f.submit "追加", class: "w-full px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700 cursor-pointer" %>
-        </div>
-      <% end %>
-    </div>
+    <details class="border-b">
+      <summary class="px-4 py-2 bg-red-100 cursor-pointer hover:bg-red-200 text-red-800 font-medium">+ 出金追加</summary>
+      <div class="p-4 bg-red-50">
+        <%= form_with url: cash_flow_entries_path, method: :post, scope: :cash_flow_entry, data: { turbo: false }, class: "grid grid-cols-1 md:grid-cols-5 gap-3 items-end" do |f| %>
+          <%= f.hidden_field :entry_type, value: "expense" %>
+          <%= f.hidden_field :expected_date, value: @date %>
+          <%= f.hidden_field :status, value: "expected" %>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">科目</label>
+            <%= f.select :category,
+                CashFlowEntry::EXPENSE_CATEGORIES.map { |c| [CashFlowEntry::CATEGORY_LABELS[c], c] },
+                {}, class: "w-full border rounded px-2 py-1.5 text-sm" %>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">金額</label>
+            <%= f.number_field :expected_amount, class: "w-full border rounded px-2 py-1.5 text-sm", min: 0, required: true %>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">支払先</label>
+            <%= f.text_field :subcategory, class: "w-full border rounded px-2 py-1.5 text-sm", placeholder: "支払先名" %>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">備考</label>
+            <%= f.text_field :notes, class: "w-full border rounded px-2 py-1.5 text-sm", placeholder: "備考" %>
+          </div>
+          <div>
+            <%= f.submit "追加", class: "w-full px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 cursor-pointer" %>
+          </div>
+        <% end %>
+      </div>
+    </details>
 
     <% if @expense_entries.any? %>
       <table class="w-full">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">科目</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">支払先</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">メモ</th>
-            <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
-            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">操作</th>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">科目</th>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">支払先</th>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">備考</th>
+            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">金額</th>
+            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">操作</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
@@ -180,23 +177,27 @@
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-3 text-sm"><%= entry.category_label %></td>
               <td class="px-4 py-3 text-sm"><%= entry.partner&.name || entry.subcategory || "-" %></td>
-              <td class="px-4 py-3 text-sm text-gray-500"><%= entry.notes || "-" %></td>
+              <td class="px-4 py-3 text-sm text-gray-500"><%= entry.notes.present? ? entry.notes : "-" %></td>
               <td class="px-4 py-3 text-sm text-right font-bold <%= entry.status == 'expected' ? 'text-red-600' : 'text-gray-900' %>">
                 <%= number_with_delimiter(entry.expected_amount.to_i) %>円
                 <% if entry.status == 'expected' %><span class="text-xs">（概算）</span><% end %>
               </td>
-              <td class="px-4 py-3 text-center space-x-1">
-                <% if entry.status == "expected" %>
-                  <%= button_to "確定", confirm_cash_flow_entry_path(entry), method: :patch,
-                      class: "px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700" %>
-                <% else %>
-                  <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">確定済</span>
-                <% end %>
-                <% unless entry.source.present? %>
-                  <%= button_to "削除", cash_flow_entry_path(entry), method: :delete,
-                      class: "px-2 py-1 bg-red-100 text-red-600 text-xs rounded hover:bg-red-200",
-                      data: { turbo_confirm: "削除しますか？" } %>
-                <% end %>
+              <td class="px-4 py-3 text-center">
+                <div class="flex gap-1 justify-center flex-wrap">
+                  <% if entry.status == "expected" %>
+                    <%= form_with url: confirm_cash_flow_entry_path(entry, return_to: request.fullpath), method: :patch, data: { turbo: false }, class: "inline" do %>
+                      <button type="submit" class="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">確定</button>
+                    <% end %>
+                  <% else %>
+                    <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">確定済</span>
+                  <% end %>
+                  <%= link_to "編集", edit_cash_flow_entry_path(entry, return_to: request.fullpath), class: "px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300", data: { turbo: false } %>
+                  <% unless entry.source.present? %>
+                    <%= form_with url: cash_flow_entry_path(entry), method: :delete, data: { turbo: false, turbo_confirm: "削除しますか？" }, class: "inline" do %>
+                      <button type="submit" class="px-2 py-1 bg-red-100 text-red-600 text-xs rounded hover:bg-red-200">削除</button>
+                    <% end %>
+                  <% end %>
+                </div>
               </td>
             </tr>
           <% end %>
@@ -208,8 +209,8 @@
   </div>
 
   <!-- 凡例 -->
-  <div class="mt-4 p-3 bg-gray-50 rounded text-sm text-gray-600">
-    <span class="text-red-600 font-medium">赤字</span>＝概算（未確定）
-    <span class="text-gray-900 font-medium">黒字</span>＝確定済
+  <div class="mt-4 p-3 bg-gray-50 rounded text-sm text-gray-600 flex flex-wrap gap-4">
+    <span><span class="text-red-600 font-medium">赤字</span>＝概算（未確定）</span>
+    <span><span class="text-gray-900 font-medium">黒字</span>＝確定済</span>
   </div>
 </div>

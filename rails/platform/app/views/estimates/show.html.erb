@@ -26,7 +26,7 @@
         </svg>
         PDF出力
       <% end %>
-      <%= link_to "編集", edit_project_estimate_path(@project, @estimate), class: "btn-secondary" %>
+      <%= link_to "編集", edit_project_estimate_path(@project, @estimate), class: "btn-secondary", data: { turbo: false } %>
       <%= link_to "一覧へ戻る", project_estimates_path(@project), class: "btn-secondary" %>
     </div>
   </div>

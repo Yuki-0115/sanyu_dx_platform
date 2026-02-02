@@ -9,14 +9,14 @@
             </p>
           <% end %>
         </div>
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-2" data-controller="redirect-select" data-redirect-select-url-template-value="/projects/:id/invoices/new">
           <%= select_tag :project_id,
               options_from_collection_for_select(@projects, :id, :name),
               include_blank: "案件を選択",
-              id: "invoice_project_select",
-              class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+              class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+              data: { redirect_select_target: "select" } %>
           <button type="button"
-              onclick="var pid = document.getElementById('invoice_project_select').value; if(pid) { window.location.href = '/projects/' + pid + '/invoices/new'; } else { alert('案件を選択してください'); }"
+              data-action="click->redirect-select#redirect"
               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
             新規請求書
           </button>

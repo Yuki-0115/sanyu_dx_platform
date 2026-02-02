@@ -12,7 +12,7 @@
   </div>
 
   <div class="bg-white rounded-lg shadow p-6">
-    <%= form_with model: @expense, url: expense_reports_path, class: "space-y-6" do |f| %>
+    <%= form_with model: @expense, url: expense_reports_path, class: "space-y-6", data: { controller: "conditional-field" } do |f| %>
       <% if @expense.errors.any? %>
         <div class="bg-red-50 border border-red-200 rounded p-4">
           <p class="text-red-800 font-medium">入力エラーがあります</p>
@@ -75,7 +75,8 @@
                 ["掛け払い", "credit"]
               ], @expense.payment_method),
               { include_blank: "-- 選択してください --" },
-              class: "w-full border rounded px-3 py-2", required: true %>
+              class: "w-full border rounded px-3 py-2", required: true,
+              data: { conditional_field_target: "trigger", action: "change->conditional-field#update" } %>
       </div>
 
       <!-- 支払先 -->
@@ -86,7 +87,7 @@
       </div>
 
       <!-- 仕入先（掛け払いの場合） -->
-      <div id="supplier-field" class="hidden">
+      <div data-conditional-field-target="field" data-show-when="credit" class="hidden">
         <label class="block text-sm font-medium text-gray-700 mb-2">仕入先（掛け払いの場合）</label>
         <%= f.select :supplier_id,
               options_for_select(@partners.map { |p| [p.name, p.id] }, @expense.supplier_id),
@@ -140,14 +141,3 @@
   </div>
 </div>
 
-<script>
-  // 支払方法によって仕入先フィールドの表示/非表示を切り替え
-  document.querySelector('select[name="expense[payment_method]"]').addEventListener('change', function() {
-    const supplierField = document.getElementById('supplier-field');
-    if (this.value === 'credit') {
-      supplierField.classList.remove('hidden');
-    } else {
-      supplierField.classList.add('hidden');
-    }
-  });
-</script>

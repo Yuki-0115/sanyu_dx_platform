@@ -8,18 +8,19 @@
         <%= cat_f.hidden_field :sort_order, class: "category-sort-order" %>
         <%= cat_f.text_field :name,
             class: "category-name-input font-medium text-blue-900 bg-transparent border-b border-blue-300 focus:border-blue-500 focus:outline-none px-1 w-48",
-            placeholder: "工種名を入力" %>
+            placeholder: "工種名を入力",
+            data: { action: "input->estimate-items#updateCategoryName" } %>
         <span class="text-blue-700">一式</span>
       </div>
       <div class="flex items-center gap-4">
         <span class="text-blue-700 font-medium category-subtotal">
           <%= number_to_currency(category.subtotal, unit: "¥", precision: 0) %>
         </span>
-        <button type="button" class="text-green-600 hover:text-green-800 text-sm font-medium go-to-budget-btn"
-                onclick="window.switchEstimateTab('budget')">
+        <button type="button" class="text-green-600 hover:text-green-800 text-sm font-medium"
+                data-action="click->estimate-items#goToBudget">
           予算作成 →
         </button>
-        <button type="button" class="text-red-500 hover:text-red-700 remove-category-btn">
+        <button type="button" class="text-red-500 hover:text-red-700" data-action="click->estimate-items#removeCategory">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
@@ -31,7 +32,8 @@
       <div class="flex items-center gap-1">
         <span class="text-gray-600">諸経費</span>
         <%= cat_f.number_field :overhead_rate, step: 0.1, min: 0, max: 100,
-            class: "w-16 rounded border-gray-300 text-sm text-right category-overhead-rate" %>
+            class: "w-16 rounded border-gray-300 text-sm text-right category-overhead-rate",
+            data: { action: "input->estimate-items#calculateRates" } %>
         <span class="text-gray-500">%</span>
         <span class="text-gray-600 ml-2 category-overhead-cost">
           <%= number_to_currency(category.overhead_cost, unit: "¥", precision: 0) %>
@@ -40,7 +42,8 @@
       <div class="flex items-center gap-1">
         <span class="text-gray-600">法定福利費</span>
         <%= cat_f.number_field :welfare_rate, step: 0.1, min: 0, max: 100,
-            class: "w-16 rounded border-gray-300 text-sm text-right category-welfare-rate" %>
+            class: "w-16 rounded border-gray-300 text-sm text-right category-welfare-rate",
+            data: { action: "input->estimate-items#calculateRates" } %>
         <span class="text-gray-500">%</span>
         <span class="text-gray-600 ml-2 category-welfare-cost">
           <%= number_to_currency(category.welfare_cost, unit: "¥", precision: 0) %>
@@ -88,7 +91,8 @@
             <td class="px-1 py-1">
               <input type="number" name="estimate[estimate_items_attributes][<%= global_item_index %>][quantity]"
                      value="<%= item.quantity %>"
-                     step="0.01" class="block w-full rounded border-gray-300 text-sm text-right estimate-qty">
+                     step="0.01" class="block w-full rounded border-gray-300 text-sm text-right estimate-qty"
+                     data-action="input->estimate-items#calculateRow">
             </td>
             <td class="px-1 py-1">
               <select name="estimate[estimate_items_attributes][<%= global_item_index %>][unit]"
@@ -102,7 +106,8 @@
             <td class="px-1 py-1">
               <input type="number" name="estimate[estimate_items_attributes][<%= global_item_index %>][unit_price]"
                      value="<%= item.unit_price %>"
-                     step="1" class="block w-full rounded border-gray-300 text-sm text-right estimate-price">
+                     step="1" class="block w-full rounded border-gray-300 text-sm text-right estimate-price"
+                     data-action="input->estimate-items#calculateRow">
             </td>
             <td class="px-1 py-1 text-right font-medium estimate-amount">
               <% if item.amount.to_i > 0 %>
@@ -118,7 +123,7 @@
             </td>
             <td class="px-1 py-1">
               <input type="hidden" name="estimate[estimate_items_attributes][<%= global_item_index %>][sort_order]" value="<%= item.sort_order || item_idx %>">
-              <button type="button" class="text-red-500 hover:text-red-700 remove-item-btn">
+              <button type="button" class="text-red-500 hover:text-red-700" data-action="click->estimate-items#removeItem">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
@@ -128,7 +133,7 @@
         <% end %>
       </tbody>
     </table>
-    <button type="button" class="add-item-btn mt-2 text-sm text-blue-600 hover:text-blue-800">
+    <button type="button" class="mt-2 text-sm text-blue-600 hover:text-blue-800" data-action="click->estimate-items#addItem">
       + 項目追加
     </button>
   </div>

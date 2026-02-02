@@ -8,3 +8,28 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+/* タブナビゲーションスタイル */
+.tab-link {
+  padding-bottom: 1rem;
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.tab-active {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.tab-inactive {
+  border-color: transparent;
+  color: #6b7280;
+}
+
+.tab-inactive:hover {
+  border-color: #d1d5db;
+  color: #374151;
+}

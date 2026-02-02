@@ -190,6 +190,65 @@ brakeman -A
 
 ---
 
+## JavaScript開発ルール
+
+### 絶対ルール：インラインスクリプト禁止
+
+以下は**全て禁止**：
+
+```erb
+<!-- ❌ 禁止：インラインスクリプト -->
+<script>
+  document.querySelector('.btn').addEventListener('click', ...);
+</script>
+
+<!-- ❌ 禁止：onclickなどのイベントハンドラ属性 -->
+<button onclick="doSomething()">実行</button>
+
+<!-- ❌ 禁止：onchange, onsubmit, onload等も全て -->
+<form onsubmit="return validate()">
+```
+
+### 正しい書き方：Stimulusコントローラー
+
+```bash
+# コントローラー生成
+bin/rails generate stimulus example
+```
+
+```javascript
+// app/javascript/controllers/example_controller.js
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["output"]
+
+  greet() {
+    this.outputTarget.textContent = "Hello!"
+  }
+}
+```
+
+```erb
+<%# ビューでの使用 %>
+<div data-controller="example">
+  <button data-action="click->example#greet">挨拶</button>
+  <span data-example-target="output"></span>
+</div>
+```
+
+### 理由
+
+- CSP（Content Security Policy）でインラインスクリプトをブロックしている
+- セキュリティ強化のため`unsafe-inline`は使用しない
+- Hotwire/Stimulus採用プロジェクトの標準アプローチ
+
+### 参考
+
+- 詳細な経緯：`docs/adr/002-stimulus-mandatory.md`
+
+---
+
 ## Git運用
 
 ### commitタイミング

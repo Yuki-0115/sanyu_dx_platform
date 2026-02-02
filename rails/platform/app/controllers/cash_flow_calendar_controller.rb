@@ -2,13 +2,16 @@
 
 class CashFlowCalendarController < ApplicationController
   authorize_with :cash_flow
-  before_action :authorize_edit!, only: %i[confirm update_entry generate_entries create_entry destroy_entry]
+  before_action :authorize_edit!, only: %i[confirm edit_entry update_entry generate_entries create_entry destroy_entry]
 
   def index
     @current_month = params[:month].present? ? Date.parse("#{params[:month]}-01") : Date.current.beginning_of_month
     @start_date = @current_month.beginning_of_month
     @end_date = @current_month.end_of_month
     @dates = (@start_date..@end_date).to_a
+
+    # 固定費スケジュールから自動生成（まだ存在しない場合のみ）
+    generate_fixed_expenses_for_month(@current_month.year, @current_month.month)
 
     # Load all entries for the month
     # Note: :source is polymorphic and cannot be eagerly loaded
@@ -57,18 +60,30 @@ class CashFlowCalendarController < ApplicationController
       date: params[:expected_date].present? ? Date.parse(params[:expected_date]) : nil,
       notes: params[:notes]
     )
-    respond_to do |format|
-      format.html { redirect_back fallback_location: cash_flow_calendar_path, notice: "確認済みにしました" }
-      format.turbo_stream
+
+    # return_toパラメータがあればそこに戻る（カレンダーページ用）
+    if params[:return_to].present?
+      redirect_to params[:return_to], notice: "確定しました"
+    else
+      redirect_to cash_flow_date_path(date: @entry.expected_date), notice: "確定しました"
     end
+  rescue StandardError => e
+    redirect_back fallback_location: cash_flow_calendar_path, alert: "確定に失敗しました: #{e.message}"
+  end
+
+  def edit_entry
+    @entry = CashFlowEntry.find(params[:id])
+    @return_to = params[:return_to]
   end
 
   def update_entry
     @entry = CashFlowEntry.find(params[:id])
+    return_to = params[:return_to].presence || cash_flow_date_path(date: @entry.expected_date)
+
     if @entry.update(entry_params.merge(manual_override: true, override_reason: params[:reason]))
-      redirect_back fallback_location: cash_flow_calendar_path, notice: "更新しました"
+      redirect_to return_to, notice: "更新しました"
     else
-      redirect_back fallback_location: cash_flow_calendar_path, alert: "更新に失敗しました"
+      redirect_to return_to, alert: "更新に失敗しました: #{@entry.errors.full_messages.join(', ')}"
     end
   end
 
@@ -119,10 +134,12 @@ class CashFlowCalendarController < ApplicationController
   end
 
   def new_entry_params
-    params.require(:cash_flow_entry).permit(
-      :entry_type, :category, :expected_date, :expected_amount, :notes, :subcategory,
-      :client_id, :partner_id, :project_id, :status
-    )
+    permitted = %i[entry_type category expected_date expected_amount notes subcategory client_id partner_id project_id status]
+    if params[:cash_flow_entry].present?
+      params.require(:cash_flow_entry).permit(permitted)
+    else
+      params.permit(permitted)
+    end
   end
 
   def calculate_opening_balance(date)
@@ -147,5 +164,12 @@ class CashFlowCalendarController < ApplicationController
     return if current_employee.can_edit?(:cash_flow)
 
     redirect_to cash_flow_calendar_path, alert: "編集権限がありません"
+  end
+
+  # 固定費スケジュールから該当月のエントリを自動生成
+  def generate_fixed_expenses_for_month(year, month)
+    FixedExpenseSchedule.active.find_each do |schedule|
+      schedule.generate_cash_flow_entry_for(year, month)
+    end
   end
 end

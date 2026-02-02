@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_02_052347) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_02_064849) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -402,18 +402,34 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_02_052347) do
     t.index ["supplier_id"], name: "index_expenses_on_supplier_id"
   end
 
+  create_table "fixed_expense_monthly_amounts", force: :cascade do |t|
+    t.bigint "fixed_expense_schedule_id", null: false
+    t.integer "year", null: false
+    t.integer "month", null: false
+    t.decimal "amount", precision: 15, scale: 2, null: false
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fixed_expense_schedule_id", "year", "month"], name: "idx_fixed_expense_monthly_amounts_unique", unique: true
+    t.index ["fixed_expense_schedule_id"], name: "idx_on_fixed_expense_schedule_id_5a5b8eac48"
+  end
+
   create_table "fixed_expense_schedules", force: :cascade do |t|
     t.string "name", null: false
     t.string "category", null: false
     t.integer "payment_day", null: false
     t.decimal "amount", precision: 15, scale: 2
-    t.boolean "is_variable", default: false
+    t.boolean "amount_variable", default: false
     t.boolean "active", default: true
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "payment_type", default: "fixed", null: false
+    t.integer "one_time_year"
+    t.integer "one_time_month"
     t.index ["active"], name: "index_fixed_expense_schedules_on_active"
     t.index ["category"], name: "index_fixed_expense_schedules_on_category"
+    t.index ["payment_type"], name: "index_fixed_expense_schedules_on_payment_type"
   end
 
   create_table "invoice_items", force: :cascade do |t|
@@ -761,6 +777,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_02_052347) do
   add_foreign_key "expenses", "employees", column: "processed_by_id"
   add_foreign_key "expenses", "partners", column: "supplier_id"
   add_foreign_key "expenses", "projects"
+  add_foreign_key "fixed_expense_monthly_amounts", "fixed_expense_schedules"
   add_foreign_key "invoice_items", "invoices"
   add_foreign_key "invoices", "payment_terms"
   add_foreign_key "invoices", "projects"
