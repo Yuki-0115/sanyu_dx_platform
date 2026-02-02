@@ -4,6 +4,9 @@
       <h1 class="text-2xl font-bold">立替精算管理</h1>
       <p class="text-gray-500">従業員の立替経費を確認・精算</p>
     </div>
+    <div class="flex gap-2">
+      <%= link_to "精算済み一覧", reimbursed_accounting_reimbursements_path, class: "px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" %>
+    </div>
   </div>
 
   <!-- サマリー -->
@@ -18,12 +21,13 @@
       <div class="text-sm text-gray-500">未精算件数</div>
       <div class="text-2xl font-bold text-orange-600"><%= @pending_expenses.count %>件</div>
     </div>
-    <div class="bg-white rounded-lg shadow p-4">
+    <%= link_to reimbursed_accounting_reimbursements_path, class: "bg-white rounded-lg shadow p-4 hover:bg-green-50 transition block" do %>
       <div class="text-sm text-gray-500">今月精算済み</div>
       <div class="text-2xl font-bold text-green-600">
         <%= number_with_delimiter(@reimbursed_this_month.to_i) %>円
       </div>
-    </div>
+      <div class="text-xs text-gray-400 mt-1">クリックで詳細</div>
+    <% end %>
   </div>
 
   <!-- 個人別未精算額 -->

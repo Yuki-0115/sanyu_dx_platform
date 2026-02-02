@@ -206,6 +206,7 @@ Rails.application.routes.draw do
       end
       collection do
         post :bulk_reimburse
+        get :reimbursed
       end
     end
   end

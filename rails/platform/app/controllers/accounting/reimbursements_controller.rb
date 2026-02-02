@@ -81,6 +81,37 @@ module Accounting
                   notice: "#{employee.name}の立替経費#{count}件（¥#{total.to_i.to_fs(:delimited)}）を精算済みにしました"
     end
 
+    # 精算済み一覧
+    def reimbursed
+      @year = (params[:year] || Date.current.year).to_i
+      @month = (params[:month] || Date.current.month).to_i
+      start_date = Date.new(@year, @month, 1)
+      end_date = start_date.end_of_month
+
+      @expenses = Expense
+        .where(reimbursed: true)
+        .where(reimbursed_at: start_date.beginning_of_day..end_date.end_of_day)
+        .includes(:payer, :project, :daily_report)
+        .order(reimbursed_at: :desc)
+
+      # 従業員フィルター
+      if params[:employee_id].present?
+        @expenses = @expenses.where(payer_id: params[:employee_id])
+        @selected_employee = Employee.find_by(id: params[:employee_id])
+      end
+
+      @total_amount = @expenses.sum(:amount)
+      @expenses_by_employee = @expenses.group_by(&:payer)
+        .transform_values { |exps| exps.sum(&:amount) }
+        .sort_by { |_, amount| -amount }
+
+      @employees_with_reimbursements = Employee
+        .joins(:expenses_as_payer)
+        .where(expenses: { reimbursed: true })
+        .distinct
+        .order(:name)
+    end
+
     private
 
     def authorize_accounting_access
