@@ -55,7 +55,7 @@
       </div>
     </div>
 
-    <!-- テンプレート（非表示、JSで使用） -->
+    <!-- デスクトップ用テンプレート（非表示、JSで使用） -->
     <template data-nested-form-target="template">
       <tr data-nested-form-target="item" data-controller="attendance-time">
         <td class="px-3 py-2">
@@ -132,7 +132,112 @@
       </tr>
     </template>
 
-    <div class="overflow-x-auto">
+    <!-- モバイル用テンプレート（非表示、JSで使用） -->
+    <template data-nested-form-target="mobileTemplate">
+      <div class="border border-blue-200 rounded-lg p-4 bg-blue-50" data-nested-form-target="item" data-controller="attendance-time">
+        <!-- 氏名と削除ボタン -->
+        <div class="flex justify-between items-start mb-3">
+          <div class="flex-1 mr-2">
+            <label class="block text-xs font-medium text-gray-600 mb-1">氏名</label>
+            <select name="daily_report[attendances_attributes][NEW_RECORD][employee_id]"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2" required>
+              <option value="">選択</option>
+              <optgroup label="正社員">
+                <% Employee.where(employment_type: 'regular').order(:name).each do |emp| %>
+                  <option value="<%= emp.id %>"><%= emp.name %></option>
+                <% end %>
+              </optgroup>
+              <% Partner.includes(:employees).where(has_temporary_employees: true).order(:name).each do |partner| %>
+                <optgroup label="仮社員（<%= partner.name %>）">
+                  <% partner.employees.where(employment_type: 'temporary').order(:name).each do |emp| %>
+                    <option value="<%= emp.id %>"><%= emp.name %></option>
+                  <% end %>
+                </optgroup>
+              <% end %>
+            </select>
+          </div>
+          <button type="button" data-action="nested-form#remove"
+              class="text-red-600 hover:text-red-800 p-2 mt-5">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 区分・出勤タイプ -->
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">区分</label>
+            <select name="daily_report[attendances_attributes][NEW_RECORD][work_category]"
+                data-attendance-time-target="workCategory"
+                data-action="change->attendance-time#calculate"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2">
+              <option value="work">出勤</option>
+              <option value="day_off">公休</option>
+              <option value="paid_leave">有給</option>
+              <option value="absence">欠勤</option>
+              <option value="substitute_holiday">振休</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">出勤</label>
+            <select name="daily_report[attendances_attributes][NEW_RECORD][attendance_type]"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2">
+              <option value="full">1日</option>
+              <option value="half">半日</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 出社・退社・休憩 -->
+        <div class="grid grid-cols-3 gap-2 mb-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">出社</label>
+            <input type="time" name="daily_report[attendances_attributes][NEW_RECORD][start_time]"
+                value="08:00"
+                data-attendance-time-target="startTime"
+                data-action="change->attendance-time#calculate"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">退社</label>
+            <input type="time" name="daily_report[attendances_attributes][NEW_RECORD][end_time]"
+                value="17:00"
+                data-attendance-time-target="endTime"
+                data-action="change->attendance-time#calculate"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">休憩</label>
+            <input type="number" name="daily_report[attendances_attributes][NEW_RECORD][break_minutes]"
+                value="60" min="0" step="15" placeholder="分"
+                data-attendance-time-target="breakMinutes"
+                data-action="change->attendance-time#calculate"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2">
+          </div>
+        </div>
+
+        <!-- 現場メモ -->
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">現場メモ</label>
+          <input type="text" name="daily_report[attendances_attributes][NEW_RECORD][site_note]"
+              placeholder="現場名など"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2">
+        </div>
+      </div>
+    </template>
+
+    <%
+      # グループ化された社員選択肢を構築
+      grouped_employees = []
+      grouped_employees << ['正社員', Employee.where(employment_type: 'regular').order(:name).map { |e| [e.name, e.id] }]
+      Partner.includes(:employees).where(has_temporary_employees: true).order(:name).each do |partner|
+        grouped_employees << ["仮社員（#{partner.name}）", partner.employees.where(employment_type: 'temporary').order(:name).map { |e| [e.name, e.id] }]
+      end
+    %>
+
+    <!-- デスクトップ用テーブル -->
+    <div class="hidden lg:block overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
@@ -147,14 +252,6 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200" data-nested-form-target="container">
-          <%
-            # グループ化された社員選択肢を構築
-            grouped_employees = []
-            grouped_employees << ['正社員', Employee.where(employment_type: 'regular').order(:name).map { |e| [e.name, e.id] }]
-            Partner.includes(:employees).where(has_temporary_employees: true).order(:name).each do |partner|
-              grouped_employees << ["仮社員（#{partner.name}）", partner.employees.where(employment_type: 'temporary').order(:name).map { |e| [e.name, e.id] }]
-            end
-          %>
           <%= f.fields_for :attendances do |af| %>
             <% next if af.object.employee_id.blank? %>
             <tr data-nested-form-target="item" data-controller="attendance-time">
@@ -210,6 +307,82 @@
           <% end %>
         </tbody>
       </table>
+    </div>
+
+    <!-- モバイル用カードレイアウト -->
+    <div class="lg:hidden space-y-3" data-nested-form-target="mobileContainer">
+      <%= f.fields_for :attendances do |af| %>
+        <% next if af.object.employee_id.blank? %>
+        <div class="border border-blue-200 rounded-lg p-4 bg-blue-50" data-nested-form-target="item" data-controller="attendance-time">
+          <%= af.hidden_field :id %>
+          <%= af.hidden_field :_destroy %>
+
+          <!-- 氏名と削除ボタン -->
+          <div class="flex justify-between items-start mb-3">
+            <div class="flex-1 mr-2">
+              <label class="block text-xs font-medium text-gray-600 mb-1">氏名</label>
+              <%= af.select :employee_id,
+                  grouped_options_for_select(grouped_employees, af.object.employee_id),
+                  { include_blank: "選択" },
+                  { class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2", required: true } %>
+            </div>
+            <button type="button" data-action="nested-form#remove"
+                class="text-red-600 hover:text-red-800 p-2 mt-5">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- 区分・出勤タイプ -->
+          <div class="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">区分</label>
+              <%= af.select :work_category,
+                  [["出勤", "work"], ["公休", "day_off"], ["有給", "paid_leave"], ["欠勤", "absence"], ["振休", "substitute_holiday"]],
+                  {},
+                  { class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2",
+                    data: { attendance_time_target: "workCategory", action: "change->attendance-time#calculate" } } %>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">出勤</label>
+              <%= af.select :attendance_type,
+                  [["1日", "full"], ["半日", "half"]],
+                  {},
+                  { class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2" } %>
+            </div>
+          </div>
+
+          <!-- 出社・退社・休憩 -->
+          <div class="grid grid-cols-3 gap-2 mb-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">出社</label>
+              <%= af.time_field :start_time,
+                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2",
+                  data: { attendance_time_target: "startTime", action: "change->attendance-time#calculate" } %>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">退社</label>
+              <%= af.time_field :end_time,
+                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2",
+                  data: { attendance_time_target: "endTime", action: "change->attendance-time#calculate" } %>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">休憩</label>
+              <%= af.number_field :break_minutes, min: 0, step: 15, placeholder: "分",
+                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2",
+                  data: { attendance_time_target: "breakMinutes", action: "change->attendance-time#calculate" } %>
+            </div>
+          </div>
+
+          <!-- 現場メモ -->
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">現場メモ</label>
+            <%= af.text_field :site_note, placeholder: "現場名など",
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2" %>
+          </div>
+        </div>
+      <% end %>
     </div>
 
     <% if daily_report.attendances.select { |a| a.employee_id.present? }.empty? %>

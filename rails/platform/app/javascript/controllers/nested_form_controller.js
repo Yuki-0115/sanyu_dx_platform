@@ -2,16 +2,26 @@ import { Controller } from "@hotwired/stimulus"
 
 // 出面一括入力など、ネストされたフォームの動的追加・削除を管理
 export default class extends Controller {
-  static targets = ["template", "container", "item"]
+  static targets = ["template", "mobileTemplate", "container", "mobileContainer", "item"]
 
   add(event) {
     event.preventDefault()
 
-    const template = this.templateTarget.innerHTML
-    const newIndex = new Date().getTime()
-    const newRow = template.replace(/NEW_RECORD/g, newIndex)
+    const isMobile = window.innerWidth < 1024
 
-    this.containerTarget.insertAdjacentHTML("beforeend", newRow)
+    // モバイル用テンプレートとコンテナがある場合
+    if (isMobile && this.hasMobileTemplateTarget && this.hasMobileContainerTarget) {
+      const template = this.mobileTemplateTarget.innerHTML
+      const newIndex = new Date().getTime()
+      const newRow = template.replace(/NEW_RECORD/g, newIndex)
+      this.mobileContainerTarget.insertAdjacentHTML("beforeend", newRow)
+    } else {
+      // デスクトップ用（従来の動作）
+      const template = this.templateTarget.innerHTML
+      const newIndex = new Date().getTime()
+      const newRow = template.replace(/NEW_RECORD/g, newIndex)
+      this.containerTarget.insertAdjacentHTML("beforeend", newRow)
+    }
   }
 
   remove(event) {

@@ -22,13 +22,20 @@ class FixedExpenseSchedule < ApplicationRecord
   scope :by_category, ->(cat) { where(category: cat) }
 
   # Calculate payment date for a given month
-  def payment_date_for_month(year, month)
+  # adjust_for_holiday: true の場合、土日祝日は前営業日に調整
+  def payment_date_for_month(year, month, adjust_for_holiday: false)
     base = Date.new(year, month, 1)
-    if payment_day.zero?
-      base.end_of_month
+    raw_date = if payment_day.zero?
+                 base.end_of_month
+               else
+                 day = [payment_day, base.end_of_month.day].min
+                 Date.new(year, month, day)
+               end
+
+    if adjust_for_holiday
+      PaymentTerm.previous_business_day(raw_date)
     else
-      day = [payment_day, base.end_of_month.day].min
-      Date.new(year, month, day)
+      raw_date
     end
   end
 

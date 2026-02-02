@@ -24,9 +24,9 @@ class CashFlowEntryGenerator
 
       client = invoice.project&.client
       term = invoice.payment_term || client&.default_payment_term
-      expected_date = term&.calculate_payment_date(invoice.issued_date || Date.current) ||
-                      invoice.due_date ||
-                      (invoice.issued_date || Date.current) + 1.month
+      # 入金は土日祝日の翌営業日に調整
+      expected_date = term&.calculate_payment_date(invoice.issued_date || Date.current, adjust_for: :income) ||
+                      PaymentTerm.next_business_day(invoice.due_date || (invoice.issued_date || Date.current) + 1.month)
 
       CashFlowEntry.create!(
         entry_type: "income",
@@ -47,7 +47,8 @@ class CashFlowEntryGenerator
       next unless term
 
       # Calculate payment date for outsourcing costs incurred this month
-      expected_date = term.calculate_payment_date(@end_date)
+      # 外注費は土日祝日の前営業日に調整
+      expected_date = term.calculate_payment_date(@end_date, adjust_for: :expense)
 
       # Get total outsourcing costs for this partner this month
       # from confirmed monthly_outsourcing_costs or daily_report outsourcing_entries
@@ -71,7 +72,8 @@ class CashFlowEntryGenerator
 
   def generate_fixed_expenses
     FixedExpenseSchedule.active.find_each do |schedule|
-      payment_date = schedule.payment_date_for_month(@year, @month)
+      # 固定費は土日祝日の前営業日に調整
+      payment_date = schedule.payment_date_for_month(@year, @month, adjust_for_holiday: true)
 
       entry = CashFlowEntry.find_or_initialize_by(
         entry_type: "expense",

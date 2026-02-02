@@ -95,7 +95,9 @@ class Invoice < ApplicationRecord
 
     client = project&.client
     term = payment_term || client&.default_payment_term
-    calc_expected_date = term&.calculate_payment_date(issued_date || Date.current) || due_date || (Date.current + 1.month)
+    # 入金日は土日祝日の翌営業日に調整
+    calc_expected_date = term&.calculate_payment_date(issued_date || Date.current, adjust_for: :income) ||
+                         PaymentTerm.next_business_day(due_date || (Date.current + 1.month))
 
     # expected_payment_dateを更新
     update_column(:expected_payment_date, calc_expected_date) if expected_payment_date != calc_expected_date
