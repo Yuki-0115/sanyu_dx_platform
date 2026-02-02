@@ -63,9 +63,18 @@ gem "devise", "~> 4.9"
 
 gem "pagy", "~> 43.2"
 
-gem "rspec-rails", "~> 8.0", :groups => [:development, :test]
+group :development, :test do
+  gem "rspec-rails", "~> 8.0"
+  gem "factory_bot_rails", "~> 6.5"
+  gem "faker", "~> 3.4"
+end
 
-gem "factory_bot_rails", "~> 6.5", :groups => [:development, :test]
+group :test do
+  gem "shoulda-matchers", "~> 6.0"
+  gem "database_cleaner-active_record", "~> 2.2"
+  gem "simplecov", require: false
+  gem "rspec_junit_formatter"
+end
 
 # Japanese holidays
 gem "holiday_jp"

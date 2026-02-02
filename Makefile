@@ -111,6 +111,29 @@ platform-test: ## Platform: テスト実行
 	docker compose exec platform bundle exec rspec
 
 # ===========================================
+# テスト & 品質
+# ===========================================
+
+.PHONY: test
+test: ## テスト実行（RSpec）
+	docker compose exec platform bundle exec rspec
+
+.PHONY: lint
+lint: ## RuboCop実行
+	docker compose exec platform bundle exec rubocop
+
+.PHONY: lint-fix
+lint-fix: ## RuboCop自動修正
+	docker compose exec platform bundle exec rubocop -a
+
+.PHONY: security
+security: ## Brakemanセキュリティチェック
+	docker compose exec platform bundle exec brakeman -q
+
+.PHONY: quality
+quality: lint security test ## 全品質チェック
+
+# ===========================================
 # Worker Web（作業員向けWeb）
 # ===========================================
 

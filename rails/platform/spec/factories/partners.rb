@@ -1,11 +1,13 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :partner do
-    tenant { nil }
-    code { "MyString" }
-    name { "MyString" }
+    sequence(:name) { |n| "協力会社 #{n}" }
     has_temporary_employees { false }
-    offset_rule { "MyString" }
-    closing_day { 1 }
-    carryover_balance { "9.99" }
+    carryover_balance { 0 }
+
+    trait :with_temporary_employees do
+      has_temporary_employees { true }
+    end
   end
 end

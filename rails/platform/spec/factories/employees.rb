@@ -1,14 +1,36 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :employee do
-    tenant { nil }
-    partner { nil }
-    code { "MyString" }
-    name { "MyString" }
-    name_kana { "MyString" }
-    email { "MyString" }
-    phone { "MyString" }
-    employment_type { "MyString" }
-    hire_date { "2026-01-15" }
-    role { "MyString" }
+    sequence(:email) { |n| "employee#{n}@example.com" }
+    password { "password123" }
+    password_confirmation { "password123" }
+    sequence(:name) { |n| "社員 #{n}" }
+    name_kana { "シャイン" }
+    phone { "090-1234-5678" }
+    employment_type { "regular" }
+    role { "worker" }
+    hire_date { Date.current - 1.year }
+
+    trait :admin do
+      role { "admin" }
+    end
+
+    trait :management do
+      role { "management" }
+    end
+
+    trait :accounting do
+      role { "accounting" }
+    end
+
+    trait :construction do
+      role { "construction" }
+    end
+
+    trait :temporary do
+      employment_type { "temporary" }
+      association :partner
+    end
   end
 end

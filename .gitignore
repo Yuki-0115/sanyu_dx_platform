@@ -39,3 +39,4 @@ logs/
 service_account*.json
 secrets/
 rclone.conf
+rails/platform/coverage/
