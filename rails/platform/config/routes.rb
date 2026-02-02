@@ -161,8 +161,10 @@ Rails.application.routes.draw do
   get "cash_flow_calendar/:date", to: "cash_flow_calendar#show", as: :cash_flow_date,
       constraints: { date: /\d{4}-\d{2}-\d{2}/ }
   post "cash_flow_calendar/generate", to: "cash_flow_calendar#generate_entries", as: :generate_cash_flow_entries
+  post "cash_flow_entries", to: "cash_flow_calendar#create_entry", as: :cash_flow_entries
   patch "cash_flow_entries/:id/confirm", to: "cash_flow_calendar#confirm", as: :confirm_cash_flow_entry
   patch "cash_flow_entries/:id", to: "cash_flow_calendar#update_entry", as: :cash_flow_entry
+  delete "cash_flow_entries/:id", to: "cash_flow_calendar#destroy_entry"
 
   # マスター管理
   namespace :master do

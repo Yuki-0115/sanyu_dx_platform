@@ -3,12 +3,23 @@
 class FixedExpenseSchedule < ApplicationRecord
   CATEGORIES = {
     "salary" => "給与",
-    "social_insurance" => "社会保険料",
-    "lease" => "リース料",
-    "insurance" => "保険料",
+    "social_insurance" => "社会保険",
+    "tax" => "税金",
     "rent" => "家賃",
+    "lease" => "リース料",
+    "insurance" => "保険",
+    "vehicle" => "ガソリン・車両費",
+    "phone" => "ドコモ・電話代",
     "utility" => "水道光熱費",
-    "other" => "その他"
+    "card" => "カード",
+    "fees" => "手数料",
+    "machine_rental" => "機械レンタル・相殺",
+    "advisory_fee" => "顧問料",
+    "materials" => "材料・現場経費",
+    "trainee" => "実習生",
+    "loan" => "貸付金",
+    "expense" => "経費",
+    "miscellaneous" => "雑費"
   }.freeze
 
   # Validations

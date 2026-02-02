@@ -55,7 +55,7 @@
           <tr>
             <th class="px-3 py-3 text-left font-medium text-gray-500 sticky left-0 bg-gray-50 z-10">日付</th>
             <th class="px-3 py-3 text-right font-medium text-gray-500">前日残高</th>
-            <th class="px-3 py-3 text-right font-medium text-green-600 bg-green-50">売掛入金</th>
+            <th class="px-3 py-3 text-right font-medium text-green-600 bg-green-50">入金</th>
             <th class="px-3 py-3 text-right font-medium text-red-600 bg-red-50">外注費</th>
             <th class="px-3 py-3 text-right font-medium text-red-600 bg-red-50">給与</th>
             <th class="px-3 py-3 text-right font-medium text-red-600 bg-red-50">社保</th>
@@ -85,32 +85,45 @@
               </td>
               <td class="px-3 py-2 text-right text-gray-500"><%= number_with_delimiter(prev_balance.to_i) %></td>
               <%
-                receivable = day_entries.select { |e| e.category == "receivable" }.sum { |e| e.net_amount.to_i }
-                outsourcing = day_entries.select { |e| e.category == "outsourcing" }.sum { |e| e.net_amount.to_i }
-                salary = day_entries.select { |e| e.category == "salary" }.sum { |e| e.net_amount.to_i }
-                social = day_entries.select { |e| e.category == "social_insurance" }.sum { |e| e.net_amount.to_i }
-                other = day_entries.select { |e| !%w[receivable outsourcing salary social_insurance].include?(e.category) }.sum { |e| e.net_amount.to_i }
+                # 入金（工事入金＋その他入金）
+                income_entries = day_entries.select { |e| e.income? }
+                income_total = income_entries.sum { |e| e.net_amount.to_i }
+                income_all_confirmed = income_entries.any? && income_entries.all? { |e| e.status != 'expected' }
+
+                # 外注費
+                outsourcing_entries = day_entries.select { |e| e.category == "outsourcing" }
+                outsourcing = outsourcing_entries.sum { |e| e.net_amount.to_i }
+                outsourcing_confirmed = outsourcing_entries.any? && outsourcing_entries.all? { |e| e.status != 'expected' }
+
+                # 給与
+                salary_entries = day_entries.select { |e| e.category == "salary" }
+                salary = salary_entries.sum { |e| e.net_amount.to_i }
+                salary_confirmed = salary_entries.any? && salary_entries.all? { |e| e.status != 'expected' }
+
+                # 社保
+                social_entries = day_entries.select { |e| e.category == "social_insurance" }
+                social = social_entries.sum { |e| e.net_amount.to_i }
+                social_confirmed = social_entries.any? && social_entries.all? { |e| e.status != 'expected' }
+
+                # その他出金
+                other_entries = day_entries.select { |e| e.expense? && !%w[outsourcing salary social_insurance].include?(e.category) }
+                other = other_entries.sum { |e| e.net_amount.to_i }
+                other_confirmed = other_entries.any? && other_entries.all? { |e| e.status != 'expected' }
               %>
-              <td class="px-3 py-2 text-right bg-green-50 <%= receivable > 0 ? 'text-green-600 font-medium' : 'text-gray-300' %>">
-                <%= receivable > 0 ? "+#{number_with_delimiter(receivable)}" : "-" %>
+              <td class="px-3 py-2 text-right bg-green-50 <%= income_total > 0 ? 'font-medium' : 'text-gray-300' %> <%= income_total > 0 && !income_all_confirmed ? 'text-red-500' : 'text-green-600' %>">
+                <%= income_total > 0 ? "+#{number_with_delimiter(income_total)}" : "-" %>
               </td>
-              <td class="px-3 py-2 text-right bg-red-50 <%= outsourcing > 0 ? 'text-red-600 font-medium' : 'text-gray-300' %>">
+              <td class="px-3 py-2 text-right bg-red-50 <%= outsourcing > 0 ? 'font-medium' : 'text-gray-300' %> <%= outsourcing > 0 && !outsourcing_confirmed ? 'text-red-500' : '' %>">
                 <%= outsourcing > 0 ? "-#{number_with_delimiter(outsourcing)}" : "-" %>
               </td>
-              <td class="px-3 py-2 text-right bg-red-50 <%= salary > 0 ? 'text-red-600 font-medium' : 'text-gray-300' %>">
+              <td class="px-3 py-2 text-right bg-red-50 <%= salary > 0 ? 'font-medium' : 'text-gray-300' %> <%= salary > 0 && !salary_confirmed ? 'text-red-500' : '' %>">
                 <%= salary > 0 ? "-#{number_with_delimiter(salary)}" : "-" %>
               </td>
-              <td class="px-3 py-2 text-right bg-red-50 <%= social > 0 ? 'text-red-600 font-medium' : 'text-gray-300' %>">
+              <td class="px-3 py-2 text-right bg-red-50 <%= social > 0 ? 'font-medium' : 'text-gray-300' %> <%= social > 0 && !social_confirmed ? 'text-red-500' : '' %>">
                 <%= social > 0 ? "-#{number_with_delimiter(social)}" : "-" %>
               </td>
-              <td class="px-3 py-2 text-right bg-red-50 <%= other != 0 ? 'font-medium' : 'text-gray-300' %>">
-                <% if other > 0 %>
-                  <span class="text-red-600">-<%= number_with_delimiter(other) %></span>
-                <% elsif other < 0 %>
-                  <span class="text-green-600">+<%= number_with_delimiter(other.abs) %></span>
-                <% else %>
-                  -
-                <% end %>
+              <td class="px-3 py-2 text-right bg-red-50 <%= other > 0 ? 'font-medium' : 'text-gray-300' %> <%= other > 0 && !other_confirmed ? 'text-red-500' : '' %>">
+                <%= other > 0 ? "-#{number_with_delimiter(other)}" : "-" %>
               </td>
               <td class="px-3 py-2 text-right bg-blue-50 font-medium <%= day_data[:balance] >= 0 ? 'text-blue-600' : 'text-red-600' %>">
                 <%= number_with_delimiter(day_data[:balance].to_i) %>
@@ -123,7 +136,7 @@
           <tr>
             <td class="px-3 py-3 sticky left-0 bg-gray-100 z-10">月計</td>
             <td class="px-3 py-3 text-right"></td>
-            <td class="px-3 py-3 text-right text-green-600">+<%= number_with_delimiter(@income_by_category["receivable"]&.to_i || 0) %></td>
+            <td class="px-3 py-3 text-right text-green-600">+<%= number_with_delimiter(@income_total.to_i) %></td>
             <td class="px-3 py-3 text-right text-red-600">-<%= number_with_delimiter(@expense_by_category["outsourcing"]&.to_i || 0) %></td>
             <td class="px-3 py-3 text-right text-red-600">-<%= number_with_delimiter(@expense_by_category["salary"]&.to_i || 0) %></td>
             <td class="px-3 py-3 text-right text-red-600">-<%= number_with_delimiter(@expense_by_category["social_insurance"]&.to_i || 0) %></td>
@@ -134,6 +147,13 @@
         </tfoot>
       </table>
     </div>
+  </div>
+
+  <!-- 凡例 -->
+  <div class="mt-4 p-3 bg-gray-50 rounded text-sm text-gray-600 flex gap-6">
+    <span><span class="text-red-500 font-medium">赤字</span>＝概算（未確定）</span>
+    <span><span class="text-gray-900 font-medium">黒字</span>＝確定済</span>
+    <span class="text-gray-400">※日付をクリックで詳細・編集</span>
   </div>
 
   <% if @entries.empty? %>

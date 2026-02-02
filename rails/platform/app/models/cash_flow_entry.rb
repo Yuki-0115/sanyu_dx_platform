@@ -6,22 +6,37 @@ class CashFlowEntry < ApplicationRecord
   # Constants
   ENTRY_TYPES = %w[income expense].freeze
   INCOME_CATEGORIES = %w[receivable other_income].freeze
-  EXPENSE_CATEGORIES = %w[outsourcing salary social_insurance lease insurance rent utility other_expense].freeze
+  EXPENSE_CATEGORIES = %w[
+    outsourcing salary social_insurance tax rent lease insurance
+    vehicle phone utility card fees machine_rental advisory_fee
+    materials trainee loan expense miscellaneous
+  ].freeze
   STATUSES = %w[expected confirmed completed cancelled].freeze
 
   CATEGORY_LABELS = {
     # Income
-    "receivable" => "売掛金入金",
+    "receivable" => "工事入金",
     "other_income" => "その他入金",
     # Expense
     "outsourcing" => "外注費",
     "salary" => "給与",
-    "social_insurance" => "社会保険料",
-    "lease" => "リース料",
-    "insurance" => "保険料",
+    "social_insurance" => "社会保険",
+    "tax" => "税金",
     "rent" => "家賃",
+    "lease" => "リース料",
+    "insurance" => "保険",
+    "vehicle" => "ガソリン・車両費",
+    "phone" => "ドコモ・電話代",
     "utility" => "水道光熱費",
-    "other_expense" => "その他"
+    "card" => "カード",
+    "fees" => "手数料",
+    "machine_rental" => "機械レンタル・相殺",
+    "advisory_fee" => "顧問料",
+    "materials" => "材料・現場経費",
+    "trainee" => "実習生",
+    "loan" => "貸付金",
+    "expense" => "経費",
+    "miscellaneous" => "雑費"
   }.freeze
 
   STATUS_LABELS = {

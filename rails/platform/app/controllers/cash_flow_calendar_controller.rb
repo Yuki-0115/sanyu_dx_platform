@@ -2,7 +2,7 @@
 
 class CashFlowCalendarController < ApplicationController
   authorize_with :cash_flow
-  before_action :authorize_edit!, only: %i[confirm update_entry generate_entries]
+  before_action :authorize_edit!, only: %i[confirm update_entry generate_entries create_entry destroy_entry]
 
   def index
     @current_month = params[:month].present? ? Date.parse("#{params[:month]}-01") : Date.current.beginning_of_month
@@ -83,11 +83,45 @@ class CashFlowCalendarController < ApplicationController
                 notice: "#{year}年#{month}月の資金繰りデータを生成しました"
   end
 
+  # 手動エントリ作成
+  def create_entry
+    @entry = CashFlowEntry.new(new_entry_params)
+    @entry.base_date = @entry.expected_date
+
+    if @entry.save
+      redirect_to cash_flow_date_path(date: @entry.expected_date), notice: "登録しました"
+    else
+      redirect_back fallback_location: cash_flow_calendar_path, alert: "登録に失敗しました: #{@entry.errors.full_messages.join(', ')}"
+    end
+  end
+
+  # エントリ削除（手動作成のみ）
+  def destroy_entry
+    @entry = CashFlowEntry.find(params[:id])
+
+    # 自動生成されたエントリは削除不可
+    if @entry.source.present?
+      redirect_back fallback_location: cash_flow_calendar_path, alert: "自動生成されたエントリは削除できません"
+      return
+    end
+
+    date = @entry.expected_date
+    @entry.destroy
+    redirect_to cash_flow_date_path(date: date), notice: "削除しました"
+  end
+
   private
 
   def entry_params
     params.require(:cash_flow_entry).permit(
       :expected_date, :expected_amount, :actual_amount, :adjustment_amount, :notes
+    )
+  end
+
+  def new_entry_params
+    params.require(:cash_flow_entry).permit(
+      :entry_type, :category, :expected_date, :expected_amount, :notes, :subcategory,
+      :client_id, :partner_id, :project_id, :status
     )
   end
 
