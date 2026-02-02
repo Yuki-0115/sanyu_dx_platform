@@ -1,0 +1,99 @@
+<%= form_with model: [:master, payment_term], class: "bg-white rounded-lg shadow p-6 max-w-2xl" do |f| %>
+  <% if payment_term.errors.any? %>
+    <div class="mb-4 p-4 bg-red-50 text-red-600 rounded">
+      <ul>
+        <% payment_term.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="space-y-4">
+    <!-- 対象種別 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">対象種別</label>
+      <%= f.select :termable_type,
+          [["顧客（入金）", "Client"], ["協力会社（支払）", "Partner"]],
+          { selected: termable_type },
+          class: "w-full border rounded px-3 py-2", id: "termable_type_select" %>
+    </div>
+
+    <!-- 対象選択 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">対象</label>
+      <div id="client_select" class="<%= termable_type == 'Partner' ? 'hidden' : '' %>">
+        <%= f.select :termable_id,
+            Client.order(:name).map { |c| [c.name, c.id] },
+            { include_blank: "選択してください", selected: termable_id },
+            class: "w-full border rounded px-3 py-2", disabled: termable_type == 'Partner' %>
+      </div>
+      <div id="partner_select" class="<%= termable_type == 'Client' ? 'hidden' : '' %>">
+        <%= select_tag "payment_term[termable_id]",
+            options_for_select(Partner.order(:name).map { |p| [p.name, p.id] }, termable_id),
+            include_blank: "選択してください",
+            class: "w-full border rounded px-3 py-2", disabled: termable_type == 'Client' %>
+      </div>
+    </div>
+
+    <!-- 名称 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">名称</label>
+      <%= f.text_field :name, class: "w-full border rounded px-3 py-2", placeholder: "通常支払い" %>
+    </div>
+
+    <!-- 締め日 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">締め日</label>
+      <%= f.select :closing_day,
+          [[" 末日", 0]] + (1..31).map { |d| ["#{d}日", d] },
+          {},
+          class: "w-full border rounded px-3 py-2" %>
+    </div>
+
+    <!-- 支払月 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">支払月</label>
+      <%= f.select :payment_month_offset,
+          [["当月", 0], ["翌月", 1], ["翌々月", 2], ["3ヶ月後", 3]],
+          {},
+          class: "w-full border rounded px-3 py-2" %>
+    </div>
+
+    <!-- 支払日 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">支払日</label>
+      <%= f.select :payment_day,
+          [["末日", 0]] + (1..31).map { |d| ["#{d}日", d] },
+          {},
+          class: "w-full border rounded px-3 py-2" %>
+    </div>
+
+    <!-- デフォルト -->
+    <div class="flex items-center gap-2">
+      <%= f.check_box :is_default, class: "w-4 h-4" %>
+      <%= f.label :is_default, "デフォルトの支払条件にする", class: "text-sm text-gray-700" %>
+    </div>
+
+    <!-- 備考 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">備考</label>
+      <%= f.text_area :notes, rows: 2, class: "w-full border rounded px-3 py-2" %>
+    </div>
+
+    <div class="pt-4">
+      <%= f.submit payment_term.new_record? ? "登録" : "更新",
+          class: "w-full px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  document.getElementById('termable_type_select')?.addEventListener('change', function() {
+    const isClient = this.value === 'Client';
+    document.getElementById('client_select').classList.toggle('hidden', !isClient);
+    document.getElementById('partner_select').classList.toggle('hidden', isClient);
+    document.querySelector('#client_select select').disabled = !isClient;
+    document.querySelector('#partner_select select').disabled = isClient;
+  });
+</script>

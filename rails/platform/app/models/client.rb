@@ -5,6 +5,8 @@ class Client < ApplicationRecord
 
   # Associations
   has_many :projects, dependent: :restrict_with_error
+  has_many :payment_terms, as: :termable, dependent: :destroy
+  has_many :cash_flow_entries, dependent: :nullify
 
   # Validations
   validates :code, uniqueness: true
@@ -12,6 +14,11 @@ class Client < ApplicationRecord
 
   # Callbacks
   before_validation :generate_code, on: :create
+
+  # デフォルト支払サイト
+  def default_payment_term
+    payment_terms.default_term.first || payment_terms.first
+  end
 
   private
 

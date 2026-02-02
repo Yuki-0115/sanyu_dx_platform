@@ -1,0 +1,148 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">資金繰り表</h1>
+      <p class="text-gray-500">日次の入出金予定と残高</p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "固定費設定", master_fixed_expense_schedules_path, class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+      <%= link_to "支払サイト", master_payment_terms_path, class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+    </div>
+  </div>
+
+  <!-- 月選択 -->
+  <div class="bg-white rounded-lg shadow p-4 mb-6">
+    <div class="flex flex-wrap gap-4 items-center justify-between">
+      <div class="flex items-center gap-2">
+        <%= link_to "< 前月", cash_flow_calendar_path(month: (@current_month - 1.month).strftime("%Y-%m")), class: "px-3 py-2 bg-gray-200 rounded hover:bg-gray-300" %>
+        <span class="text-xl font-bold"><%= @current_month.strftime("%Y年%m月") %></span>
+        <%= link_to "翌月 >", cash_flow_calendar_path(month: (@current_month + 1.month).strftime("%Y-%m")), class: "px-3 py-2 bg-gray-200 rounded hover:bg-gray-300" %>
+      </div>
+      <div class="flex gap-2">
+        <%= link_to "今月", cash_flow_calendar_path, class: "px-3 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200" %>
+        <%= button_to "データ生成",
+            generate_cash_flow_entries_path(year: @current_month.year, month: @current_month.month),
+            method: :post,
+            class: "px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700",
+            data: { turbo_confirm: "#{@current_month.strftime('%Y年%m月')}の資金繰りデータを生成しますか？" } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- サマリー -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">月初残高</div>
+      <div class="text-2xl font-bold"><%= number_with_delimiter(@opening_balance.to_i) %>円</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">入金予定</div>
+      <div class="text-2xl font-bold text-green-600">+<%= number_with_delimiter(@income_total.to_i) %>円</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">出金予定</div>
+      <div class="text-2xl font-bold text-red-600">-<%= number_with_delimiter(@expense_total.to_i) %>円</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">月末残高予定</div>
+      <% end_balance = @daily_balances.last&.dig(:balance) || @opening_balance %>
+      <div class="text-2xl font-bold <%= end_balance >= 0 ? 'text-blue-600' : 'text-red-600' %>">
+        <%= number_with_delimiter(end_balance.to_i) %>円
+      </div>
+    </div>
+  </div>
+
+  <!-- 資金繰り表（マトリクス） -->
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-3 py-3 text-left font-medium text-gray-500 sticky left-0 bg-gray-50 z-10">日付</th>
+            <th class="px-3 py-3 text-right font-medium text-gray-500">前日残高</th>
+            <th class="px-3 py-3 text-right font-medium text-green-600 bg-green-50">売掛入金</th>
+            <th class="px-3 py-3 text-right font-medium text-red-600 bg-red-50">外注費</th>
+            <th class="px-3 py-3 text-right font-medium text-red-600 bg-red-50">給与</th>
+            <th class="px-3 py-3 text-right font-medium text-red-600 bg-red-50">社保</th>
+            <th class="px-3 py-3 text-right font-medium text-red-600 bg-red-50">その他</th>
+            <th class="px-3 py-3 text-right font-medium text-blue-600 bg-blue-50">残高</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% prev_balance = @opening_balance %>
+          <% @daily_balances.each do |day_data| %>
+            <% date = day_data[:date] %>
+            <% day_entries = @entries_by_date[date] || [] %>
+            <% has_entries = day_entries.any? %>
+            <% weekend = date.saturday? || date.sunday? %>
+            <tr class="<%= weekend ? 'bg-gray-50' : '' %> <%= has_entries ? 'hover:bg-yellow-50 cursor-pointer' : '' %>"
+                <% if has_entries %>onclick="window.location='<%= cash_flow_date_path(date: date) %>'"<% end %>>
+              <td class="px-3 py-2 sticky left-0 <%= weekend ? 'bg-gray-50' : 'bg-white' %> z-10">
+                <span class="<%= date.sunday? ? 'text-red-500' : date.saturday? ? 'text-blue-500' : '' %>">
+                  <%= date.strftime("%m/%d") %>
+                  <span class="text-xs">(<%= %w[日 月 火 水 木 金 土][date.wday] %>)</span>
+                </span>
+              </td>
+              <td class="px-3 py-2 text-right text-gray-500"><%= number_with_delimiter(prev_balance.to_i) %></td>
+              <%
+                receivable = day_entries.select { |e| e.category == "receivable" }.sum { |e| e.net_amount.to_i }
+                outsourcing = day_entries.select { |e| e.category == "outsourcing" }.sum { |e| e.net_amount.to_i }
+                salary = day_entries.select { |e| e.category == "salary" }.sum { |e| e.net_amount.to_i }
+                social = day_entries.select { |e| e.category == "social_insurance" }.sum { |e| e.net_amount.to_i }
+                other = day_entries.select { |e| !%w[receivable outsourcing salary social_insurance].include?(e.category) }.sum { |e| e.net_amount.to_i }
+              %>
+              <td class="px-3 py-2 text-right bg-green-50 <%= receivable > 0 ? 'text-green-600 font-medium' : 'text-gray-300' %>">
+                <%= receivable > 0 ? "+#{number_with_delimiter(receivable)}" : "-" %>
+              </td>
+              <td class="px-3 py-2 text-right bg-red-50 <%= outsourcing > 0 ? 'text-red-600 font-medium' : 'text-gray-300' %>">
+                <%= outsourcing > 0 ? "-#{number_with_delimiter(outsourcing)}" : "-" %>
+              </td>
+              <td class="px-3 py-2 text-right bg-red-50 <%= salary > 0 ? 'text-red-600 font-medium' : 'text-gray-300' %>">
+                <%= salary > 0 ? "-#{number_with_delimiter(salary)}" : "-" %>
+              </td>
+              <td class="px-3 py-2 text-right bg-red-50 <%= social > 0 ? 'text-red-600 font-medium' : 'text-gray-300' %>">
+                <%= social > 0 ? "-#{number_with_delimiter(social)}" : "-" %>
+              </td>
+              <td class="px-3 py-2 text-right bg-red-50 <%= other != 0 ? 'font-medium' : 'text-gray-300' %>">
+                <% if other > 0 %>
+                  <span class="text-red-600">-<%= number_with_delimiter(other) %></span>
+                <% elsif other < 0 %>
+                  <span class="text-green-600">+<%= number_with_delimiter(other.abs) %></span>
+                <% else %>
+                  -
+                <% end %>
+              </td>
+              <td class="px-3 py-2 text-right bg-blue-50 font-medium <%= day_data[:balance] >= 0 ? 'text-blue-600' : 'text-red-600' %>">
+                <%= number_with_delimiter(day_data[:balance].to_i) %>
+              </td>
+            </tr>
+            <% prev_balance = day_data[:balance] %>
+          <% end %>
+        </tbody>
+        <tfoot class="bg-gray-100 font-bold">
+          <tr>
+            <td class="px-3 py-3 sticky left-0 bg-gray-100 z-10">月計</td>
+            <td class="px-3 py-3 text-right"></td>
+            <td class="px-3 py-3 text-right text-green-600">+<%= number_with_delimiter(@income_by_category["receivable"]&.to_i || 0) %></td>
+            <td class="px-3 py-3 text-right text-red-600">-<%= number_with_delimiter(@expense_by_category["outsourcing"]&.to_i || 0) %></td>
+            <td class="px-3 py-3 text-right text-red-600">-<%= number_with_delimiter(@expense_by_category["salary"]&.to_i || 0) %></td>
+            <td class="px-3 py-3 text-right text-red-600">-<%= number_with_delimiter(@expense_by_category["social_insurance"]&.to_i || 0) %></td>
+            <% other_expense = @expense_by_category.except("outsourcing", "salary", "social_insurance").values.sum.to_i %>
+            <td class="px-3 py-3 text-right text-red-600">-<%= number_with_delimiter(other_expense) %></td>
+            <td class="px-3 py-3 text-right"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <% if @entries.empty? %>
+    <div class="mt-6 p-8 bg-yellow-50 rounded-lg text-center">
+      <p class="text-yellow-700 mb-4">この月のデータがありません</p>
+      <%= button_to "データを生成する",
+          generate_cash_flow_entries_path(year: @current_month.year, month: @current_month.month),
+          method: :post,
+          class: "px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700" %>
+    </div>
+  <% end %>
+</div>

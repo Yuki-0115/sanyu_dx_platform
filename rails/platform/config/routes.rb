@@ -156,11 +156,21 @@ Rails.application.routes.draw do
     end
   end
 
+  # 資金繰り表
+  get "cash_flow_calendar", to: "cash_flow_calendar#index", as: :cash_flow_calendar
+  get "cash_flow_calendar/:date", to: "cash_flow_calendar#show", as: :cash_flow_date,
+      constraints: { date: /\d{4}-\d{2}-\d{2}/ }
+  post "cash_flow_calendar/generate", to: "cash_flow_calendar#generate_entries", as: :generate_cash_flow_entries
+  patch "cash_flow_entries/:id/confirm", to: "cash_flow_calendar#confirm", as: :confirm_cash_flow_entry
+  patch "cash_flow_entries/:id", to: "cash_flow_calendar#update_entry", as: :cash_flow_entry
+
   # マスター管理
   namespace :master do
     resources :clients
     resources :partners
     resources :employees
+    resources :payment_terms, except: [:show]
+    resources :fixed_expense_schedules, except: [:show]
     resources :company_holidays, only: [:index, :create, :destroy] do
       collection do
         post :add_holiday

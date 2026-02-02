@@ -9,6 +9,6 @@ FactoryBot.define do
     phone { "092-123-4567" }
     contact_name { "担当太郎" }
     contact_email { "tantou@example.com" }
-    payment_terms { "月末締め翌月末払い" }
+    payment_terms_text { "月末締め翌月末払い" }
   end
 end

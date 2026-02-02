@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_29_140000) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_02_052347) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -97,6 +97,42 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_29_140000) do
     t.index ["project_id"], name: "index_budgets_on_project_id"
   end
 
+  create_table "cash_flow_entries", force: :cascade do |t|
+    t.string "entry_type", null: false
+    t.string "category", null: false
+    t.string "subcategory"
+    t.string "source_type"
+    t.bigint "source_id"
+    t.bigint "client_id"
+    t.bigint "partner_id"
+    t.bigint "project_id"
+    t.date "base_date", null: false
+    t.date "expected_date", null: false
+    t.date "actual_date"
+    t.decimal "expected_amount", precision: 15, scale: 2, null: false
+    t.decimal "actual_amount", precision: 15, scale: 2
+    t.decimal "adjustment_amount", precision: 15, scale: 2, default: "0.0"
+    t.string "status", default: "expected"
+    t.boolean "manual_override", default: false
+    t.text "override_reason"
+    t.bigint "confirmed_by_id"
+    t.datetime "confirmed_at"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actual_date"], name: "index_cash_flow_entries_on_actual_date"
+    t.index ["category"], name: "index_cash_flow_entries_on_category"
+    t.index ["client_id"], name: "index_cash_flow_entries_on_client_id"
+    t.index ["confirmed_by_id"], name: "index_cash_flow_entries_on_confirmed_by_id"
+    t.index ["entry_type"], name: "index_cash_flow_entries_on_entry_type"
+    t.index ["expected_date", "entry_type"], name: "index_cash_flow_entries_on_expected_date_and_entry_type"
+    t.index ["expected_date"], name: "index_cash_flow_entries_on_expected_date"
+    t.index ["partner_id"], name: "index_cash_flow_entries_on_partner_id"
+    t.index ["project_id"], name: "index_cash_flow_entries_on_project_id"
+    t.index ["source_type", "source_id"], name: "index_cash_flow_entries_on_source"
+    t.index ["status"], name: "index_cash_flow_entries_on_status"
+  end
+
   create_table "clients", force: :cascade do |t|
     t.string "code", null: false
     t.string "name", null: false
@@ -106,7 +142,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_29_140000) do
     t.string "phone"
     t.string "contact_name"
     t.string "contact_email"
-    t.string "payment_terms"
+    t.string "payment_terms_text"
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -366,6 +402,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_29_140000) do
     t.index ["supplier_id"], name: "index_expenses_on_supplier_id"
   end
 
+  create_table "fixed_expense_schedules", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "category", null: false
+    t.integer "payment_day", null: false
+    t.decimal "amount", precision: 15, scale: 2
+    t.boolean "is_variable", default: false
+    t.boolean "active", default: true
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_fixed_expense_schedules_on_active"
+    t.index ["category"], name: "index_fixed_expense_schedules_on_category"
+  end
+
   create_table "invoice_items", force: :cascade do |t|
     t.bigint "invoice_id", null: false
     t.string "name", null: false
@@ -395,6 +445,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_29_140000) do
     t.datetime "updated_at", null: false
     t.integer "progress_year", comment: "対象年"
     t.integer "progress_month", comment: "対象月"
+    t.bigint "payment_term_id"
+    t.date "expected_payment_date"
+    t.index ["payment_term_id"], name: "index_invoices_on_payment_term_id"
     t.index ["progress_year", "progress_month"], name: "index_invoices_on_progress_year_and_progress_month"
     t.index ["project_id"], name: "index_invoices_on_project_id"
     t.index ["status"], name: "index_invoices_on_status"
@@ -524,6 +577,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_29_140000) do
     t.decimal "carryover_balance", precision: 15, scale: 2, default: "0.0"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "payment_terms", force: :cascade do |t|
+    t.string "termable_type", null: false
+    t.bigint "termable_id", null: false
+    t.string "name", null: false
+    t.integer "closing_day", null: false
+    t.integer "payment_month_offset", default: 1
+    t.integer "payment_day", null: false
+    t.boolean "is_default", default: false
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["termable_type", "termable_id", "is_default"], name: "index_payment_terms_on_termable_and_default"
+    t.index ["termable_type", "termable_id"], name: "index_payment_terms_on_termable"
+    t.index ["termable_type", "termable_id"], name: "index_payment_terms_on_termable_type_and_termable_id"
   end
 
   create_table "payments", force: :cascade do |t|
@@ -671,6 +740,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_29_140000) do
   add_foreign_key "attendances", "employees"
   add_foreign_key "audit_logs", "employees", column: "user_id"
   add_foreign_key "budgets", "projects"
+  add_foreign_key "cash_flow_entries", "clients"
+  add_foreign_key "cash_flow_entries", "employees", column: "confirmed_by_id"
+  add_foreign_key "cash_flow_entries", "partners"
+  add_foreign_key "cash_flow_entries", "projects"
   add_foreign_key "daily_reports", "employees", column: "foreman_id"
   add_foreign_key "daily_reports", "employees", column: "revised_by_id"
   add_foreign_key "daily_reports", "projects"
@@ -689,6 +762,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_29_140000) do
   add_foreign_key "expenses", "partners", column: "supplier_id"
   add_foreign_key "expenses", "projects"
   add_foreign_key "invoice_items", "invoices"
+  add_foreign_key "invoices", "payment_terms"
   add_foreign_key "invoices", "projects"
   add_foreign_key "monthly_cost_confirmations", "employees", column: "confirmed_by_id"
   add_foreign_key "monthly_outsourcing_costs", "partners"

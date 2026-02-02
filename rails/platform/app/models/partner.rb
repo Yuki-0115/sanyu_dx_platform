@@ -6,6 +6,8 @@ class Partner < ApplicationRecord
   # Associations
   has_many :employees, dependent: :nullify
   has_many :offsets, dependent: :restrict_with_error
+  has_many :payment_terms, as: :termable, dependent: :destroy
+  has_many :cash_flow_entries, dependent: :nullify
 
   # Validations
   validates :code, uniqueness: true
@@ -17,6 +19,11 @@ class Partner < ApplicationRecord
   # Defaults
   attribute :has_temporary_employees, :boolean, default: false
   attribute :carryover_balance, :decimal, default: 0
+
+  # デフォルト支払サイト
+  def default_payment_term
+    payment_terms.default_term.first || payment_terms.first
+  end
 
   private
 

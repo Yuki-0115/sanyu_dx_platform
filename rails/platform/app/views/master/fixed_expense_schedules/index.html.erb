@@ -1,0 +1,75 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">固定費スケジュール</h1>
+      <p class="text-gray-500">毎月の固定支出を設定</p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "資金繰り表", cash_flow_calendar_path, class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+      <%= link_to "新規登録", new_master_fixed_expense_schedule_path, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <% if @schedules.any? %>
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">名称</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">カテゴリ</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">支払日</th>
+            <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">ステータス</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">操作</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% @schedules.each do |schedule| %>
+            <tr class="hover:bg-gray-50 <%= schedule.active? ? '' : 'opacity-50' %>">
+              <td class="px-4 py-3 text-sm font-medium"><%= schedule.name %></td>
+              <td class="px-4 py-3 text-center">
+                <span class="px-2 py-1 text-xs rounded bg-gray-100"><%= schedule.category_label %></span>
+              </td>
+              <td class="px-4 py-3 text-center text-sm"><%= schedule.payment_day_label %></td>
+              <td class="px-4 py-3 text-right text-sm">
+                <% if schedule.variable? %>
+                  <span class="text-gray-400">毎月変動</span>
+                <% elsif schedule.amount.present? %>
+                  <%= number_with_delimiter(schedule.amount.to_i) %>円
+                <% else %>
+                  <span class="text-gray-400">未設定</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <span class="px-2 py-1 text-xs rounded <%= schedule.active? ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' %>">
+                  <%= schedule.active? ? "有効" : "無効" %>
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <%= link_to "編集", edit_master_fixed_expense_schedule_path(schedule), class: "px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm mr-1" %>
+                <%= button_to "削除", master_fixed_expense_schedule_path(schedule), method: :delete,
+                    class: "px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 text-sm",
+                    data: { turbo_confirm: "削除しますか？" } %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="p-8 text-center text-gray-500">
+        <p class="mb-4">固定費スケジュールが登録されていません</p>
+        <%= link_to "登録する", new_master_fixed_expense_schedule_path, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- カテゴリ説明 -->
+  <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+    <h3 class="font-bold text-blue-800 mb-2">カテゴリ一覧</h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-blue-700">
+      <% FixedExpenseSchedule::CATEGORIES.each do |key, label| %>
+        <div>・<%= label %></div>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,142 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold"><%= @date.strftime("%Y年%m月%d日") %>（<%= %w[日 月 火 水 木 金 土][@date.wday] %>）</h1>
+      <p class="text-gray-500">資金繰り詳細</p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "< 前日", cash_flow_date_path(date: @date - 1.day), class: "px-3 py-2 bg-gray-200 rounded hover:bg-gray-300" %>
+      <%= link_to "カレンダーに戻る", cash_flow_calendar_path(month: @date.strftime("%Y-%m")), class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+      <%= link_to "翌日 >", cash_flow_date_path(date: @date + 1.day), class: "px-3 py-2 bg-gray-200 rounded hover:bg-gray-300" %>
+    </div>
+  </div>
+
+  <!-- サマリー -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">入金</div>
+      <div class="text-2xl font-bold text-green-600">+<%= number_with_delimiter(@income_total.to_i) %>円</div>
+      <div class="text-sm text-gray-400"><%= @income_entries.count %>件</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">出金</div>
+      <div class="text-2xl font-bold text-red-600">-<%= number_with_delimiter(@expense_total.to_i) %>円</div>
+      <div class="text-sm text-gray-400"><%= @expense_entries.count %>件</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">差引</div>
+      <% diff = @income_total - @expense_total %>
+      <div class="text-2xl font-bold <%= diff >= 0 ? 'text-blue-600' : 'text-red-600' %>">
+        <%= diff >= 0 ? '+' : '' %><%= number_with_delimiter(diff.to_i) %>円
+      </div>
+    </div>
+  </div>
+
+  <!-- 入金一覧 -->
+  <% if @income_entries.any? %>
+    <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+      <div class="px-4 py-3 border-b bg-green-50">
+        <h2 class="font-bold text-green-800">入金予定</h2>
+      </div>
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">科目</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">顧客</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">案件</th>
+            <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
+            <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">相殺</th>
+            <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">差引</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">ステータス</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">操作</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% @income_entries.each do |entry| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3 text-sm"><%= entry.category_label %></td>
+              <td class="px-4 py-3 text-sm"><%= entry.client&.name || "-" %></td>
+              <td class="px-4 py-3 text-sm">
+                <% if entry.project %>
+                  <%= link_to entry.project.name, project_path(entry.project), class: "text-blue-600 hover:underline" %>
+                <% else %>
+                  -
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right font-medium">
+                <%= number_with_delimiter(entry.expected_amount.to_i) %>円
+              </td>
+              <td class="px-4 py-3 text-sm text-right text-red-500">
+                <%= entry.adjustment_amount.to_i > 0 ? "-#{number_with_delimiter(entry.adjustment_amount.to_i)}" : "-" %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right font-bold text-green-600">
+                <%= number_with_delimiter(entry.net_amount.to_i) %>円
+              </td>
+              <td class="px-4 py-3 text-center">
+                <span class="px-2 py-1 text-xs rounded <%= entry.status == 'confirmed' ? 'bg-green-100 text-green-800' : entry.status == 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100' %>">
+                  <%= entry.status_label %>
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <% if entry.status == "expected" %>
+                  <%= button_to "確認", confirm_cash_flow_entry_path(entry), method: :patch,
+                      class: "px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <!-- 出金一覧 -->
+  <% if @expense_entries.any? %>
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      <div class="px-4 py-3 border-b bg-red-50">
+        <h2 class="font-bold text-red-800">出金予定</h2>
+      </div>
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">科目</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">支払先</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">内容</th>
+            <th class="px-4 py-3 text-right text-sm font-medium text-gray-500">金額</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">ステータス</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-500">操作</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% @expense_entries.each do |entry| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3 text-sm"><%= entry.category_label %></td>
+              <td class="px-4 py-3 text-sm"><%= entry.partner&.name || entry.subcategory || "-" %></td>
+              <td class="px-4 py-3 text-sm"><%= entry.notes || "-" %></td>
+              <td class="px-4 py-3 text-sm text-right font-bold text-red-600">
+                <%= number_with_delimiter(entry.expected_amount.to_i) %>円
+              </td>
+              <td class="px-4 py-3 text-center">
+                <span class="px-2 py-1 text-xs rounded <%= entry.status == 'confirmed' ? 'bg-green-100 text-green-800' : entry.status == 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100' %>">
+                  <%= entry.status_label %>
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <% if entry.status == "expected" %>
+                  <%= button_to "確認", confirm_cash_flow_entry_path(entry), method: :patch,
+                      class: "px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <% if @entries.empty? %>
+    <div class="p-8 bg-gray-50 rounded-lg text-center text-gray-500">
+      この日の入出金予定はありません
+    </div>
+  <% end %>
+</div>

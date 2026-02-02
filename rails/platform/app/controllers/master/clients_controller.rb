@@ -56,7 +56,7 @@ module Master
     def client_params
       params.require(:client).permit(
         :code, :name, :name_kana, :postal_code, :address,
-        :phone, :contact_name, :contact_email, :payment_terms, :notes
+        :phone, :contact_name, :contact_email, :payment_terms_text, :notes
       )
     end
   end

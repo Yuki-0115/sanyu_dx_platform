@@ -1,0 +1,8 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">支払サイト登録</h1>
+    <%= link_to "戻る", master_payment_terms_path, class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+  </div>
+
+  <%= render "form", payment_term: @payment_term, termable_type: @termable_type, termable_id: @termable_id %>
+</div>
