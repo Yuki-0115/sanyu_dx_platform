@@ -224,5 +224,143 @@ end
 
 puts "Created daily reports and attendances for current month"
 
+# === 有給休暇テストデータ ===
+puts "\n=== Creating paid leave data ==="
+
+# 正社員に入社日と基準日を設定
+regular_employees = Employee.where(employment_type: "regular")
+
+regular_employees.each_with_index do |emp, idx|
+  # 入社日を1〜5年前にランダム設定
+  years_ago = rand(1..5)
+  hire_date = Date.current - years_ago.years - rand(0..11).months
+  emp.update!(
+    hire_date: hire_date,
+    paid_leave_base_date: hire_date + 6.months
+  )
+end
+
+puts "Updated hire dates for #{regular_employees.count} employees"
+
+# 有給付与データ作成
+regular_employees.reload.each do |emp|
+  next unless emp.hire_date
+
+  # 既存の付与データがあればスキップ
+  next if emp.paid_leave_grants.any?
+
+  service = PaidLeaveGrantService.new(emp)
+
+  # 前年度の付与
+  prev_grant_date = emp.paid_leave_base_date + 1.year
+  prev_fiscal_year = prev_grant_date.month >= 4 ? prev_grant_date.year : prev_grant_date.year - 1
+  used_prev = rand(3..8)
+  granted_prev = 11
+
+  prev_year_grant = emp.paid_leave_grants.create!(
+    grant_type: "auto",
+    grant_date: prev_grant_date,
+    expiry_date: prev_grant_date + 2.years,
+    fiscal_year: prev_fiscal_year,
+    granted_days: granted_prev,
+    used_days: used_prev,
+    remaining_days: [granted_prev - used_prev, 0].max
+  )
+
+  # 今年度の付与
+  current_grant_date = emp.paid_leave_base_date + 2.years
+  current_fiscal_year = current_grant_date.month >= 4 ? current_grant_date.year : current_grant_date.year - 1
+  granted_current = service.calculate_grant_days
+  used_current = rand(0..3)
+
+  current_grant = emp.paid_leave_grants.create!(
+    grant_type: "auto",
+    grant_date: current_grant_date,
+    expiry_date: current_grant_date + 2.years,
+    fiscal_year: current_fiscal_year,
+    granted_days: granted_current,
+    used_days: used_current,
+    remaining_days: [granted_current - used_current, 0].max
+  )
+end
+
+puts "Created paid leave grants"
+
+# 有給申請データ作成
+# 承認済み申請（過去の取得実績）- バリデーションをスキップして作成
+admin_user = Employee.find_by(role: "admin")
+
+regular_employees.each do |emp|
+  grant = emp.paid_leave_grants.order(grant_date: :asc).where("remaining_days > 0").first
+  next unless grant
+
+  # 過去1-3件の承認済み申請
+  rand(1..3).times do |i|
+    leave_date = Date.current - rand(10..60).days
+    next if emp.paid_leave_requests.exists?(leave_date: leave_date)
+
+    leave_type = %w[full half_am half_pm].sample
+    consumed = leave_type == "full" ? 1.0 : 0.5
+
+    request = emp.paid_leave_requests.new(
+      paid_leave_grant: grant,
+      leave_date: leave_date,
+      leave_type: leave_type,
+      consumed_days: consumed,
+      reason: ["私用のため", "通院のため", "家族の用事", ""].sample,
+      status: "approved",
+      approved_by: admin_user,
+      approved_at: leave_date - 3.days
+    )
+    request.save!(validate: false) # 過去日付のバリデーションをスキップ
+  end
+end
+
+puts "Created approved leave requests"
+
+# 承認待ち申請（未来の申請）
+pending_employees = regular_employees.sample(4)
+pending_employees.each do |emp|
+  leave_date = Date.current + rand(3..14).days
+  next if emp.paid_leave_requests.exists?(leave_date: leave_date)
+
+  emp.paid_leave_requests.create!(
+    leave_date: leave_date,
+    leave_type: %w[full half_am half_pm].sample,
+    consumed_days: [1.0, 0.5].sample,
+    reason: ["旅行のため", "法事のため", "引越しのため", "資格試験のため"].sample,
+    status: "pending"
+  )
+end
+
+puts "Created #{pending_employees.size} pending leave requests"
+
+# 却下された申請（1件）
+rejected_emp = regular_employees.sample
+rejected_date = Date.current + 5.days
+unless rejected_emp.paid_leave_requests.exists?(leave_date: rejected_date)
+  rejected_emp.paid_leave_requests.create!(
+    leave_date: rejected_date,
+    leave_type: "full",
+    consumed_days: 1.0,
+    reason: "私用のため",
+    status: "rejected",
+    approved_by: Employee.find_by(role: "admin"),
+    approved_at: Date.current - 1.day,
+    rejection_reason: "繁忙期のため、別日程への変更をお願いします"
+  )
+end
+
+puts "Created rejected leave request"
+
+# 5日未達者を作るため、一部社員の取得日数を調整
+at_risk_employees = regular_employees.sample(2)
+at_risk_employees.each do |emp|
+  # 今年度の申請を減らす
+  emp.paid_leave_requests.where(status: "approved").limit(2).destroy_all
+end
+
+puts "Adjusted at-risk employees: #{at_risk_employees.map(&:name).join(', ')}"
+
 puts "\n=== Seed completed ==="
 puts "Login with: admin@sanyu.example.com / password123"
