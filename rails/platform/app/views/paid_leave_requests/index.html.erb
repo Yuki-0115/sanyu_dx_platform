@@ -156,7 +156,7 @@
                 <% end %>
               </td>
               <td class="px-4 py-3 text-center">
-                <% if request.pending? && request.employee_id == current_user.id %>
+                <% if request.pending? && request.employee_id == current_employee.id %>
                   <%= button_to "取消", cancel_paid_leave_request_path(request),
                       method: :patch,
                       data: { turbo_confirm: "この申請を取り消しますか？" },
