@@ -94,3 +94,6 @@ gem "googleauth"
 
 # Cron job scheduling
 gem "whenever", require: false
+
+# Excel file processing
+gem "roo", "~> 2.10"

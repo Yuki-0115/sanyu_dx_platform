@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_03_010002) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_03_032158) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -223,6 +223,23 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_03_010002) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["project_id"], name: "index_daily_schedule_notes_on_project_id"
+  end
+
+  create_table "data_imports", force: :cascade do |t|
+    t.string "import_type", null: false
+    t.string "status", default: "pending"
+    t.string "file_name"
+    t.integer "total_rows", default: 0
+    t.integer "success_rows", default: 0
+    t.integer "error_rows", default: 0
+    t.jsonb "error_details", default: []
+    t.jsonb "skipped_rows", default: []
+    t.bigint "imported_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["import_type"], name: "index_data_imports_on_import_type"
+    t.index ["imported_by_id"], name: "index_data_imports_on_imported_by_id"
+    t.index ["status"], name: "index_data_imports_on_status"
   end
 
   create_table "employees", force: :cascade do |t|
@@ -805,6 +822,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_03_010002) do
   add_foreign_key "daily_reports", "employees", column: "revised_by_id"
   add_foreign_key "daily_reports", "projects"
   add_foreign_key "daily_schedule_notes", "projects"
+  add_foreign_key "data_imports", "employees", column: "imported_by_id"
   add_foreign_key "employees", "partners"
   add_foreign_key "estimate_categories", "estimates"
   add_foreign_key "estimate_confirmations", "estimates"

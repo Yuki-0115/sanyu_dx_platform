@@ -1,8 +1,18 @@
 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-900">案件一覧</h2>
-        <%= link_to "新規案件", new_project_path,
-            class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+        <div class="flex items-center gap-2">
+          <% if current_employee.admin? || current_employee.management? %>
+            <%= link_to new_data_imports_path(import_type: "projects"), class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700" do %>
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+              </svg>
+              Excel取込
+            <% end %>
+          <% end %>
+          <%= link_to "新規案件", new_project_path,
+              class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+        </div>
       </div>
 
       <div class="mb-4 flex space-x-4">

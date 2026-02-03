@@ -165,6 +165,19 @@ Rails.application.routes.draw do
     end
   end
 
+  # データ取込（Excel一括取込）
+  resources :data_imports, only: [:index] do
+    collection do
+      get ":import_type/new", action: :new, as: :new
+      post ":import_type/preview", action: :preview, as: :preview
+      post ":import_type/execute", action: :execute, as: :execute
+      get ":import_type/template", action: :template, as: :template
+    end
+    member do
+      get :result
+    end
+  end
+
   # 仮経費確定
   resources :provisional_expenses, only: [:index] do
     member do

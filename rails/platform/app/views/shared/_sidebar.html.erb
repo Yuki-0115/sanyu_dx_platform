@@ -340,6 +340,15 @@
         </svg>
         <span class="ml-3" data-sidebar-target="text">有給管理</span>
       <% end %>
+
+      <%= link_to data_imports_path,
+          class: "flex items-center px-4 py-3 lg:px-3 lg:py-2 text-base lg:text-sm transition-colors rounded-lg #{controller_name == 'data_imports' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}",
+          title: "データ取込" do %>
+        <svg class="w-6 h-6 lg:w-5 lg:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+        </svg>
+        <span class="ml-3" data-sidebar-target="text">データ取込</span>
+      <% end %>
     <% end %>
 
     <!-- ログアウト -->

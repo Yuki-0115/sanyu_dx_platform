@@ -1,0 +1,85 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= @label %>の取込</h1>
+      <p class="text-sm text-gray-600 mt-1">Excelファイル（.xlsx/.xls）またはCSVをアップロード</p>
+    </div>
+    <%= link_to "戻る", data_imports_path,
+        class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+  </div>
+
+  <%# 列情報 %>
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex justify-between items-start mb-4">
+      <h2 class="text-lg font-medium text-gray-900">必要な列</h2>
+      <%= link_to template_data_imports_path(import_type: @import_type),
+          class: "px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700" do %>
+        テンプレートをダウンロード
+      <% end %>
+    </div>
+
+    <div class="mb-4">
+      <h3 class="text-sm font-medium text-gray-700 mb-2">必須列</h3>
+      <div class="flex flex-wrap gap-2">
+        <% @required_headers.each do |col| %>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+            <%= col %>
+          </span>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="p-3 bg-blue-50 rounded text-sm text-blue-800">
+      <strong>ヒント:</strong>
+      1行目はヘッダー行として扱われます。列名は上記と完全一致させてください。
+      任意列（備考など）も追加可能です。
+    </div>
+  </div>
+
+  <%# アップロードフォーム %>
+  <div class="bg-white rounded-lg shadow p-6" data-controller="data-import-form">
+    <%= form_with url: preview_data_imports_path(import_type: @import_type), method: :post, multipart: true, data: { turbo: false } do |f| %>
+
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          ファイル選択 <span class="text-red-500">*</span>
+        </label>
+        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg"
+             data-data-import-form-target="dropzone"
+             data-action="dragover->data-import-form#dragover dragenter->data-import-form#dragenter dragleave->data-import-form#dragleave drop->data-import-form#drop">
+          <div class="space-y-1 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+              <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <div class="flex text-sm text-gray-600">
+              <label for="file" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
+                <span>ファイルを選択</span>
+                <%= file_field_tag :file, accept: ".xlsx,.xls,.csv",
+                    class: "sr-only",
+                    data: { action: "change->data-import-form#fileSelected", data_import_form_target: "fileInput" } %>
+              </label>
+              <p class="pl-1">またはドラッグ＆ドロップ</p>
+            </div>
+            <p class="text-xs text-gray-500">.xlsx, .xls, .csv ファイル</p>
+          </div>
+        </div>
+        <div class="mt-2 hidden" data-data-import-form-target="fileInfo">
+          <div class="flex items-center gap-2 p-3 bg-green-50 rounded">
+            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="text-sm text-green-700" data-data-import-form-target="fileName"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <%= link_to "キャンセル", data_imports_path,
+            class: "px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400" %>
+        <%= submit_tag "プレビュー",
+            class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer disabled:opacity-50",
+            data: { data_import_form_target: "submitBtn" } %>
+      </div>
+    <% end %>
+  </div>
+</div>

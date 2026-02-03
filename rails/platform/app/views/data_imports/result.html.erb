@@ -1,0 +1,167 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">取込結果</h1>
+      <p class="text-sm text-gray-600 mt-1">
+        <%= @import_record.import_type_label %> - <%= @import_record.file_name %>
+      </p>
+    </div>
+    <%= link_to "一覧に戻る", data_imports_path,
+        class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+  </div>
+
+  <%# ステータス %>
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium <%= @import_record.status_badge_class %>">
+          <%= @import_record.status_label %>
+        </span>
+        <div class="text-sm text-gray-500">
+          取込日時: <%= @import_record.created_at.strftime("%Y/%m/%d %H:%M") %>
+          <% if @import_record.imported_by %>
+            / 実行者: <%= @import_record.imported_by.name %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# サマリー %>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">総行数</div>
+      <div class="text-2xl font-bold text-gray-900"><%= @import_record.total_rows %></div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">成功</div>
+      <div class="text-2xl font-bold text-green-600"><%= @import_record.success_rows %></div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">スキップ</div>
+      <div class="text-2xl font-bold text-red-600"><%= @import_record.error_rows %></div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">成功率</div>
+      <% rate = @import_record.total_rows > 0 ? (@import_record.success_rows.to_f / @import_record.total_rows * 100).round(1) : 0 %>
+      <div class="text-2xl font-bold <%= rate >= 80 ? 'text-green-600' : rate >= 50 ? 'text-yellow-600' : 'text-red-600' %>">
+        <%= rate %>%
+      </div>
+    </div>
+  </div>
+
+  <%# 成功メッセージ %>
+  <% if @import_record.status == "completed" && @import_record.success_rows > 0 %>
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div>
+          <h3 class="text-sm font-medium text-green-800">取込完了</h3>
+          <p class="text-sm text-green-700 mt-1">
+            <%= @import_record.success_rows %>件のデータが正常に登録されました。
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%# エラー詳細 %>
+  <% error_details = @import_record.skipped_rows || [] %>
+  <% if error_details.any? %>
+    <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+      <div class="px-4 py-3 bg-red-50 border-b">
+        <h2 class="font-medium text-red-800">スキップ行詳細（<%= error_details.size %>件）</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">行番号</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">エラー内容</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% error_details.each do |detail| %>
+              <tr class="bg-red-50">
+                <td class="px-4 py-2 text-sm text-gray-900">
+                  <% if detail["row"] == 0 %>
+                    全体
+                  <% else %>
+                    <%= detail["row"] %>行目
+                  <% end %>
+                </td>
+                <td class="px-4 py-2 text-sm text-red-600">
+                  <%= Array(detail["errors"]).join(", ") %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <%# 手入力への導線 %>
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-yellow-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div>
+          <p class="text-sm text-yellow-800">
+            <%= error_details.size %>件のエラー行があります。手入力で追加する場合は
+            <% manual_entry_path = case @import_record.import_type
+               when "clients" then new_master_client_path
+               when "partners" then new_master_partner_path
+               when "employees" then new_master_employee_path
+               when "projects" then new_project_path
+               when "paid_leaves" then paid_leaves_path
+               when "offsets" then new_offset_path
+               when "invoices" then all_invoices_path
+               when "cash_flow_entries" then cash_flow_calendar_path
+               end %>
+            <%= link_to "こちら", manual_entry_path, class: "text-yellow-700 font-medium underline hover:text-yellow-900" %>
+            から登録できます。
+          </p>
+        </div>
+      </div>
+    </div>
+  <% elsif @import_record.status == "completed" %>
+    <div class="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+      スキップ行はありませんでした
+    </div>
+  <% end %>
+
+  <%# 次のアクション %>
+  <div class="mt-6 flex justify-center gap-4">
+    <%= link_to "新規取込", data_imports_path,
+        class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+    <% case @import_record.import_type
+       when "clients" %>
+      <%= link_to "顧客一覧を確認", master_clients_path,
+          class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+    <% when "partners" %>
+      <%= link_to "協力会社一覧を確認", master_partners_path,
+          class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+    <% when "employees" %>
+      <%= link_to "社員一覧を確認", master_employees_path,
+          class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+    <% when "projects" %>
+      <%= link_to "案件一覧を確認", projects_path,
+          class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+    <% when "paid_leaves" %>
+      <%= link_to "有給管理を確認", paid_leaves_path,
+          class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+    <% when "offsets" %>
+      <%= link_to "相殺一覧を確認", offsets_path,
+          class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+    <% when "invoices" %>
+      <%= link_to "請求一覧を確認", all_invoices_path,
+          class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+    <% when "cash_flow_entries" %>
+      <%= link_to "資金繰り表を確認", cash_flow_calendar_path,
+          class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+    <% end %>
+  </div>
+</div>

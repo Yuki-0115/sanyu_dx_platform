@@ -1,0 +1,127 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">取込プレビュー</h1>
+      <p class="text-sm text-gray-600 mt-1"><%= @label %></p>
+    </div>
+    <%= link_to "戻る", new_data_imports_path(import_type: @import_type),
+        class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+  </div>
+
+  <%# サマリー %>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">総行数</div>
+      <div class="text-2xl font-bold text-gray-900"><%= @summary[:total] %></div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">プレビュー行数</div>
+      <div class="text-2xl font-bold text-blue-600"><%= @preview_rows.size %></div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">正常</div>
+      <div class="text-2xl font-bold text-green-600"><%= @summary[:valid] %></div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">エラー</div>
+      <div class="text-2xl font-bold text-red-600"><%= @summary[:invalid] %></div>
+    </div>
+  </div>
+
+  <%# 注意事項 %>
+  <% if @summary[:invalid] > 0 %>
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-yellow-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+        <div>
+          <h3 class="text-sm font-medium text-yellow-800">エラー行があります</h3>
+          <p class="text-sm text-yellow-700 mt-1">
+            エラー行は取込がスキップされます。正常行のみが登録されます。
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%# プレビューテーブル %>
+  <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+    <div class="px-4 py-3 bg-gray-50 border-b">
+      <h2 class="font-medium text-gray-900">プレビューデータ（最大100行）</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">行</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">状態</th>
+            <% if @preview_rows.any? %>
+              <% @preview_rows.first[:data].keys.first(6).each do |key| %>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                  <%= key %>
+                </th>
+              <% end %>
+            <% end %>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">エラー</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% @preview_rows.each do |row| %>
+            <tr class="<%= row[:valid] ? '' : 'bg-red-50' %>">
+              <td class="px-4 py-2 text-sm text-gray-600"><%= row[:row_number] %></td>
+              <td class="px-4 py-2 text-center">
+                <% if row[:valid] %>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">OK</span>
+                <% else %>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">NG</span>
+                <% end %>
+              </td>
+              <% row[:data].values.first(6).each do |val| %>
+                <td class="px-4 py-2 text-sm text-gray-900 whitespace-nowrap max-w-xs truncate">
+                  <%= val.to_s.truncate(30) %>
+                </td>
+              <% end %>
+              <td class="px-4 py-2 text-sm text-red-600">
+                <% if row[:errors].any? %>
+                  <%= row[:errors].join(", ") %>
+                <% else %>
+                  -
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <%# 実行ボタン %>
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600">
+          <strong><%= @summary[:valid] %>件</strong>のデータが登録されます。
+          <% if @summary[:invalid] > 0 %>
+            <span class="text-red-600"><%= @summary[:invalid] %>件</span>はスキップされます。
+          <% end %>
+        </p>
+      </div>
+      <div class="flex gap-2">
+        <%= link_to "キャンセル", data_imports_path,
+            class: "px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400" %>
+        <% if @summary[:valid] > 0 %>
+          <%= form_with url: execute_data_imports_path(import_type: @import_type), method: :post, data: { turbo: false } do |f| %>
+            <%= submit_tag "取込実行",
+                class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer",
+                data: { confirm: "#{@summary[:valid]}件のデータを登録します。よろしいですか？" } %>
+          <% end %>
+        <% else %>
+          <button disabled class="px-4 py-2 bg-gray-400 text-white rounded cursor-not-allowed">
+            取込実行
+          </button>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
