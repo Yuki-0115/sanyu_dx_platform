@@ -22,6 +22,10 @@ class Employee < ApplicationRecord
   has_many :expenses_as_payer, class_name: "Expense", foreign_key: :payer_id,
                                dependent: :restrict_with_error, inverse_of: :payer
 
+  # 有給休暇管理
+  has_many :paid_leave_grants, dependent: :destroy
+  has_many :paid_leave_requests, dependent: :destroy
+
   # Validations
   validates :code, uniqueness: true
   validates :name, presence: true
@@ -62,12 +66,12 @@ class Employee < ApplicationRecord
   def can_access?(feature)
     permissions = {
       admin: :all,
-      management: %i[dashboard management_dashboard projects estimates budgets daily_reports invoices offsets accounting safety_documents master schedule attendance_sheets cash_flow],
-      accounting: %i[dashboard management_dashboard invoices payments offsets expenses accounting master cash_flow],
-      sales: %i[dashboard projects estimates clients master schedule],
-      engineering: %i[dashboard projects budgets daily_reports safety_documents schedule attendance_sheets],
-      construction: %i[dashboard projects daily_reports attendances expenses safety_documents schedule],
-      worker: %i[dashboard daily_reports attendances schedule]
+      management: %i[dashboard management_dashboard projects estimates budgets daily_reports invoices offsets accounting safety_documents master schedule attendance_sheets cash_flow paid_leaves paid_leave_requests],
+      accounting: %i[dashboard management_dashboard invoices payments offsets expenses accounting master cash_flow paid_leaves],
+      sales: %i[dashboard projects estimates clients master schedule paid_leave_requests],
+      engineering: %i[dashboard projects budgets daily_reports safety_documents schedule attendance_sheets paid_leave_requests],
+      construction: %i[dashboard projects daily_reports attendances expenses safety_documents schedule paid_leave_requests],
+      worker: %i[dashboard daily_reports attendances schedule paid_leave_requests]
     }
 
     allowed = permissions[role.to_sym]
@@ -84,7 +88,80 @@ class Employee < ApplicationRecord
     can_access?(feature)
   end
 
+  # =====================
+  # 有給休暇関連メソッド
+  # =====================
+
+  # 有給残日数合計
+  def total_paid_leave_remaining
+    paid_leave_grants.active.with_remaining.sum(:remaining_days)
+  end
+
+  # 当期の取得日数
+  def paid_leave_taken_in_period(start_date, end_date)
+    paid_leave_requests
+      .approved
+      .for_period(start_date, end_date)
+      .sum(:consumed_days)
+  end
+
+  # 年5日取得義務の達成状況
+  def paid_leave_obligation_status
+    base_date = paid_leave_base_date || (hire_date && (hire_date + 6.months))
+    return { status: :not_applicable, message: "入社日未設定" } unless base_date
+
+    period_start = calculate_current_period_start(base_date)
+    period_end = period_start + 1.year - 1.day
+
+    # 基準期間が未来の場合
+    return { status: :not_applicable, message: "付与前" } if period_start > Date.current
+
+    taken = paid_leave_taken_in_period(period_start, period_end)
+    days_remaining_in_period = (period_end - Date.current).to_i
+    months_elapsed = ((Date.current - period_start) / 30.0).floor
+
+    {
+      period_start: period_start,
+      period_end: period_end,
+      taken: taken,
+      required: 5.0,
+      shortage: [5.0 - taken, 0].max,
+      days_remaining_in_period: [days_remaining_in_period, 0].max,
+      alert_level: calculate_alert_level(taken, months_elapsed)
+    }
+  end
+
+  # 次回付与予定日
+  def next_paid_leave_grant_date
+    base_date = paid_leave_base_date || (hire_date && (hire_date + 6.months))
+    return nil unless base_date
+    return base_date if base_date > Date.current
+
+    years_since_base = ((Date.current - base_date) / 365.25).floor
+    base_date + (years_since_base + 1).years
+  end
+
   private
+
+  def calculate_current_period_start(base_date)
+    return base_date if base_date > Date.current
+
+    # 基準日の月日を今年度に適用
+    years_since_base = ((Date.current - base_date) / 365.25).floor
+    current_period_start = base_date + years_since_base.years
+
+    # まだ今年度の基準日に達していない場合は前年度
+    current_period_start > Date.current ? current_period_start - 1.year : current_period_start
+  end
+
+  def calculate_alert_level(taken, months_elapsed)
+    return :ok if taken >= 5.0
+    return :urgent if months_elapsed >= 11 && taken < 5.0
+    return :danger if months_elapsed >= 9 && taken < 3.0
+    return :warning if months_elapsed >= 6 && taken < 2.0
+
+    :normal
+  end
 
   def generate_code
     return if code.present?
