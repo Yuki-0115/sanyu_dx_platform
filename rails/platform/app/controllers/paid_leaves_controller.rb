@@ -67,7 +67,7 @@ class PaidLeavesController < ApplicationController
     notes = params[:notes]
 
     if days <= 0
-      redirect_to paid_leave_path(@employee), alert: "付与日数を正しく入力してください"
+      redirect_to paid_leafe_path(@employee), alert: "付与日数を正しく入力してください"
       return
     end
 
@@ -77,9 +77,9 @@ class PaidLeavesController < ApplicationController
         grant_type: grant_type,
         notes: notes
       )
-      redirect_to paid_leave_path(@employee), notice: "#{days}日を付与しました"
+      redirect_to paid_leafe_path(@employee), notice: "#{days}日を付与しました"
     rescue => e
-      redirect_to paid_leave_path(@employee), alert: e.message
+      redirect_to paid_leafe_path(@employee), alert: e.message
     end
   end
 

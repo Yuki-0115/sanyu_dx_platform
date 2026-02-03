@@ -55,7 +55,7 @@
             else "bg-yellow-100 text-yellow-800"
             end
           %>
-          <%= link_to paid_leave_path(emp), class: "inline-flex items-center px-3 py-1 rounded-full text-sm #{badge_class}" do %>
+          <%= link_to paid_leafe_path(emp), class: "inline-flex items-center px-3 py-1 rounded-full text-sm #{badge_class}" do %>
             <%= emp.name %> (<%= status[:taken] %>/<%= status[:required] %>日)
           <% end %>
         <% end %>
@@ -137,7 +137,7 @@
               </span>
             </td>
             <td class="px-4 py-3 text-center">
-              <%= link_to "詳細", paid_leave_path(employee),
+              <%= link_to "詳細", paid_leafe_path(employee),
                   class: "text-blue-600 hover:underline text-sm" %>
             </td>
           </tr>
