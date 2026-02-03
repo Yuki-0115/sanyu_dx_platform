@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_02_064849) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_03_010002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -250,6 +250,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_02_064849) do
     t.decimal "social_insurance_monthly", precision: 12, default: "0"
     t.decimal "daily_rate", precision: 10, default: "0"
     t.date "birth_date"
+    t.date "paid_leave_base_date", comment: "有給基準日"
     t.index ["employment_type"], name: "index_employees_on_employment_type"
     t.index ["partner_id"], name: "index_employees_on_partner_id"
     t.index ["reset_password_token"], name: "index_employees_on_reset_password_token", unique: true
@@ -584,6 +585,46 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_02_064849) do
     t.index ["partner_id"], name: "index_outsourcing_entries_on_partner_id"
   end
 
+  create_table "paid_leave_grants", force: :cascade do |t|
+    t.bigint "employee_id", null: false
+    t.date "grant_date", null: false, comment: "付与日（基準日）"
+    t.date "expiry_date", null: false, comment: "失効日（付与日+2年）"
+    t.decimal "granted_days", precision: 4, scale: 1, null: false, comment: "付与日数"
+    t.decimal "used_days", precision: 4, scale: 1, default: "0.0", comment: "使用済日数"
+    t.decimal "expired_days", precision: 4, scale: 1, default: "0.0", comment: "失効日数"
+    t.decimal "remaining_days", precision: 4, scale: 1, null: false, comment: "残日数"
+    t.integer "fiscal_year", null: false, comment: "対象年度"
+    t.string "grant_type", default: "auto", comment: "auto=自動/manual=手動/special=特別"
+    t.text "notes", comment: "備考"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id", "grant_date"], name: "index_paid_leave_grants_on_employee_id_and_grant_date", unique: true
+    t.index ["employee_id"], name: "index_paid_leave_grants_on_employee_id"
+    t.index ["expiry_date"], name: "index_paid_leave_grants_on_expiry_date"
+    t.index ["fiscal_year"], name: "index_paid_leave_grants_on_fiscal_year"
+  end
+
+  create_table "paid_leave_requests", force: :cascade do |t|
+    t.bigint "employee_id", null: false
+    t.date "leave_date", null: false, comment: "取得日"
+    t.string "leave_type", null: false, comment: "full/half_am/half_pm"
+    t.text "reason", comment: "申請理由"
+    t.string "status", default: "pending", comment: "pending/approved/rejected/cancelled"
+    t.bigint "approved_by_id"
+    t.datetime "approved_at"
+    t.text "rejection_reason", comment: "却下理由"
+    t.bigint "paid_leave_grant_id"
+    t.decimal "consumed_days", precision: 4, scale: 1, null: false, comment: "消化日数"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["approved_by_id"], name: "index_paid_leave_requests_on_approved_by_id"
+    t.index ["employee_id", "leave_date"], name: "index_paid_leave_requests_on_employee_id_and_leave_date", unique: true
+    t.index ["employee_id"], name: "index_paid_leave_requests_on_employee_id"
+    t.index ["leave_date"], name: "index_paid_leave_requests_on_leave_date"
+    t.index ["paid_leave_grant_id"], name: "index_paid_leave_requests_on_paid_leave_grant_id"
+    t.index ["status"], name: "index_paid_leave_requests_on_status"
+  end
+
   create_table "partners", force: :cascade do |t|
     t.string "code", null: false
     t.string "name", null: false
@@ -789,6 +830,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_02_064849) do
   add_foreign_key "offsets", "partners"
   add_foreign_key "outsourcing_entries", "daily_reports"
   add_foreign_key "outsourcing_entries", "partners"
+  add_foreign_key "paid_leave_grants", "employees"
+  add_foreign_key "paid_leave_requests", "employees"
+  add_foreign_key "paid_leave_requests", "employees", column: "approved_by_id"
+  add_foreign_key "paid_leave_requests", "paid_leave_grants"
   add_foreign_key "payments", "invoices"
   add_foreign_key "project_assignments", "employees"
   add_foreign_key "project_assignments", "projects"
