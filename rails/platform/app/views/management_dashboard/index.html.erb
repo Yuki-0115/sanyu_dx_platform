@@ -152,6 +152,62 @@
         </div>
       </div>
 
+      <%# 有給休暇アラート %>
+      <% if @paid_leave_at_risk.any? || @pending_leave_requests > 0 %>
+        <div class="bg-white shadow rounded-lg p-6 mb-8">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">有給休暇アラート</h3>
+            <%= link_to "管理画面", paid_leaves_path, class: "text-sm text-blue-600 hover:underline" %>
+          </div>
+
+          <% if @pending_leave_requests > 0 %>
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+              <div class="flex items-center justify-between">
+                <span class="text-yellow-800">
+                  承認待ちの有給申請が <strong><%= @pending_leave_requests %>件</strong> あります
+                </span>
+                <%= link_to "確認する", paid_leave_requests_path, class: "text-yellow-800 underline text-sm" %>
+              </div>
+            </div>
+          <% end %>
+
+          <% if @paid_leave_at_risk.any? %>
+            <div class="space-y-2">
+              <p class="text-sm text-gray-600 mb-2">年5日取得義務 要注意者（<%= @paid_leave_at_risk.size %>名）</p>
+              <% @paid_leave_at_risk.each do |risk| %>
+                <%
+                  badge_class = case risk[:alert_level]
+                  when :urgent then "bg-red-600 text-white"
+                  when :danger then "bg-red-100 text-red-800"
+                  else "bg-yellow-100 text-yellow-800"
+                  end
+                  alert_text = case risk[:alert_level]
+                  when :urgent then "緊急"
+                  when :danger then "危険"
+                  else "注意"
+                  end
+                %>
+                <div class="flex items-center justify-between p-3 rounded-lg <%= risk[:alert_level] == :urgent ? 'bg-red-50' : 'bg-gray-50' %>">
+                  <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= badge_class %>">
+                      <%= alert_text %>
+                    </span>
+                    <%= link_to risk[:employee].name, paid_leave_path(risk[:employee]), class: "font-medium text-gray-900 hover:underline" %>
+                  </div>
+                  <div class="text-sm text-gray-600">
+                    取得 <strong><%= risk[:taken] %></strong>/5日
+                    <span class="text-gray-400 mx-1">|</span>
+                    あと<strong class="text-red-600"><%= risk[:shortage] %></strong>日
+                    <span class="text-gray-400 mx-1">|</span>
+                    期限まで<%= risk[:days_remaining] %>日
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- 月別推移 -->
         <div class="bg-white shadow rounded-lg p-6">

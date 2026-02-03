@@ -69,6 +69,29 @@ class ManagementDashboardController < ApplicationController
       }
     end
     @monthly_trends.reverse!
+
+    # === 有給5日未達者アラート ===
+    @paid_leave_at_risk = load_paid_leave_at_risk
+    @pending_leave_requests = PaidLeaveRequest.pending.count
+  end
+
+  private
+
+  def load_paid_leave_at_risk
+    Employee.where(employment_type: "regular").filter_map do |emp|
+      status = emp.paid_leave_obligation_status
+      next if status[:status] == :not_applicable
+      next unless status[:alert_level].in?(%i[warning danger urgent])
+
+      {
+        employee: emp,
+        taken: status[:taken],
+        shortage: status[:shortage],
+        alert_level: status[:alert_level],
+        deadline: status[:period_end],
+        days_remaining: status[:days_remaining_in_period]
+      }
+    end.sort_by { |r| r[:alert_level] == :urgent ? 0 : (r[:alert_level] == :danger ? 1 : 2) }
   end
 
   private
