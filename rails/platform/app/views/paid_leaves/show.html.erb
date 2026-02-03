@@ -1,0 +1,230 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= @employee.name %>さんの有給休暇</h1>
+      <p class="text-sm text-gray-600 mt-1">社員コード: <%= @employee.code %></p>
+    </div>
+    <%= link_to "一覧に戻る", paid_leaves_path,
+        class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+  </div>
+
+  <%# 基本情報 %>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">基本情報</h3>
+      <dl class="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <dt class="text-gray-500">入社日</dt>
+          <dd class="font-medium"><%= @employee.hire_date&.strftime("%Y年%m月%d日") || "-" %></dd>
+        </div>
+        <div>
+          <dt class="text-gray-500">勤続年数</dt>
+          <dd class="font-medium"><%= @service.continuous_service_years %>年</dd>
+        </div>
+        <div>
+          <dt class="text-gray-500">有給基準日</dt>
+          <dd class="font-medium">
+            <%= (@employee.paid_leave_base_date || @employee.hire_date&.+(6.months))&.strftime("%m月%d日") || "-" %>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-gray-500">次回付与予定</dt>
+          <dd class="font-medium">
+            <%= @employee.next_paid_leave_grant_date&.strftime("%Y年%m月%d日") || "-" %>
+            <% if @service.calculate_grant_days > 0 %>
+              <span class="text-blue-600">(<%= @service.calculate_grant_days %>日)</span>
+            <% end %>
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">残日数サマリー</h3>
+      <div class="text-center">
+        <div class="text-4xl font-bold text-blue-600 mb-2">
+          <%= @employee.total_paid_leave_remaining %>
+          <span class="text-lg text-gray-500">日</span>
+        </div>
+        <p class="text-sm text-gray-500">現在の有給残日数</p>
+      </div>
+    </div>
+  </div>
+
+  <%# 年5日取得義務達成状況 %>
+  <% if @obligation[:status] != :not_applicable %>
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">年5日取得義務達成状況</h3>
+
+      <div class="mb-4">
+        <div class="flex justify-between text-sm mb-1">
+          <span>対象期間: <%= @obligation[:period_start].strftime("%Y/%m/%d") %> 〜 <%= @obligation[:period_end].strftime("%Y/%m/%d") %></span>
+          <span>残り<%= @obligation[:days_remaining_in_period] %>日</span>
+        </div>
+
+        <%# プログレスバー %>
+        <div class="relative h-8 bg-gray-200 rounded-full overflow-hidden">
+          <% progress = [(@obligation[:taken] / 5.0 * 100), 100].min %>
+          <%
+            bar_color = case @obligation[:alert_level]
+            when :ok then "bg-green-500"
+            when :urgent, :danger then "bg-red-500"
+            when :warning then "bg-yellow-500"
+            else "bg-blue-500"
+            end
+          %>
+          <div class="absolute top-0 left-0 h-full <%= bar_color %> transition-all duration-300"
+               style="width: <%= progress %>%"></div>
+          <div class="absolute inset-0 flex items-center justify-center text-sm font-medium text-gray-900">
+            <%= @obligation[:taken] %> / <%= @obligation[:required] %> 日
+            <% if @obligation[:taken] >= 5.0 %>
+              <span class="ml-2 text-green-600">達成!</span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <% if @obligation[:taken] < 5.0 %>
+        <div class="flex items-center gap-2 text-sm">
+          <%
+            alert_config = case @obligation[:alert_level]
+            when :urgent then ["この期間中に必ず取得が必要です", "text-red-600", "bg-red-100"]
+            when :danger then ["取得ペースが遅れています", "text-red-600", "bg-red-50"]
+            when :warning then ["計画的な取得をお勧めします", "text-yellow-600", "bg-yellow-50"]
+            else ["順調に取得できています", "text-gray-600", "bg-gray-50"]
+            end
+          %>
+          <div class="flex-1 p-3 rounded <%= alert_config[2] %> <%= alert_config[1] %>">
+            あと<strong><%= @obligation[:shortage] %>日</strong>の取得が必要です。<%= alert_config[0] %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# 手動付与フォーム %>
+  <div class="bg-white rounded-lg shadow p-6 mb-6" data-controller="toggle">
+    <div class="flex justify-between items-center">
+      <h3 class="text-lg font-medium text-gray-900">有給付与</h3>
+      <button type="button"
+              data-action="click->toggle#toggle"
+              class="text-blue-600 hover:underline text-sm">
+        手動付与
+      </button>
+    </div>
+
+    <div data-toggle-target="content" class="hidden mt-4 pt-4 border-t">
+      <%= form_with url: grant_paid_leave_path(@employee), method: :post, class: "space-y-4" do |f| %>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">付与日数</label>
+            <%= number_field_tag :days, nil, step: 0.5, min: 0.5, max: 40,
+                class: "w-full border rounded px-3 py-2", required: true %>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">付与種別</label>
+            <%= select_tag :grant_type,
+                options_for_select([["手動付与", "manual"], ["特別付与", "special"]]),
+                class: "w-full border rounded px-3 py-2" %>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">備考</label>
+            <%= text_field_tag :notes, nil, placeholder: "理由など",
+                class: "w-full border rounded px-3 py-2" %>
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <%= submit_tag "付与する", class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <%# 付与履歴 %>
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      <div class="px-4 py-3 bg-gray-50 border-b">
+        <h3 class="font-medium text-gray-900">付与履歴</h3>
+      </div>
+      <% if @grants.any? %>
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left text-xs text-gray-500">付与日</th>
+              <th class="px-4 py-2 text-right text-xs text-gray-500">付与</th>
+              <th class="px-4 py-2 text-right text-xs text-gray-500">使用</th>
+              <th class="px-4 py-2 text-right text-xs text-gray-500">残</th>
+              <th class="px-4 py-2 text-left text-xs text-gray-500">失効日</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% @grants.each do |grant| %>
+              <tr class="<%= grant.expired? ? 'bg-gray-100 text-gray-400' : '' %>">
+                <td class="px-4 py-2 text-sm">
+                  <%= grant.grant_date.strftime("%Y/%m/%d") %>
+                  <span class="text-xs text-gray-500 block"><%= grant.grant_type_label %></span>
+                </td>
+                <td class="px-4 py-2 text-sm text-right"><%= grant.granted_days %>日</td>
+                <td class="px-4 py-2 text-sm text-right"><%= grant.used_days %>日</td>
+                <td class="px-4 py-2 text-sm text-right font-medium">
+                  <% if grant.expired? %>
+                    <span class="text-gray-400">失効</span>
+                  <% else %>
+                    <%= grant.remaining_days %>日
+                  <% end %>
+                </td>
+                <td class="px-4 py-2 text-sm">
+                  <%= grant.expiry_date.strftime("%Y/%m/%d") %>
+                  <% if grant.expired? %>
+                    <span class="text-xs text-red-500 block">失効済</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="px-4 py-8 text-center text-gray-500">
+          付与履歴がありません
+        </div>
+      <% end %>
+    </div>
+
+    <%# 取得履歴 %>
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      <div class="px-4 py-3 bg-gray-50 border-b">
+        <h3 class="font-medium text-gray-900">取得履歴</h3>
+      </div>
+      <% if @requests.any? %>
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left text-xs text-gray-500">取得日</th>
+              <th class="px-4 py-2 text-center text-xs text-gray-500">種別</th>
+              <th class="px-4 py-2 text-right text-xs text-gray-500">日数</th>
+              <th class="px-4 py-2 text-center text-xs text-gray-500">状態</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% @requests.each do |request| %>
+              <tr>
+                <td class="px-4 py-2 text-sm"><%= request.leave_date.strftime("%Y/%m/%d") %></td>
+                <td class="px-4 py-2 text-sm text-center"><%= request.leave_type_label %></td>
+                <td class="px-4 py-2 text-sm text-right"><%= request.consumed_days %>日</td>
+                <td class="px-4 py-2 text-center">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs <%= request.status_badge_class %>">
+                    <%= request.status_label %>
+                  </span>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="px-4 py-8 text-center text-gray-500">
+          取得履歴がありません
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

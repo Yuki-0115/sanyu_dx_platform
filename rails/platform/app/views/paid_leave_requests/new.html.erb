@@ -1,0 +1,130 @@
+<div class="container mx-auto px-4 py-6 max-w-2xl">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">有給休暇申請</h1>
+    <%= link_to "戻る", paid_leave_requests_path,
+        class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+  </div>
+
+  <%# 残日数表示 %>
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-blue-800 text-sm font-medium">現在の有給残日数</p>
+        <p class="text-3xl font-bold text-blue-600"><%= @remaining_days %><span class="text-lg">日</span></p>
+      </div>
+      <% if @obligation[:status] != :not_applicable %>
+        <div class="text-right">
+          <p class="text-blue-800 text-sm font-medium">年5日取得義務</p>
+          <p class="text-lg font-medium">
+            <span class="<%= @obligation[:taken] >= 5.0 ? 'text-green-600' : 'text-yellow-600' %>">
+              <%= @obligation[:taken] %> / 5日
+            </span>
+            <% if @obligation[:taken] < 5.0 %>
+              <span class="text-sm text-gray-600">(あと<%= @obligation[:shortage] %>日)</span>
+            <% end %>
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <% if @remaining_days <= 0 %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+      <p class="text-red-800">有給残日数がありません。上長にご相談ください。</p>
+    </div>
+  <% end %>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <%= form_with model: @request, url: paid_leave_requests_path, class: "space-y-6",
+        data: { controller: "paid-leave-form" } do |f| %>
+      <% if @request.errors.any? %>
+        <div class="bg-red-50 border border-red-200 rounded p-4">
+          <p class="text-red-800 font-medium">入力エラーがあります</p>
+          <ul class="mt-2 text-sm text-red-600 list-disc list-inside">
+            <% @request.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <%# 取得日 %>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">取得日</label>
+        <%= f.date_field :leave_date,
+            min: Date.current,
+            class: "w-full border rounded px-3 py-2",
+            required: true %>
+        <p class="mt-1 text-xs text-gray-500">本日以降の日付を選択してください</p>
+      </div>
+
+      <%# 休暇種別 %>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">休暇種別</label>
+        <div class="grid grid-cols-3 gap-4" data-paid-leave-form-target="leaveType">
+          <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+            <%= f.radio_button :leave_type, "full",
+                class: "mr-3",
+                checked: @request.leave_type.nil? || @request.leave_type == "full",
+                data: { action: "change->paid-leave-form#updateDays" } %>
+            <div>
+              <span class="font-medium">全休</span>
+              <p class="text-xs text-gray-500">1日</p>
+            </div>
+          </label>
+          <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+            <%= f.radio_button :leave_type, "half_am",
+                class: "mr-3",
+                data: { action: "change->paid-leave-form#updateDays" } %>
+            <div>
+              <span class="font-medium">午前半休</span>
+              <p class="text-xs text-gray-500">0.5日</p>
+            </div>
+          </label>
+          <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+            <%= f.radio_button :leave_type, "half_pm",
+                class: "mr-3",
+                data: { action: "change->paid-leave-form#updateDays" } %>
+            <div>
+              <span class="font-medium">午後半休</span>
+              <p class="text-xs text-gray-500">0.5日</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <%# 消化日数表示 %>
+      <div class="bg-gray-50 rounded-lg p-4">
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-gray-600">消化日数</span>
+          <span class="text-xl font-bold text-blue-600" data-paid-leave-form-target="consumedDays">1.0日</span>
+        </div>
+        <div class="flex justify-between items-center mt-2">
+          <span class="text-sm text-gray-600">申請後残日数</span>
+          <span class="text-lg font-medium" data-paid-leave-form-target="remainingAfter">
+            <%= @remaining_days - 1.0 %>日
+          </span>
+        </div>
+      </div>
+
+      <%# 理由 %>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          理由 <span class="text-gray-400 text-xs">（任意）</span>
+        </label>
+        <%= f.text_area :reason, rows: 3,
+            placeholder: "私用、通院、家事都合など",
+            class: "w-full border rounded px-3 py-2" %>
+      </div>
+
+      <%# 送信ボタン %>
+      <div class="flex justify-end gap-4 pt-4 border-t">
+        <%= link_to "キャンセル", paid_leave_requests_path,
+            class: "px-6 py-2 bg-gray-300 rounded hover:bg-gray-400" %>
+        <%= f.submit "申請する",
+            class: "px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer",
+            disabled: @remaining_days <= 0 %>
+      </div>
+    <% end %>
+  </div>
+</div>

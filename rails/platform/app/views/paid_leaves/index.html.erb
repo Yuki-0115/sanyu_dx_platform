@@ -1,0 +1,148 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">有給休暇管理</h1>
+      <p class="text-sm text-gray-600 mt-1">社員の有給取得状況を確認・管理できます</p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "管理簿出力", report_paid_leaves_path(format: :csv, year: Date.current.year),
+          class: "px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" %>
+      <%= button_to "一括付与", bulk_grant_paid_leaves_path,
+          method: :post,
+          data: { turbo_confirm: "基準日到来者に有給を付与しますか？" },
+          class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+    </div>
+  </div>
+
+  <%# サマリーカード %>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">対象社員数</div>
+      <div class="text-2xl font-bold text-gray-900"><%= @summary[:total_employees] %>名</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">5日達成</div>
+      <div class="text-2xl font-bold text-green-600"><%= @summary[:obligation_met] %>名</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">要注意</div>
+      <div class="text-2xl font-bold text-red-600"><%= @summary[:at_risk] %>名</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-sm text-gray-500">承認待ち申請</div>
+      <div class="text-2xl font-bold text-yellow-600"><%= @pending_requests_count %>件</div>
+      <% if @pending_requests_count > 0 %>
+        <%= link_to "確認する →", paid_leave_requests_path, class: "text-sm text-blue-600 hover:underline" %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# 年5日未達アラート %>
+  <% at_risk_employees = @employees.select { |e|
+    status = e.paid_leave_obligation_status
+    status[:status] != :not_applicable && status[:alert_level].in?(%i[warning danger urgent])
+  } %>
+  <% if at_risk_employees.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+      <h3 class="text-red-800 font-medium mb-2">年5日取得義務 要注意者</h3>
+      <div class="flex flex-wrap gap-2">
+        <% at_risk_employees.each do |emp| %>
+          <% status = emp.paid_leave_obligation_status %>
+          <%
+            badge_class = case status[:alert_level]
+            when :urgent then "bg-red-600 text-white"
+            when :danger then "bg-red-100 text-red-800"
+            else "bg-yellow-100 text-yellow-800"
+            end
+          %>
+          <%= link_to paid_leave_path(emp), class: "inline-flex items-center px-3 py-1 rounded-full text-sm #{badge_class}" do %>
+            <%= emp.name %> (<%= status[:taken] %>/<%= status[:required] %>日)
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# 社員一覧テーブル %>
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">社員名</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">入社日</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">残日数</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">当期取得</th>
+          <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">5日達成</th>
+          <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">状態</th>
+          <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">操作</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @employees.each do |employee| %>
+          <% status = employee.paid_leave_obligation_status %>
+          <%
+            row_class = case status[:alert_level]
+            when :urgent then "bg-red-50"
+            when :danger then "bg-red-50"
+            when :warning then "bg-yellow-50"
+            when :ok then "bg-green-50"
+            else ""
+            end
+          %>
+          <tr class="<%= row_class %> hover:bg-gray-50">
+            <td class="px-4 py-3">
+              <div class="font-medium text-gray-900"><%= employee.name %></div>
+              <div class="text-xs text-gray-500"><%= employee.code %></div>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-600">
+              <%= employee.hire_date&.strftime("%Y/%m/%d") || "-" %>
+            </td>
+            <td class="px-4 py-3 text-right">
+              <span class="text-lg font-bold text-blue-600"><%= employee.total_paid_leave_remaining %></span>
+              <span class="text-xs text-gray-500">日</span>
+            </td>
+            <td class="px-4 py-3 text-right">
+              <% if status[:status] != :not_applicable %>
+                <span class="font-medium"><%= status[:taken] %></span>
+                <span class="text-xs text-gray-500">/ 5日</span>
+              <% else %>
+                <span class="text-gray-400">-</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <% if status[:status] == :not_applicable %>
+                <span class="text-gray-400 text-sm"><%= status[:message] %></span>
+              <% elsif status[:taken] >= 5.0 %>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                  達成
+                </span>
+              <% else %>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
+                  あと<%= status[:shortage] %>日
+                </span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <%
+                alert_badge = case status[:alert_level]
+                when :urgent then ["緊急", "bg-red-600 text-white"]
+                when :danger then ["危険", "bg-red-100 text-red-800"]
+                when :warning then ["注意", "bg-yellow-100 text-yellow-800"]
+                when :ok then ["良好", "bg-green-100 text-green-800"]
+                else ["通常", "bg-gray-100 text-gray-800"]
+                end
+              %>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs <%= alert_badge[1] %>">
+                <%= alert_badge[0] %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <%= link_to "詳細", paid_leave_path(employee),
+                  class: "text-blue-600 hover:underline text-sm" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
