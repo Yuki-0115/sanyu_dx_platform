@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PaidLeaveRequestsController < ApplicationController
-  before_action :authenticate_user!
+  before_action :authenticate_employee!
   before_action :set_request, only: [:approve, :reject, :cancel]
 
   def index
@@ -9,28 +9,28 @@ class PaidLeaveRequestsController < ApplicationController
                   PaidLeaveRequest.includes(:employee, :approved_by)
                                   .order(created_at: :desc)
                 else
-                  current_user.paid_leave_requests
-                              .includes(:approved_by)
-                              .order(created_at: :desc)
+                  current_employee.paid_leave_requests
+                                  .includes(:approved_by)
+                                  .order(created_at: :desc)
                 end
 
     @pending_requests = @requests.pending if can_approve?
   end
 
   def new
-    @request = current_user.paid_leave_requests.build
-    @remaining_days = current_user.total_paid_leave_remaining
-    @obligation = current_user.paid_leave_obligation_status
+    @request = current_employee.paid_leave_requests.build
+    @remaining_days = current_employee.total_paid_leave_remaining
+    @obligation = current_employee.paid_leave_obligation_status
   end
 
   def create
-    @request = current_user.paid_leave_requests.build(request_params)
+    @request = current_employee.paid_leave_requests.build(request_params)
 
     if @request.save
       redirect_to paid_leave_requests_path, notice: "有給申請を提出しました"
     else
-      @remaining_days = current_user.total_paid_leave_remaining
-      @obligation = current_user.paid_leave_obligation_status
+      @remaining_days = current_employee.total_paid_leave_remaining
+      @obligation = current_employee.paid_leave_obligation_status
       render :new, status: :unprocessable_entity
     end
   end
@@ -42,7 +42,7 @@ class PaidLeaveRequestsController < ApplicationController
     end
 
     begin
-      @request.approve!(current_user)
+      @request.approve!(current_employee)
       redirect_to paid_leave_requests_path, notice: "承認しました"
     rescue => e
       redirect_to paid_leave_requests_path, alert: e.message
@@ -62,12 +62,12 @@ class PaidLeaveRequestsController < ApplicationController
       return
     end
 
-    @request.reject!(current_user, reason)
+    @request.reject!(current_employee, reason)
     redirect_to paid_leave_requests_path, notice: "却下しました"
   end
 
   def cancel
-    unless @request.employee_id == current_user.id
+    unless @request.employee_id == current_employee.id
       redirect_to paid_leave_requests_path, alert: "自分の申請のみキャンセルできます"
       return
     end
@@ -92,7 +92,7 @@ class PaidLeaveRequestsController < ApplicationController
   end
 
   def can_approve?
-    current_user.role.in?(%w[admin management engineering construction])
+    current_employee.role.in?(%w[admin management engineering construction])
   end
   helper_method :can_approve?
 end

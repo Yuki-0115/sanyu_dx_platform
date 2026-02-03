@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PaidLeavesController < ApplicationController
-  before_action :authenticate_user!
+  before_action :authenticate_employee!
   before_action :require_management_or_accounting!
   before_action :set_employee, only: [:show, :grant]
 
@@ -90,7 +90,7 @@ class PaidLeavesController < ApplicationController
   end
 
   def require_management_or_accounting!
-    unless current_user.role.in?(%w[admin management accounting])
+    unless current_employee.role.in?(%w[admin management accounting])
       redirect_to root_path, alert: "アクセス権限がありません"
     end
   end
