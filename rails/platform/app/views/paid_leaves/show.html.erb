@@ -103,37 +103,77 @@
   <% end %>
 
   <%# 手動付与フォーム %>
-  <div class="bg-white rounded-lg shadow p-6 mb-6" data-controller="toggle">
+  <div class="bg-white rounded-lg shadow p-6 mb-6" data-controller="toggle paid-leave-grant">
     <div class="flex justify-between items-center">
       <h3 class="text-lg font-medium text-gray-900">有給付与</h3>
       <button type="button"
               data-action="click->toggle#toggle"
               class="text-blue-600 hover:underline text-sm">
-        手動付与
+        手動付与（初期移行含む）
       </button>
     </div>
 
     <div data-toggle-target="content" class="hidden mt-4 pt-4 border-t">
       <%= form_with url: grant_paid_leafe_path(@employee), method: :post, class: "space-y-4" do |f| %>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <%# 付与日数 %>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">付与日数</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">付与日数 <span class="text-red-500">*</span></label>
             <%= number_field_tag :days, nil, step: 0.5, min: 0.5, max: 40,
-                class: "w-full border rounded px-3 py-2", required: true %>
+                class: "w-full border rounded px-3 py-2",
+                required: true,
+                data: { action: "input->paid-leave-grant#updateRemaining", paid_leave_grant_target: "days" } %>
           </div>
+
+          <%# 残日数（初期移行用） %>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">残日数 <span class="text-gray-400 text-xs">（初期移行用）</span></label>
+            <%= number_field_tag :remaining_days, nil, step: 0.5, min: 0, max: 40,
+                class: "w-full border rounded px-3 py-2",
+                placeholder: "付与日数と同じ",
+                data: { paid_leave_grant_target: "remaining" } %>
+            <p class="text-xs text-gray-500 mt-1">空欄なら付与日数と同じ</p>
+          </div>
+
+          <%# 付与種別 %>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">付与種別</label>
             <%= select_tag :grant_type,
                 options_for_select([["手動付与", "manual"], ["特別付与", "special"]]),
                 class: "w-full border rounded px-3 py-2" %>
           </div>
+
+          <%# 付与日 %>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">付与日 <span class="text-red-500">*</span></label>
+            <%= date_field_tag :grant_date, Date.current,
+                class: "w-full border rounded px-3 py-2",
+                required: true,
+                data: { action: "change->paid-leave-grant#updateExpiry", paid_leave_grant_target: "grantDate" } %>
+          </div>
+
+          <%# 失効日（自動計算、上書き可能） %>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">失効日 <span class="text-gray-400 text-xs">（付与日+2年）</span></label>
+            <%= date_field_tag :expiry_date, Date.current + 2.years,
+                class: "w-full border rounded px-3 py-2",
+                data: { paid_leave_grant_target: "expiryDate" } %>
+          </div>
+
+          <%# 備考 %>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">備考</label>
-            <%= text_field_tag :notes, nil, placeholder: "理由など",
+            <%= text_field_tag :notes, nil, placeholder: "初期移行、調整など",
                 class: "w-full border rounded px-3 py-2" %>
           </div>
         </div>
-        <div class="flex justify-end">
+
+        <div class="flex justify-end gap-2">
+          <button type="button"
+                  data-action="click->toggle#toggle"
+                  class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+            キャンセル
+          </button>
           <%= submit_tag "付与する", class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
         </div>
       <% end %>

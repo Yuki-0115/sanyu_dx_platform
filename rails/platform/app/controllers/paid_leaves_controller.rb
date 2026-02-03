@@ -59,11 +59,13 @@ class PaidLeavesController < ApplicationController
     redirect_to paid_leaves_path
   end
 
-  # 個別手動付与
+  # 個別手動付与（初期移行対応）
   def grant
-    service = PaidLeaveGrantService.new(@employee)
     days = params[:days].to_f
+    remaining = params[:remaining_days].present? ? params[:remaining_days].to_f : days
     grant_type = params[:grant_type] || "manual"
+    grant_date = params[:grant_date].present? ? Date.parse(params[:grant_date]) : Date.current
+    expiry_date = params[:expiry_date].present? ? Date.parse(params[:expiry_date]) : grant_date + 2.years
     notes = params[:notes]
 
     if days <= 0
@@ -71,13 +73,28 @@ class PaidLeavesController < ApplicationController
       return
     end
 
+    if remaining < 0 || remaining > days
+      redirect_to paid_leafe_path(@employee), alert: "残日数は0〜付与日数の範囲で指定してください"
+      return
+    end
+
     begin
-      grant = service.manual_grant!(
-        days: days,
+      used_days = days - remaining
+      fiscal_year = grant_date.month >= 4 ? grant_date.year : grant_date.year - 1
+
+      PaidLeaveGrant.create!(
+        employee: @employee,
+        grant_date: grant_date,
+        expiry_date: expiry_date,
+        fiscal_year: fiscal_year,
+        granted_days: days,
+        used_days: used_days,
+        remaining_days: remaining,
         grant_type: grant_type,
         notes: notes
       )
-      redirect_to paid_leafe_path(@employee), notice: "#{days}日を付与しました"
+
+      redirect_to paid_leafe_path(@employee), notice: "#{days}日を付与しました（残#{remaining}日）"
     rescue => e
       redirect_to paid_leafe_path(@employee), alert: e.message
     end

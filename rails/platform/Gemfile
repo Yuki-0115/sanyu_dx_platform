@@ -91,3 +91,6 @@ gem "jwt"
 gem "google-apis-drive_v3"
 gem "google-apis-sheets_v4"
 gem "googleauth"
+
+# Cron job scheduling
+gem "whenever", require: false
