@@ -247,6 +247,68 @@ CREATE TABLE employees (
 -- role: admin, management, accounting, sales, engineering, construction, worker
 ```
 
+#### paid_leave_grants（有給付与）
+
+```sql
+CREATE TABLE paid_leave_grants (
+  id SERIAL PRIMARY KEY,
+  employee_id INTEGER REFERENCES employees(id) NOT NULL,
+
+  grant_type VARCHAR(20) NOT NULL,       -- auto/manual/special
+  grant_date DATE NOT NULL,              -- 付与日
+  expiry_date DATE NOT NULL,             -- 失効日（付与日+2年）
+
+  granted_days DECIMAL(3,1) NOT NULL,    -- 付与日数
+  used_days DECIMAL(3,1) DEFAULT 0,      -- 消化済み日数
+  remaining_days DECIMAL(3,1) NOT NULL,  -- 残日数
+
+  reason TEXT,                           -- 付与理由（特別付与時）
+  granted_by_id INTEGER REFERENCES employees(id), -- 付与者
+
+  created_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL
+);
+
+CREATE INDEX idx_paid_leave_grants_employee ON paid_leave_grants(employee_id);
+CREATE INDEX idx_paid_leave_grants_active ON paid_leave_grants(expiry_date) WHERE remaining_days > 0;
+
+-- grant_type: auto（自動付与）, manual（手動調整）, special（特別付与）
+-- FIFO消化: 古い付与分（grant_date順）から消化
+```
+
+#### paid_leave_requests（有給申請）
+
+```sql
+CREATE TABLE paid_leave_requests (
+  id SERIAL PRIMARY KEY,
+  employee_id INTEGER REFERENCES employees(id) NOT NULL,
+  paid_leave_grant_id INTEGER REFERENCES paid_leave_grants(id), -- 消化対象付与
+
+  leave_date DATE NOT NULL,              -- 取得日
+  leave_type VARCHAR(10) NOT NULL,       -- full/half_am/half_pm
+  consumed_days DECIMAL(2,1) NOT NULL,   -- 消化日数（1.0 or 0.5）
+
+  reason TEXT,                           -- 申請理由
+  status VARCHAR(20) DEFAULT 'pending',  -- pending/approved/rejected/cancelled
+
+  approved_by_id INTEGER REFERENCES employees(id),
+  approved_at TIMESTAMP,
+  rejection_reason TEXT,                 -- 却下理由
+
+  created_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL,
+
+  UNIQUE(employee_id, leave_date)        -- 1社員1日1申請
+);
+
+CREATE INDEX idx_paid_leave_requests_employee ON paid_leave_requests(employee_id);
+CREATE INDEX idx_paid_leave_requests_status ON paid_leave_requests(status);
+CREATE INDEX idx_paid_leave_requests_leave_date ON paid_leave_requests(leave_date);
+
+-- leave_type: full（全日）, half_am（午前半休）, half_pm（午後半休）
+-- status: pending（承認待ち）, approved（承認）, rejected（却下）, cancelled（取消）
+```
+
 #### partners（協力会社マスタ）
 
 ```sql

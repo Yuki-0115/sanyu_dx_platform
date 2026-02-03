@@ -7,6 +7,14 @@
 ## [Unreleased]
 
 ### Added
+- 有給休暇管理機能
+  - PaidLeaveGrant: 有給付与管理（自動付与・手動付与・特別付与）
+  - PaidLeaveRequest: 有給申請・承認ワークフロー
+  - PaidLeaveGrantService: 勤続年数に基づく自動付与計算
+  - PaidLeaveReportService: 有給休暇管理簿CSV出力（労働基準法準拠）
+  - 年5日取得義務アラート（経営ダッシュボード連携）
+  - FIFO消化ロジック（古い付与分から消化）
+  - Stimulusコントローラー: paid_leave_form_controller, paid_leave_approval_controller
 - ADR-002: JavaScript開発ルール（Stimulus必須）を追加
 - Stimulusコントローラー追加
   - tabs_controller（タブ切り替え）
