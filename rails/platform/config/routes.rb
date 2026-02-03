@@ -145,6 +145,26 @@ Rails.application.routes.draw do
   # 経費報告（日報外）
   resources :expense_reports, only: %i[index new create show edit update destroy]
 
+  # 有給休暇管理（管理者向け）
+  resources :paid_leaves, only: [:index, :show] do
+    collection do
+      get :report
+      post :bulk_grant
+    end
+    member do
+      post :grant
+    end
+  end
+
+  # 有給申請（社員向け）
+  resources :paid_leave_requests, only: [:index, :new, :create] do
+    member do
+      patch :approve
+      patch :reject
+      patch :cancel
+    end
+  end
+
   # 仮経費確定
   resources :provisional_expenses, only: [:index] do
     member do
