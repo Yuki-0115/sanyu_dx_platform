@@ -115,6 +115,24 @@
       <span class="ml-3" data-sidebar-target="text">経費報告</span>
     <% end %>
 
+    <!-- 有給申請（全員アクセス可） -->
+    <% pending_leave_count = current_employee.admin? || current_employee.management? ? PaidLeaveRequest.pending.count : 0 %>
+    <%= link_to paid_leave_requests_path,
+        class: "flex items-center px-4 py-3.5 lg:px-3 lg:py-2.5 text-base lg:text-sm transition-colors rounded-lg #{controller_name == 'paid_leave_requests' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}",
+        title: "有給申請" do %>
+      <svg class="w-6 h-6 lg:w-5 lg:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+      </svg>
+      <span class="ml-3 flex items-center" data-sidebar-target="text">
+        有給申請
+        <% if pending_leave_count > 0 %>
+          <span class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+            <%= pending_leave_count %>
+          </span>
+        <% end %>
+      </span>
+    <% end %>
+
     <!-- 区切り線 -->
     <div class="my-2 border-t border-gray-700"></div>
 
@@ -312,6 +330,15 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
         </svg>
         <span class="ml-3" data-sidebar-target="text">休日</span>
+      <% end %>
+
+      <%= link_to paid_leaves_path,
+          class: "flex items-center px-4 py-3 lg:px-3 lg:py-2 text-base lg:text-sm transition-colors rounded-lg #{controller_name == 'paid_leaves' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}",
+          title: "有給管理" do %>
+        <svg class="w-6 h-6 lg:w-5 lg:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+        </svg>
+        <span class="ml-3" data-sidebar-target="text">有給管理</span>
       <% end %>
     <% end %>
 
