@@ -61,24 +61,19 @@ class CashFlowCalendarController < ApplicationController
       notes: params[:notes]
     )
 
-    # return_toパラメータがあればそこに戻る（カレンダーページ用）
-    if params[:return_to].present?
-      redirect_to params[:return_to], notice: "確定しました"
-    else
-      redirect_to cash_flow_date_path(date: @entry.expected_date), notice: "確定しました"
-    end
+    redirect_to safe_return_to(cash_flow_date_path(date: @entry.expected_date)), notice: "確定しました"
   rescue StandardError => e
     redirect_back fallback_location: cash_flow_calendar_path, alert: "確定に失敗しました: #{e.message}"
   end
 
   def edit_entry
     @entry = CashFlowEntry.find(params[:id])
-    @return_to = params[:return_to]
+    @return_to = safe_return_to(cash_flow_date_path(date: @entry.expected_date))
   end
 
   def update_entry
     @entry = CashFlowEntry.find(params[:id])
-    return_to = params[:return_to].presence || cash_flow_date_path(date: @entry.expected_date)
+    return_to = safe_return_to(cash_flow_date_path(date: @entry.expected_date))
 
     if @entry.update(entry_params.merge(manual_override: true, override_reason: params[:reason]))
       redirect_to return_to, notice: "更新しました"
@@ -158,6 +153,11 @@ class CashFlowCalendarController < ApplicationController
       running = running + day_income - day_expense
       { date: date, income: day_income, expense: day_expense, balance: running }
     end
+  end
+
+  def safe_return_to(fallback)
+    path = params[:return_to]
+    path.present? && path.start_with?("/") && !path.start_with?("//") ? path : fallback
   end
 
   def authorize_edit!

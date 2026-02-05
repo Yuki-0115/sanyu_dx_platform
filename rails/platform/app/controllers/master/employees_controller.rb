@@ -67,11 +67,11 @@ module Master
     end
 
     def employee_params
-      params.require(:employee).permit(
-        :code, :name, :name_kana, :email, :phone, :password,
-        :employment_type, :hire_date, :role, :partner_id,
-        :monthly_salary, :social_insurance_monthly, :daily_rate
-      )
+      permitted = %i[code name name_kana email phone password
+                     employment_type hire_date partner_id
+                     monthly_salary social_insurance_monthly daily_rate]
+      permitted << :role if current_employee&.admin?
+      params.require(:employee).permit(permitted)
     end
   end
 end

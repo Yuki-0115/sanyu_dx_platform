@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class MonthlyReportsController < ApplicationController
-  before_action :authenticate_user!
+  before_action :authenticate_employee!
 
   def index
     @year = params[:year]&.to_i || Date.current.year

@@ -59,7 +59,8 @@ class DataImportsController < ApplicationController
 
     # importerをセッションに保存はできないのでファイルを一時保存
     if @errors.empty?
-      temp_path = Rails.root.join("tmp", "imports", "#{SecureRandom.hex}_#{params[:file].original_filename}")
+      safe_filename = File.basename(params[:file].original_filename).gsub(/[\/\\]/, "_")
+      temp_path = Rails.root.join("tmp", "imports", "#{SecureRandom.hex}_#{safe_filename}")
       FileUtils.mkdir_p(File.dirname(temp_path))
       FileUtils.cp(params[:file].tempfile.path, temp_path)
       session[:import_temp_file] = temp_path.to_s
@@ -110,6 +111,12 @@ class DataImportsController < ApplicationController
   # GET /data_imports/:import_type/template — テンプレートダウンロード
   def template
     @import_type = params[:import_type]
+
+    unless ::DataImport::IMPORT_TYPES.include?(@import_type)
+      redirect_to data_imports_path, alert: "不正な取込種別です"
+      return
+    end
+
     template_path = Rails.root.join("lib", "templates", "import_#{@import_type}.xlsx")
 
     if File.exist?(template_path)
