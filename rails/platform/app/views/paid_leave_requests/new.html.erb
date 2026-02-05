@@ -61,7 +61,7 @@
       <%# 休暇種別 %>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">休暇種別</label>
-        <div class="grid grid-cols-3 gap-4" data-paid-leave-form-target="leaveType">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4" data-paid-leave-form-target="leaveType">
           <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
             <%= f.radio_button :leave_type, "full",
                 class: "mr-3",

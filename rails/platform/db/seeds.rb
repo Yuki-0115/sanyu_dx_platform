@@ -364,3 +364,60 @@ puts "Adjusted at-risk employees: #{at_risk_employees.map(&:name).join(', ')}"
 
 puts "\n=== Seed completed ==="
 puts "Login with: admin@sanyu.example.com / password123"
+
+# ========================================
+# 見積テンプレート（デフォルト）
+# ========================================
+puts "Creating estimate templates..."
+
+# 条件書テンプレート
+condition_templates = [
+  {
+    name: "舗装工事_標準",
+    content: <<~TEXT.strip
+      ・産業廃棄物 運搬処分は別途
+      ・昼間施工 08:00～17:00
+      ・舗装機械 小物機械 含む
+      ・重機 労務回送 1往復 含みます
+      ・路床 路盤 軟弱な場合は別途協議願います
+      ・勾配1.5％以上確保願います
+      ・舗装版切断 含みません
+      ・安全費 ガードマンは含みません
+      ・掘削残土運搬処分 含みません
+    TEXT
+  },
+  {
+    name: "地盤改良_標準",
+    content: <<~TEXT.strip
+      ・産業廃棄物 運搬処分は別途
+      ・昼間施工 08:00～17:00
+      ・地盤改良機械 含む
+      ・重機 労務回送 1往復 含みます
+      ・軟弱地盤の場合は別途協議願います
+    TEXT
+  }
+]
+
+condition_templates.each_with_index do |data, idx|
+  EstimateTemplate.find_or_create_by!(template_type: "condition", name: data[:name], is_shared: true) do |t|
+    t.content = data[:content]
+    t.sort_order = idx
+  end
+end
+puts "  Created #{condition_templates.size} condition templates"
+
+# 確認書テンプレート
+confirmation_content = {
+  "材料費" => ["As合材", "RC-40 RM-25"],
+  "施工管理" => ["写真管理", "出来形管理", "品質管理"],
+  "安全費" => ["保安要員", "保安施設"],
+  "仮設経費（左）" => ["看板・標識類", "保安関係費", "電気引込費", "土捨場代", "丁張材料"],
+  "仮設経費（右）" => ["基本測量", "施工測量", "測量機器", "仮設道路", "工事用電気", "工事用水道", "工事用借地料", "重機仮置場", "現場事務所", "宿舎", "倉庫", "電気 水道 ガス", "借地料"],
+  "その他" => ["労災保険料", "建退協証紙代"]
+}.to_json
+
+EstimateTemplate.find_or_create_by!(template_type: "confirmation", name: "標準確認書", is_shared: true) do |t|
+  t.content = confirmation_content
+  t.sort_order = 0
+end
+puts "  Created confirmation template"

@@ -7,6 +7,11 @@
 ## [Unreleased]
 
 ### Added
+- 見積テンプレート管理機能（条件書・確認書）
+  - EstimateTemplateモデル追加（CRUD対応）
+  - 全社共有テンプレート + 個人テンプレートの両方に対応
+  - /estimate_templates でテンプレート一覧・作成・編集・削除
+  - 見積書作成時にDBからテンプレートを取得
 - 有給休暇管理機能
   - PaidLeaveGrant: 有給付与管理（自動付与・手動付与・特別付与）
   - PaidLeaveRequest: 有給申請・承認ワークフロー
@@ -31,6 +36,7 @@
 - 通知イベント対応
   - 案件作成、4点チェック完了、着工、完工
   - 実行予算確定、請求書発行、入金確認
+  - 有給申請・承認・却下
 - Google Drive連携
   - GoogleDriveService（案件フォルダ自動作成）
   - 案件作成時にサブフォルダ自動生成（見積・現場管理・安全・写真・竣工・請求）
@@ -43,6 +49,7 @@
   - Google Driveへの自動保存
 
 ### Changed
+- 実行予算画面に見積書の予算明細を表示（読み取り専用）
 - CLAUDE.md: JavaScript開発ルールセクションを追加
 - CSP設定: unsafe-inline削除、nonce有効化
 - 全ビューのインラインスクリプトをStimulusに移行

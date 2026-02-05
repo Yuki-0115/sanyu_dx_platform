@@ -117,6 +117,13 @@ Rails.application.routes.draw do
     resources :project_documents, only: %i[index new create destroy], path: "documents"
   end
 
+  # 見積テンプレート管理
+  resources :estimate_templates, except: [:show] do
+    collection do
+      post :quick_create
+    end
+  end
+
   # 常用日報（外部現場）
   resources :external_daily_reports, only: %i[index new create show edit update] do
     member do

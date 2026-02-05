@@ -24,7 +24,10 @@ class LineWorksNotifier
     daily_report_confirmed: "日報確認",
     invoice_issued: "請求書発行",
     payment_received: "入金確認",
-    offset_confirmed: "相殺確定"
+    offset_confirmed: "相殺確定",
+    paid_leave_requested: "有給申請",
+    paid_leave_approved: "有給承認",
+    paid_leave_rejected: "有給却下"
   }.freeze
 
   class << self
@@ -32,6 +35,7 @@ class LineWorksNotifier
              :pre_construction_completed, :construction_started, :project_completed,
              :budget_confirmed, :daily_report_submitted, :daily_report_confirmed,
              :invoice_issued, :payment_received, :offset_confirmed,
+             :paid_leave_requested, :paid_leave_approved, :paid_leave_rejected,
              :test_connection, :send_test_message,
              to: :instance
   end
@@ -198,6 +202,41 @@ class LineWorksNotifier
         "協力会社: #{offset.partner&.name}",
         "対象月: #{offset.year_month}",
         "相殺額: #{format_currency(offset.offset_amount)}"
+      ])
+    )
+  end
+
+  # === 有給休暇関連通知 ===
+
+  def paid_leave_requested(request)
+    notify(
+      type: :paid_leave_requested,
+      message: build_message(:paid_leave_requested, [
+        "申請者: #{request.employee&.name}",
+        "取得日: #{request.leave_date.strftime('%Y/%m/%d')}（#{request.leave_type_label}）",
+        "理由: #{request.reason.presence || '未記入'}"
+      ])
+    )
+  end
+
+  def paid_leave_approved(request)
+    notify(
+      type: :paid_leave_approved,
+      message: build_message(:paid_leave_approved, [
+        "申請者: #{request.employee&.name}",
+        "取得日: #{request.leave_date.strftime('%Y/%m/%d')}（#{request.leave_type_label}）",
+        "承認者: #{request.approved_by&.name}"
+      ])
+    )
+  end
+
+  def paid_leave_rejected(request)
+    notify(
+      type: :paid_leave_rejected,
+      message: build_message(:paid_leave_rejected, [
+        "申請者: #{request.employee&.name}",
+        "取得日: #{request.leave_date.strftime('%Y/%m/%d')}（#{request.leave_type_label}）",
+        "却下理由: #{request.rejection_reason}"
       ])
     )
   end

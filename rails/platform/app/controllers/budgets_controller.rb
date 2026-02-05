@@ -6,7 +6,9 @@ class BudgetsController < ApplicationController
   authorize_with :budgets
   before_action :set_budget, only: %i[show edit update confirm]
 
-  def show; end
+  def show
+    @estimate = @project.estimate
+  end
 
   def new
     @budget = @project.build_budget

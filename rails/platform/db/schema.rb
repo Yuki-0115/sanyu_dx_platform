@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_03_032158) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_05_052053) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -337,6 +337,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_03_032158) do
     t.index ["estimate_category_id"], name: "index_estimate_items_on_estimate_category_id"
     t.index ["estimate_id", "sort_order"], name: "index_estimate_items_on_estimate_id_and_sort_order"
     t.index ["estimate_id"], name: "index_estimate_items_on_estimate_id"
+  end
+
+  create_table "estimate_templates", force: :cascade do |t|
+    t.string "template_type", null: false
+    t.string "name", null: false
+    t.text "content"
+    t.boolean "is_shared", default: false, null: false
+    t.bigint "employee_id"
+    t.integer "sort_order", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id"], name: "index_estimate_templates_on_employee_id"
+    t.index ["template_type", "employee_id"], name: "index_estimate_templates_on_template_type_and_employee_id"
+    t.index ["template_type", "is_shared"], name: "index_estimate_templates_on_template_type_and_is_shared"
   end
 
   create_table "estimates", force: :cascade do |t|
@@ -829,6 +843,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_03_032158) do
   add_foreign_key "estimate_item_costs", "estimate_items"
   add_foreign_key "estimate_items", "estimate_categories"
   add_foreign_key "estimate_items", "estimates"
+  add_foreign_key "estimate_templates", "employees"
   add_foreign_key "estimates", "employees", column: "created_by_id"
   add_foreign_key "estimates", "projects"
   add_foreign_key "expenses", "daily_reports"

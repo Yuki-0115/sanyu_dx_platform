@@ -1,0 +1,104 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">見積テンプレート管理</h1>
+      <p class="text-sm text-gray-600 mt-1">条件書・確認書のテンプレートを管理できます</p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to new_estimate_template_path(type: "condition"),
+          class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" do %>
+        + 条件書テンプレート
+      <% end %>
+      <%= link_to new_estimate_template_path(type: "confirmation"),
+          class: "px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" do %>
+        + 確認書テンプレート
+      <% end %>
+    </div>
+  </div>
+
+  <%# 条件書テンプレート %>
+  <div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-4 py-3 bg-blue-50 border-b rounded-t-lg">
+      <h2 class="text-lg font-medium text-blue-900">条件書テンプレート</h2>
+    </div>
+
+    <% if @condition_templates.any? %>
+      <div class="divide-y divide-gray-200">
+        <% @condition_templates.each do |template| %>
+          <div class="p-4 hover:bg-gray-50">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-medium text-gray-900"><%= template.name %></h3>
+                  <% if template.shared? %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800">共有</span>
+                  <% else %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">個人</span>
+                  <% end %>
+                </div>
+                <p class="mt-1 text-sm text-gray-500 line-clamp-2 whitespace-pre-wrap"><%= template.content.truncate(100) %></p>
+              </div>
+              <% if template.editable_by?(current_employee) %>
+                <div class="flex items-center gap-2 ml-4">
+                  <%= link_to "編集", edit_estimate_template_path(template),
+                      class: "text-blue-600 hover:text-blue-800 text-sm" %>
+                  <%= button_to "削除", estimate_template_path(template),
+                      method: :delete,
+                      data: { turbo_confirm: "このテンプレートを削除しますか？" },
+                      class: "text-red-600 hover:text-red-800 text-sm" %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="p-8 text-center text-gray-500">
+        条件書テンプレートがありません
+      </div>
+    <% end %>
+  </div>
+
+  <%# 確認書テンプレート %>
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-3 bg-green-50 border-b rounded-t-lg">
+      <h2 class="text-lg font-medium text-green-900">確認書テンプレート</h2>
+    </div>
+
+    <% if @confirmation_templates.any? %>
+      <div class="divide-y divide-gray-200">
+        <% @confirmation_templates.each do |template| %>
+          <div class="p-4 hover:bg-gray-50">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-medium text-gray-900"><%= template.name %></h3>
+                  <% if template.shared? %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-800">共有</span>
+                  <% else %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">個人</span>
+                  <% end %>
+                </div>
+                <p class="mt-1 text-sm text-gray-500"><%= template.content.truncate(100) %></p>
+              </div>
+              <% if template.editable_by?(current_employee) %>
+                <div class="flex items-center gap-2 ml-4">
+                  <%= link_to "編集", edit_estimate_template_path(template),
+                      class: "text-green-600 hover:text-green-800 text-sm" %>
+                  <%= button_to "削除", estimate_template_path(template),
+                      method: :delete,
+                      data: { turbo_confirm: "このテンプレートを削除しますか？" },
+                      class: "text-red-600 hover:text-red-800 text-sm" %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="p-8 text-center text-gray-500">
+        確認書テンプレートがありません
+      </div>
+    <% end %>
+  </div>
+</div>

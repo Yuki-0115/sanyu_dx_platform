@@ -29,6 +29,7 @@ class EstimatesController < ApplicationController
       payment_terms: "出来高現金払 現金100％"
     )
     build_default_confirmations
+    load_templates
     @tab = params[:tab] || "cover"
   end
 
@@ -40,6 +41,7 @@ class EstimatesController < ApplicationController
       redirect_to project_estimate_path(@project, @estimate), notice: "見積書を作成しました"
     else
       build_default_confirmations if @estimate.estimate_confirmations.empty?
+      load_templates
       @tab = params[:tab] || "cover"
       render :new, status: :unprocessable_entity
     end
@@ -47,6 +49,7 @@ class EstimatesController < ApplicationController
 
   def edit
     build_default_confirmations if @estimate.estimate_confirmations.empty?
+    load_templates
     @tab = params[:tab] || "cover"
   end
 
@@ -55,6 +58,7 @@ class EstimatesController < ApplicationController
       redirect_to project_estimate_path(@project, @estimate, tab: params[:tab]),
                   notice: "見積書を更新しました"
     else
+      load_templates
       @tab = params[:tab] || "cover"
       render :edit, status: :unprocessable_entity
     end
@@ -116,12 +120,25 @@ class EstimatesController < ApplicationController
     )
   end
 
+  def load_templates
+    @condition_templates = EstimateTemplate.condition_templates_for(current_employee)
+    @confirmation_templates = EstimateTemplate.confirmation_templates_for(current_employee)
+  end
+
   def build_default_confirmations
     return if @estimate.estimate_confirmations.any?
 
     sort_order = 0
 
-    Estimate::CONFIRMATION_ITEMS.each do |category, items|
+    # DBのテンプレートから取得、なければ定数からフォールバック
+    confirmation_template = EstimateTemplate.confirmation_templates_for(current_employee).first
+    confirmation_items = if confirmation_template
+                           JSON.parse(confirmation_template.content) rescue {}
+                         else
+                           Estimate::CONFIRMATION_ITEMS
+                         end
+
+    confirmation_items.each do |category, items|
       items.each do |item_name|
         @estimate.estimate_confirmations.build(
           item_category: category,

@@ -1,0 +1,11 @@
+<div class="container mx-auto px-4 py-6 max-w-2xl">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">
+      <%= @template.template_type == "condition" ? "条件書" : "確認書" %>テンプレート作成
+    </h1>
+    <%= link_to "戻る", estimate_templates_path,
+        class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+  </div>
+
+  <%= render "form", template: @template %>
+</div>

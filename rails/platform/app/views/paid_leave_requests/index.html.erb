@@ -21,43 +21,47 @@
 
       <div class="space-y-4">
         <% @pending_requests.each do |request| %>
-          <div class="bg-white rounded-lg shadow p-4 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-              <div>
-                <p class="font-medium text-gray-900"><%= request.employee.name %></p>
-                <p class="text-sm text-gray-500"><%= request.employee.code %></p>
-              </div>
-              <div class="text-center px-4 border-l">
-                <p class="text-lg font-bold text-gray-900"><%= request.leave_date.strftime("%m/%d") %></p>
-                <p class="text-xs text-gray-500"><%= request.leave_date.strftime("%Y年") %></p>
-              </div>
-              <div class="px-4 border-l">
-                <span class="inline-flex items-center px-2 py-1 rounded text-sm bg-gray-100">
-                  <%= request.leave_type_label %>
-                </span>
-                <span class="text-sm text-gray-600 ml-2">(<%= request.consumed_days %>日)</span>
-              </div>
-              <% if request.reason.present? %>
-                <div class="px-4 border-l text-sm text-gray-600 max-w-xs truncate" title="<%= request.reason %>">
-                  <%= request.reason %>
+          <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div class="flex flex-wrap items-center gap-3 sm:gap-4">
+                <div class="flex items-center gap-3">
+                  <div>
+                    <p class="font-medium text-gray-900"><%= request.employee.name %></p>
+                    <p class="text-sm text-gray-500"><%= request.employee.code %></p>
+                  </div>
+                  <div class="text-center px-3 sm:px-4 border-l">
+                    <p class="text-lg font-bold text-gray-900"><%= request.leave_date.strftime("%m/%d") %></p>
+                    <p class="text-xs text-gray-500"><%= request.leave_date.strftime("%Y年") %></p>
+                  </div>
                 </div>
-              <% end %>
-            </div>
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex items-center px-2 py-1 rounded text-sm bg-gray-100">
+                    <%= request.leave_type_label %>
+                  </span>
+                  <span class="text-sm text-gray-600">(<%= request.consumed_days %>日)</span>
+                </div>
+                <% if request.reason.present? %>
+                  <div class="text-sm text-gray-600 truncate max-w-[200px] sm:max-w-xs" title="<%= request.reason %>">
+                    <%= request.reason %>
+                  </div>
+                <% end %>
+              </div>
 
-            <div class="flex items-center gap-2">
-              <%= button_to "承認", approve_paid_leave_request_path(request),
-                  method: :patch,
-                  data: { turbo_confirm: "#{request.employee.name}さんの#{request.leave_date.strftime('%m月%d日')}の有給申請を承認しますか？" },
-                  class: "px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700" %>
+              <div class="flex items-center gap-2">
+                <%= button_to "承認", approve_paid_leave_request_path(request),
+                    method: :patch,
+                    data: { turbo_confirm: "#{request.employee.name}さんの#{request.leave_date.strftime('%m月%d日')}の有給申請を承認しますか？" },
+                    class: "flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 text-center" %>
 
-              <button type="button"
-                      data-action="click->paid-leave-approval#showRejectModal"
-                      data-request-id="<%= request.id %>"
-                      data-employee-name="<%= request.employee.name %>"
-                      data-leave-date="<%= request.leave_date.strftime('%m月%d日') %>"
-                      class="px-4 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700">
-                却下
-              </button>
+                <button type="button"
+                        data-action="click->paid-leave-approval#showRejectModal"
+                        data-request-id="<%= request.id %>"
+                        data-employee-name="<%= request.employee.name %>"
+                        data-leave-date="<%= request.leave_date.strftime('%m月%d日') %>"
+                        class="flex-1 sm:flex-none px-4 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 text-center">
+                  却下
+                </button>
+              </div>
             </div>
           </div>
         <% end %>
@@ -105,6 +109,55 @@
     </div>
 
     <% if @requests.any? %>
+      <%# スマホ用カードビュー %>
+      <div class="sm:hidden divide-y divide-gray-200">
+        <% @requests.each do |request| %>
+          <div class="p-4 space-y-2">
+            <div class="flex justify-between items-start">
+              <div>
+                <% if can_approve? %>
+                  <p class="font-medium text-gray-900"><%= request.employee.name %></p>
+                  <p class="text-xs text-gray-500"><%= request.employee.code %></p>
+                <% end %>
+                <p class="text-sm text-gray-900 mt-1">
+                  <%= request.leave_date.strftime("%Y/%m/%d") %>
+                  <span class="text-gray-500">(<%= %w[日 月 火 水 木 金 土][request.leave_date.wday] %>)</span>
+                </p>
+              </div>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs <%= request.status_badge_class %>">
+                <%= request.status_label %>
+              </span>
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <span class="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100">
+                <%= request.leave_type_label %>
+              </span>
+              <span class="text-gray-600"><%= request.consumed_days %>日</span>
+            </div>
+            <% if request.reason.present? %>
+              <p class="text-sm text-gray-600"><%= request.reason %></p>
+            <% end %>
+            <% if request.approved_by %>
+              <p class="text-xs text-gray-500">
+                承認: <%= request.approved_by.name %> (<%= request.approved_at&.strftime("%m/%d %H:%M") %>)
+              </p>
+            <% end %>
+            <% if request.pending? && request.employee_id == current_employee.id %>
+              <div class="pt-2">
+                <%= button_to "取消", cancel_paid_leave_request_path(request),
+                    method: :patch,
+                    data: { turbo_confirm: "この申請を取り消しますか？" },
+                    class: "text-red-600 hover:underline text-sm" %>
+              </div>
+            <% elsif request.rejected? && request.rejection_reason.present? %>
+              <p class="text-xs text-red-600">却下理由: <%= request.rejection_reason %></p>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <%# PC用テーブルビュー %>
+      <div class="hidden sm:block overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
@@ -173,6 +226,7 @@
           <% end %>
         </tbody>
       </table>
+      </div>
     <% else %>
       <div class="px-4 py-8 text-center text-gray-500">
         申請履歴がありません

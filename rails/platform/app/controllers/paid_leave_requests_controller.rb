@@ -27,6 +27,7 @@ class PaidLeaveRequestsController < ApplicationController
     @request = current_employee.paid_leave_requests.build(request_params)
 
     if @request.save
+      LineWorksNotifier.paid_leave_requested(@request)
       redirect_to paid_leave_requests_path, notice: "有給申請を提出しました"
     else
       @remaining_days = current_employee.total_paid_leave_remaining
@@ -43,6 +44,7 @@ class PaidLeaveRequestsController < ApplicationController
 
     begin
       @request.approve!(current_employee)
+      LineWorksNotifier.paid_leave_approved(@request)
       redirect_to paid_leave_requests_path, notice: "承認しました"
     rescue => e
       redirect_to paid_leave_requests_path, alert: e.message
@@ -63,6 +65,7 @@ class PaidLeaveRequestsController < ApplicationController
     end
 
     @request.reject!(current_employee, reason)
+    LineWorksNotifier.paid_leave_rejected(@request)
     redirect_to paid_leave_requests_path, notice: "却下しました"
   end
 
