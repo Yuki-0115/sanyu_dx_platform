@@ -1,9 +1,21 @@
+<% item_templates = @item_templates || [] %>
+<% item_template_data = item_templates.map { |t| { name: t.name, unit: t.unit, unit_price: t.default_unit_price, specification: t.specification } } %>
+
 <div class="bg-white shadow rounded-lg p-6"
      data-controller="estimate-items"
      data-estimate-items-item-index-value="<%= @estimate.estimate_items.size %>"
      data-estimate-items-category-index-value="<%= @estimate.estimate_categories.size %>"
      data-estimate-items-overhead-rate-value="<%= @estimate.overhead_rate || 4.0 %>"
-     data-estimate-items-welfare-rate-value="<%= @estimate.welfare_rate || 3.0 %>">
+     data-estimate-items-welfare-rate-value="<%= @estimate.welfare_rate || 3.0 %>"
+     data-estimate-items-templates-value="<%= item_template_data.to_json %>">
+
+  <!-- 項目名のdatalist（全カテゴリで共有） -->
+  <datalist id="item-name-list">
+    <% item_templates.each do |t| %>
+      <option value="<%= t.name %>"></option>
+    <% end %>
+  </datalist>
+
   <div class="flex justify-between items-center mb-4">
     <h3 class="text-lg font-medium text-gray-900">内訳明細</h3>
     <button type="button" class="btn-primary text-sm" data-action="click->estimate-items#addCategory">
@@ -298,7 +310,10 @@
     <td class="px-1 py-1">
       <input type="hidden" name="estimate[estimate_items_attributes][NEW_INDEX][estimate_category_id]" value="CAT_ID" class="item-category-id">
       <input type="text" name="estimate[estimate_items_attributes][NEW_INDEX][name]"
-             class="block w-full rounded border-gray-300 text-sm" placeholder="項目名">
+             list="item-name-list"
+             class="block w-full rounded border-gray-300 text-sm item-name"
+             data-action="change->estimate-items#onItemNameChange"
+             placeholder="選択または入力">
     </td>
     <td class="px-1 py-1">
       <input type="text" name="estimate[estimate_items_attributes][NEW_INDEX][specification]"

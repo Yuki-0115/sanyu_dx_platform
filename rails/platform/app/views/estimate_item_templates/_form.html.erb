@@ -1,0 +1,93 @@
+<%= form_with model: @template, local: true, class: "space-y-6" do |f| %>
+  <% if @template.errors.any? %>
+    <div class="rounded-md bg-red-50 p-4">
+      <div class="flex">
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">入力エラーがあります</h3>
+          <div class="mt-2 text-sm text-red-700">
+            <ul class="list-disc pl-5 space-y-1">
+              <% @template.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="bg-white shadow rounded-lg p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- 名称 -->
+      <div class="md:col-span-2">
+        <label for="estimate_item_template_name" class="block text-sm font-medium text-gray-700">名称 <span class="text-red-500">*</span></label>
+        <%= f.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500", placeholder: "例：As舗装工" %>
+      </div>
+
+      <!-- カテゴリ -->
+      <div>
+        <label for="estimate_item_template_category" class="block text-sm font-medium text-gray-700">カテゴリ</label>
+        <%= f.select :category,
+            options_for_select(EstimateItemTemplate::CATEGORIES.map { |c| [c, c] }, @template.category),
+            { include_blank: "選択してください" },
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+      </div>
+
+      <!-- 規格 -->
+      <div>
+        <label for="estimate_item_template_specification" class="block text-sm font-medium text-gray-700">規格</label>
+        <%= f.text_field :specification, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500", placeholder: "例：t=50mm" %>
+      </div>
+
+      <!-- 単位 -->
+      <div>
+        <label for="estimate_item_template_unit" class="block text-sm font-medium text-gray-700">単位</label>
+        <%= f.select :unit,
+            options_for_select(CostUnit.all_names.map { |u| [u, u] }, @template.unit),
+            {},
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+      </div>
+
+      <!-- 標準単価 -->
+      <div>
+        <label for="estimate_item_template_default_unit_price" class="block text-sm font-medium text-gray-700">標準単価</label>
+        <div class="mt-1 relative rounded-md shadow-sm">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">¥</span>
+          </div>
+          <%= f.number_field :default_unit_price, class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500", step: 1, min: 0, placeholder: "0" %>
+        </div>
+      </div>
+
+      <!-- 表示順 -->
+      <div>
+        <label for="estimate_item_template_sort_order" class="block text-sm font-medium text-gray-700">表示順</label>
+        <%= f.number_field :sort_order, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500", step: 1, min: 0 %>
+      </div>
+
+      <!-- 備考 -->
+      <div class="md:col-span-2">
+        <label for="estimate_item_template_note" class="block text-sm font-medium text-gray-700">備考</label>
+        <%= f.text_area :note, rows: 2, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500", placeholder: "メモや説明など" %>
+      </div>
+
+      <!-- 共有設定 -->
+      <% if can_manage_shared? %>
+        <div class="md:col-span-2">
+          <div class="flex items-center">
+            <%= f.check_box :is_shared, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+            <label for="estimate_item_template_is_shared" class="ml-2 block text-sm text-gray-700">
+              全員と共有する
+            </label>
+          </div>
+          <p class="mt-1 text-sm text-gray-500 ml-6">チェックすると全社員がこのテンプレートを使用できます</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3">
+    <%= link_to "キャンセル", estimate_item_templates_path, class: "px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+    <%= f.submit @template.persisted? ? "更新" : "作成", class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 cursor-pointer" %>
+  </div>
+<% end %>

@@ -24,7 +24,8 @@ export default class extends Controller {
     itemIndex: Number,
     categoryIndex: Number,
     overheadRate: { type: Number, default: 4.0 },
-    welfareRate: { type: Number, default: 3.0 }
+    welfareRate: { type: Number, default: 3.0 },
+    templates: { type: Array, default: [] }
   }
 
   connect() {
@@ -126,6 +127,37 @@ export default class extends Controller {
 
   // 端数調整変更時
   adjustmentChanged() {
+    this.calculateAllTotals()
+  }
+
+  // 項目名を選択/入力したときにテンプレートから単位・単価を自動入力
+  onItemNameChange(event) {
+    const input = event.currentTarget
+    const selectedName = input.value
+    const row = input.closest("tr")
+
+    // テンプレートから一致するものを検索
+    const template = this.templatesValue.find(t => t.name === selectedName)
+    if (!template) return
+
+    // 規格を設定（空の場合のみ）
+    const specInput = row.querySelector("input[name*='[specification]']")
+    if (specInput && !specInput.value && template.specification) {
+      specInput.value = template.specification
+    }
+
+    // 単位を設定
+    const unitSelect = row.querySelector("select[name*='[unit]']")
+    if (unitSelect && template.unit) {
+      unitSelect.value = template.unit
+    }
+
+    // 単価を設定（空の場合のみ）
+    const priceInput = row.querySelector(".estimate-price")
+    if (priceInput && !priceInput.value && template.unit_price) {
+      priceInput.value = template.unit_price
+    }
+
     this.calculateAllTotals()
   }
 

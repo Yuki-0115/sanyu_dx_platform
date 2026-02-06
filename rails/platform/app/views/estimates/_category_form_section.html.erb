@@ -81,7 +81,10 @@
               <%= hidden_field_tag "estimate[estimate_items_attributes][#{global_item_index}][estimate_category_id]", category.id, class: "item-category-id" %>
               <input type="text" name="estimate[estimate_items_attributes][<%= global_item_index %>][name]"
                      value="<%= item.name %>"
-                     class="block w-full rounded border-gray-300 text-sm" placeholder="項目名">
+                     list="item-name-list"
+                     class="block w-full rounded border-gray-300 text-sm item-name"
+                     data-action="change->estimate-items#onItemNameChange"
+                     placeholder="選択または入力">
             </td>
             <td class="px-1 py-1">
               <input type="text" name="estimate[estimate_items_attributes][<%= global_item_index %>][specification]"

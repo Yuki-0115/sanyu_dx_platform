@@ -480,3 +480,61 @@ CostUnit::DEFAULT_UNITS.each_with_index do |name, idx|
 end
 
 puts "  Created #{CostUnit::DEFAULT_UNITS.size} cost units"
+
+# 見積項目テンプレート
+puts "Creating estimate item templates..."
+
+estimate_item_templates = [
+  # 舗装工事
+  { name: "As舗装工", category: "舗装工事", unit: "m²", specification: "t=50mm" },
+  { name: "As舗装工", category: "舗装工事", unit: "m²", specification: "t=40mm" },
+  { name: "路盤工", category: "舗装工事", unit: "m²", specification: "RC-40 t=100mm" },
+  { name: "路盤工", category: "舗装工事", unit: "m²", specification: "RM-25 t=50mm" },
+  { name: "舗装版切断", category: "舗装工事", unit: "m" },
+  { name: "舗装版破砕", category: "舗装工事", unit: "m²" },
+  { name: "プライムコート", category: "舗装工事", unit: "m²" },
+  { name: "タックコート", category: "舗装工事", unit: "m²" },
+
+  # 土工事
+  { name: "掘削工", category: "土工事", unit: "m³" },
+  { name: "埋戻工", category: "土工事", unit: "m³" },
+  { name: "残土処分", category: "土工事", unit: "m³" },
+  { name: "床付け", category: "土工事", unit: "m²" },
+  { name: "転圧工", category: "土工事", unit: "m²" },
+
+  # コンクリート工事
+  { name: "コンクリート打設", category: "コンクリート工事", unit: "m³" },
+  { name: "均しコンクリート", category: "コンクリート工事", unit: "m²", specification: "t=50mm" },
+  { name: "土間コンクリート", category: "コンクリート工事", unit: "m²", specification: "t=100mm" },
+
+  # 型枠工事
+  { name: "型枠工", category: "型枠工事", unit: "m²" },
+
+  # 鉄筋工事
+  { name: "鉄筋工", category: "鉄筋工事", unit: "t" },
+  { name: "ワイヤーメッシュ", category: "鉄筋工事", unit: "m²" },
+
+  # 外構工事
+  { name: "縁石設置", category: "外構工事", unit: "m" },
+  { name: "側溝設置", category: "外構工事", unit: "m" },
+  { name: "フェンス設置", category: "外構工事", unit: "m" },
+  { name: "車止め設置", category: "外構工事", unit: "箇所" },
+  { name: "区画線", category: "外構工事", unit: "m" },
+
+  # 仮設工事
+  { name: "仮囲い", category: "仮設工事", unit: "m" },
+  { name: "仮設電気", category: "仮設工事", unit: "式" },
+  { name: "仮設水道", category: "仮設工事", unit: "式" },
+  { name: "安全対策費", category: "仮設工事", unit: "式" },
+  { name: "交通誘導員", category: "仮設工事", unit: "人工" },
+]
+
+estimate_item_templates.each_with_index do |data, idx|
+  EstimateItemTemplate.find_or_create_by!(name: data[:name], category: data[:category], specification: data[:specification], is_shared: true) do |t|
+    t.unit = data[:unit] || "式"
+    t.default_unit_price = data[:default_unit_price]
+    t.sort_order = idx
+  end
+end
+
+puts "  Created #{estimate_item_templates.size} estimate item templates"

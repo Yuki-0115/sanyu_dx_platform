@@ -145,6 +145,10 @@
             class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_name == 'cost_units' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
           <span>単位テンプレート</span>
         <% end %>
+        <%= link_to estimate_item_templates_path,
+            class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_name == 'estimate_item_templates' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
+          <span>項目テンプレート</span>
+        <% end %>
       </div>
     </div>
 
