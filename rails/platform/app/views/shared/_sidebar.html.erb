@@ -138,6 +138,10 @@
             class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{template_controllers.include?(controller_name) ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
           <span>見積テンプレート</span>
         <% end %>
+        <%= link_to cost_templates_path,
+            class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_name == 'cost_templates' || controller_name == 'project_cost_templates' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
+          <span>単価テンプレート</span>
+        <% end %>
         <% pending_invoice_count_sales = ReceivedInvoice.pending.count rescue 0 %>
         <%= link_to accounting_received_invoices_path,
             class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_path == 'accounting/received_invoices' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>

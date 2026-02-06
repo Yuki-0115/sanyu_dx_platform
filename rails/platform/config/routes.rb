@@ -144,6 +144,9 @@ Rails.application.routes.draw do
   # 見積項目テンプレート管理
   resources :estimate_item_templates, except: [:show]
 
+  # 案件別単価テンプレート一覧
+  get "cost_templates", to: "cost_templates#index", as: :cost_templates
+
   # 常用日報（外部現場）
   resources :external_daily_reports, only: %i[index new create show edit update] do
     member do
