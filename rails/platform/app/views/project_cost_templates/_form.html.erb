@@ -1,0 +1,72 @@
+<%= form_with model: [@project, template], class: "space-y-6" do |f| %>
+  <% if template.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+      <ul class="list-disc list-inside text-red-700 text-sm">
+        <% template.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <%= f.label :category, "カテゴリ", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :category,
+          ProjectCostTemplate::CATEGORIES.map { |c| [ProjectCostTemplate::CATEGORY_LABELS[c], c] },
+          { prompt: "選択してください" },
+          class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+    </div>
+
+    <div>
+      <%= f.label :item_name, "品目名", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :item_name,
+          class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500",
+          placeholder: "例: 生コン、砕石、○○工務店" %>
+    </div>
+
+    <div>
+      <%= f.label :unit, "単位", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :unit,
+          class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500",
+          placeholder: "例: m3、t、式、人工" %>
+    </div>
+
+    <div>
+      <%= f.label :unit_price, "単価（円）", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.number_field :unit_price,
+          class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500",
+          min: 0, step: 1,
+          placeholder: "例: 15000" %>
+    </div>
+
+    <div>
+      <%= f.label :supplier_name, "仕入先/外注先", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :supplier_name,
+          class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500",
+          placeholder: "例: ○○建材、△△工務店" %>
+    </div>
+
+    <div>
+      <%= f.label :sort_order, "表示順", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.number_field :sort_order,
+          class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500",
+          min: 0, value: template.sort_order || 0 %>
+      <p class="text-xs text-gray-500 mt-1">数字が小さいほど上に表示</p>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :note, "備考", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.text_area :note, rows: 2,
+        class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500",
+        placeholder: "補足情報など" %>
+  </div>
+
+  <div class="flex justify-end gap-4">
+    <%= link_to "キャンセル", project_project_cost_templates_path(@project),
+        class: "px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50" %>
+    <%= f.submit template.persisted? ? "更新" : "登録",
+        class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+  </div>
+<% end %>

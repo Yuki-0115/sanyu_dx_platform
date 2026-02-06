@@ -1,0 +1,25 @@
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <!-- パンくず -->
+  <nav class="mb-4">
+    <ol class="flex items-center space-x-2 text-sm text-gray-500">
+      <li><%= link_to "案件一覧", projects_path, class: "hover:text-blue-600" %></li>
+      <li>/</li>
+      <li><%= link_to @project.name, project_path(@project), class: "hover:text-blue-600" %></li>
+      <li>/</li>
+      <li><%= link_to "単価テンプレート", project_project_cost_templates_path(@project), class: "hover:text-blue-600" %></li>
+      <li>/</li>
+      <li class="text-gray-900 font-medium">編集</li>
+    </ol>
+  </nav>
+
+  <div class="max-w-2xl">
+    <div class="mb-6">
+      <h2 class="text-xl font-bold">単価テンプレート編集</h2>
+      <p class="text-sm text-gray-500 mt-1"><%= @template.item_name %></p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <%= render "form", template: @template %>
+    </div>
+  </div>
+</div>

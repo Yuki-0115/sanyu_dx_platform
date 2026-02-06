@@ -103,6 +103,7 @@ Rails.application.routes.draw do
       post :import_from_estimate
     end
     resource :site_ledger, only: [:show]
+    resources :project_cost_templates, only: %i[index new create edit update destroy]
     resources :outsourcing_reports, only: %i[index new create]
     resources :daily_reports do
       member do

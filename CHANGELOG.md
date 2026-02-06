@@ -7,6 +7,11 @@
 ## [Unreleased]
 
 ### Added
+- 案件別単価テンプレート機能（ProjectCostTemplate）
+  - 営業・工務が案件ごとに材料費・外注費・機械費・その他の単価表を登録可能
+  - カテゴリ別（材料費/外注費/機械費/その他）に品目名・単位・単価・業者名・備考を設定
+  - 案件詳細画面から「単価テンプレート管理」にアクセス
+  - 日報フォームに「単価参照」セクションを追加（職長が経費入力時に参照可能）
 - 日報・予算に機械費（自社・レンタル）を追加
   - daily_reportsテーブル: machinery_own_cost, machinery_rental_costカラム追加
   - budgetsテーブル: machinery_own_cost, machinery_rental_costカラム追加

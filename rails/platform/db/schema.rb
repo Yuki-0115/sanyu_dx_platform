@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_06_045751) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_06_075028) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -768,6 +768,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_045751) do
     t.index ["project_id"], name: "index_project_assignments_on_project_id"
   end
 
+  create_table "project_cost_templates", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.string "category", null: false
+    t.string "item_name", null: false
+    t.string "unit"
+    t.decimal "unit_price", precision: 12, scale: 2
+    t.string "supplier_name"
+    t.text "note"
+    t.integer "sort_order", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id", "category"], name: "index_project_cost_templates_on_project_id_and_category"
+    t.index ["project_id"], name: "index_project_cost_templates_on_project_id"
+  end
+
   create_table "project_documents", force: :cascade do |t|
     t.bigint "project_id", null: false
     t.bigint "uploaded_by_id"
@@ -998,6 +1013,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_045751) do
   add_foreign_key "payments", "invoices"
   add_foreign_key "project_assignments", "employees"
   add_foreign_key "project_assignments", "projects"
+  add_foreign_key "project_cost_templates", "projects"
   add_foreign_key "project_documents", "employees", column: "uploaded_by_id"
   add_foreign_key "project_documents", "projects"
   add_foreign_key "project_monthly_progresses", "projects"

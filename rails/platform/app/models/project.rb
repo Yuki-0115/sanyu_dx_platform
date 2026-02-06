@@ -41,6 +41,7 @@ class Project < ApplicationRecord
   has_many :project_documents, dependent: :destroy
   has_many :monthly_progresses, class_name: "ProjectMonthlyProgress", dependent: :destroy
   has_many :outsourcing_schedules, dependent: :destroy
+  has_many :project_cost_templates, dependent: :destroy
 
   # Validations
   validates :code, uniqueness: true

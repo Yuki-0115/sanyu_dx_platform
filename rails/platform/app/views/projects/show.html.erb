@@ -457,6 +457,33 @@
               <% end %>
             </div>
 
+            <!-- 単価テンプレート -->
+            <div class="bg-white shadow rounded-lg p-6 mt-6">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">単価テンプレート</h3>
+                <%= link_to "管理", project_project_cost_templates_path(@project),
+                    class: "text-sm text-blue-600 hover:underline" %>
+              </div>
+              <% template_count = @project.project_cost_templates.count %>
+              <% if template_count > 0 %>
+                <p class="text-sm text-gray-600">
+                  登録済み: <span class="font-medium"><%= template_count %>件</span>
+                </p>
+                <p class="text-xs text-gray-500 mt-1">職長が日報入力時に単価を参照できます</p>
+              <% else %>
+                <p class="text-sm text-gray-500">未登録</p>
+                <p class="text-xs text-gray-400 mt-1">職長向けに材料・外注・機械の単価を登録してください</p>
+              <% end %>
+              <%= link_to project_project_cost_templates_path(@project),
+                  class: "mt-3 inline-flex items-center px-3 py-1.5 border border-green-600 text-sm font-medium rounded-md text-green-600 bg-white hover:bg-green-50" do %>
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+                単価テンプレート管理
+              <% end %>
+            </div>
+          <% end %>
+
             <%# 出来高管理（施工中案件のみ表示） %>
             <% if @project.wip_target? %>
               <div class="bg-white shadow rounded-lg p-6 mt-6 border-l-4 border-yellow-400">

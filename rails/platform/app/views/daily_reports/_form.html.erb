@@ -948,6 +948,50 @@
     </p>
   </div>
 
+  <!-- 単価参照（案件別テンプレート） -->
+  <% if @project.project_cost_templates.any? %>
+    <div class="bg-white shadow rounded-lg p-6">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h3 class="text-lg font-medium text-gray-900">単価参照</h3>
+          <p class="text-sm text-gray-500">経費入力時の参考にしてください（営業・工務が設定した単価表）</p>
+        </div>
+      </div>
+
+      <% templates_by_cat = @project.project_cost_templates.ordered.group_by(&:category) %>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <% ProjectCostTemplate::CATEGORIES.each do |category| %>
+          <% templates = templates_by_cat[category] || [] %>
+          <% next if templates.empty? %>
+
+          <div class="border rounded-lg overflow-hidden">
+            <div class="px-3 py-2 bg-gray-100 border-b">
+              <span class="font-medium text-sm"><%= ProjectCostTemplate::CATEGORY_LABELS[category] %></span>
+            </div>
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">品目</th>
+                  <th class="px-3 py-1 text-right text-xs font-medium text-gray-500">単価</th>
+                  <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">業者</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <% templates.each do |template| %>
+                  <tr class="hover:bg-blue-50">
+                    <td class="px-3 py-1.5"><%= template.item_name %></td>
+                    <td class="px-3 py-1.5 text-right font-medium"><%= template.formatted_unit_price_with_unit %></td>
+                    <td class="px-3 py-1.5 text-gray-500"><%= template.supplier_name.presence || "-" %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
   <div class="flex justify-end space-x-3">
     <%= link_to "キャンセル", daily_report.persisted? ? project_daily_report_path(@project, daily_report) : project_daily_reports_path(@project),
         class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
