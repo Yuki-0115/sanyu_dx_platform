@@ -15,7 +15,7 @@ class SafetyDocumentsController < ApplicationController
       @folders = @folders.for_project(params[:project_id]) if params[:project_id].present?
     else
       # 案件一覧モード（デフォルト）
-      @projects = Project.where(status: %w[in_progress preparing ordered])
+      @projects = Project.where(status: %w[in_progress preparing ordered estimating])
                          .includes(:client, :sales_user)
                          .order(scheduled_start_date: :desc)
 

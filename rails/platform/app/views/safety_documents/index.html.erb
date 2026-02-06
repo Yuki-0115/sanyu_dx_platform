@@ -69,11 +69,42 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
               <% @project_statuses.each do |ps| %>
-                <tr class="hover:bg-gray-50">
+                <%
+                  # ステータスに応じた行の背景色
+                  row_bg = case ps[:project].status
+                           when 'estimating' then 'bg-purple-50 hover:bg-purple-100'
+                           when 'ordered' then 'bg-blue-50 hover:bg-blue-100'
+                           when 'preparing' then 'bg-yellow-50 hover:bg-yellow-100'
+                           when 'in_progress' then 'bg-green-50 hover:bg-green-100'
+                           else 'hover:bg-gray-50'
+                           end
+                  # ステータスバッジの色
+                  badge_class = case ps[:project].status
+                                when 'estimating' then 'bg-purple-100 text-purple-800'
+                                when 'ordered' then 'bg-blue-100 text-blue-800'
+                                when 'preparing' then 'bg-yellow-100 text-yellow-800'
+                                when 'in_progress' then 'bg-green-100 text-green-800'
+                                else 'bg-gray-100 text-gray-800'
+                                end
+                  # ステータス表示名
+                  status_label = case ps[:project].status
+                                 when 'estimating' then '見積中'
+                                 when 'ordered' then '受注済'
+                                 when 'preparing' then '準備中'
+                                 when 'in_progress' then '施工中'
+                                 else ps[:project].status
+                                 end
+                %>
+                <tr class="<%= row_bg %>">
                   <td class="px-4 py-4">
-                    <div class="flex items-center">
+                    <div class="flex items-center gap-2">
                       <div>
-                        <div class="text-sm font-medium text-gray-900"><%= ps[:project].name %></div>
+                        <div class="flex items-center gap-2">
+                          <span class="text-sm font-medium text-gray-900"><%= ps[:project].name %></span>
+                          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <%= badge_class %>">
+                            <%= status_label %>
+                          </span>
+                        </div>
                         <div class="text-xs text-gray-500"><%= ps[:project].client&.name %></div>
                       </div>
                     </div>
@@ -138,8 +169,18 @@
         </div>
       </div>
 
-      <!-- 必要書類の凡例 -->
+      <!-- 凡例 -->
       <div class="mt-6 bg-white shadow rounded-lg p-4">
+        <!-- ステータス色分け -->
+        <h3 class="text-sm font-medium text-gray-900 mb-3">案件ステータス</h3>
+        <div class="flex flex-wrap items-center gap-3 text-xs mb-4">
+          <span class="inline-flex items-center px-2 py-1 rounded bg-purple-100 text-purple-800">見積中</span>
+          <span class="inline-flex items-center px-2 py-1 rounded bg-blue-100 text-blue-800">受注済</span>
+          <span class="inline-flex items-center px-2 py-1 rounded bg-yellow-100 text-yellow-800">準備中</span>
+          <span class="inline-flex items-center px-2 py-1 rounded bg-green-100 text-green-800">施工中</span>
+        </div>
+
+        <!-- 必要書類一覧 -->
         <h3 class="text-sm font-medium text-gray-900 mb-3">必要安全書類一覧</h3>
         <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
           <% SafetyFolder::REQUIRED_DOCUMENTS.each do |doc| %>
@@ -148,6 +189,8 @@
             </div>
           <% end %>
         </div>
+
+        <!-- 提出状況アイコン -->
         <div class="mt-4 flex items-center gap-4 text-xs text-gray-500">
           <span class="flex items-center gap-1">
             <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-green-100 text-green-600">
