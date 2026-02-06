@@ -292,23 +292,24 @@ Rails.application.routes.draw do
     end
   end
 
-  # 安全書類管理（フォルダ形式）
-  resources :safety_documents, only: %i[index show] do
+  # 安全書類管理
+  resources :safety_documents, only: %i[index] do
     collection do
-      get :new_folder
-      post :create_folder
+      # 案件別ファイル一覧
+      get "projects/:project_id/files", action: :project_files, as: :project_files
+      get "projects/:project_id/files/new", action: :new_project_file, as: :new_project_file
+      post "projects/:project_id/files", action: :create_project_file, as: :create_project_file
       # 案件別必要書類設定
       get "projects/:project_id/requirements", action: :project_requirements, as: :project_requirements
       patch "projects/:project_id/requirements", action: :update_project_requirements
       post "projects/:project_id/set_all_requirements", action: :set_all_requirements, as: :set_all_project_requirements
       delete "projects/:project_id/clear_requirements", action: :clear_requirements, as: :clear_project_requirements
     end
-    member do
-      get :edit_folder
-      patch :update_folder
-      delete :destroy_folder
-    end
   end
+  # 安全書類ファイル
+  get "safety_files/:id/edit", to: "safety_documents#edit_file", as: :edit_safety_file
+  patch "safety_files/:id", to: "safety_documents#update_file", as: :safety_file
+  delete "safety_files/:id", to: "safety_documents#destroy_file"
 
   # 安全書類種類マスタ
   resources :safety_document_types, except: [:show] do
@@ -320,18 +321,6 @@ Rails.application.routes.draw do
       post :seed_defaults
     end
   end
-  # 安全書類ファイル
-  resources :safety_files, only: [] do
-    collection do
-      get :new, action: :new_file, as: :new
-      post :create, action: :create_file
-    end
-  end
-  get "safety_folders/:folder_id/files/new", to: "safety_documents#new_file", as: :new_safety_folder_file
-  post "safety_folders/:folder_id/files", to: "safety_documents#create_file", as: :safety_folder_files
-  get "safety_files/:id/edit", to: "safety_documents#edit_file", as: :edit_safety_file
-  patch "safety_files/:id", to: "safety_documents#update_file", as: :safety_file
-  delete "safety_files/:id", to: "safety_documents#destroy_file"
 
   # API routes for n8n integration
   namespace :api do

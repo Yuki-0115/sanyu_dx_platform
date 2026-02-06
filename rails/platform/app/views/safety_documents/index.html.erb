@@ -7,267 +7,172 @@
         <p class="text-gray-600">案件ごとの安全書類提出状況を確認・管理</p>
       </div>
       <div class="flex items-center gap-2">
-        <!-- ビュー切替 -->
-        <div class="bg-gray-100 rounded-lg p-1 flex">
-          <%= link_to safety_documents_path(view: "projects"),
-              class: "px-3 py-1.5 text-sm font-medium rounded-md #{@view_mode == 'projects' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'}" do %>
-            案件別
-          <% end %>
-          <%= link_to safety_documents_path(view: "folders"),
-              class: "px-3 py-1.5 text-sm font-medium rounded-md #{@view_mode == 'folders' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'}" do %>
-            フォルダ
-          <% end %>
-        </div>
         <%= link_to safety_document_types_path, class: "inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50", title: "書類種類の設定" do %>
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
           </svg>
         <% end %>
-        <%= link_to new_folder_safety_documents_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" do %>
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
-          </svg>
-          新規フォルダ
-        <% end %>
       </div>
     </div>
 
-    <% if @view_mode == "projects" %>
-      <!-- 案件別ビュー -->
-      <!-- フィルター -->
-      <div class="bg-white shadow rounded-lg p-4 mb-6">
-        <div class="flex flex-wrap items-center gap-4">
-          <span class="text-sm font-medium text-gray-700">フィルター:</span>
-          <div class="flex gap-2">
-            <%= link_to safety_documents_path(view: "projects"),
-                class: "px-3 py-1 text-sm rounded-full #{params[:filter].blank? ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
-              すべて
-            <% end %>
-            <%= link_to safety_documents_path(view: "projects", filter: "incomplete"),
-                class: "px-3 py-1 text-sm rounded-full #{params[:filter] == 'incomplete' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
-              未完了
-            <% end %>
-            <%= link_to safety_documents_path(view: "projects", filter: "complete"),
-                class: "px-3 py-1 text-sm rounded-full #{params[:filter] == 'complete' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
-              完了
-            <% end %>
-          </div>
-        </div>
-      </div>
-
-      <!-- 案件一覧 -->
-      <div class="space-y-4">
-        <% @project_statuses.each do |ps| %>
-          <%
-            # ステータスに応じた背景色
-            status_bg = case ps[:project].status
-                        when 'estimating' then 'border-l-purple-500'
-                        when 'ordered' then 'border-l-blue-500'
-                        when 'preparing' then 'border-l-yellow-500'
-                        when 'in_progress' then 'border-l-green-500'
-                        else 'border-l-gray-300'
-                        end
-            badge_class = case ps[:project].status
-                          when 'estimating' then 'bg-purple-100 text-purple-800'
-                          when 'ordered' then 'bg-blue-100 text-blue-800'
-                          when 'preparing' then 'bg-yellow-100 text-yellow-800'
-                          when 'in_progress' then 'bg-green-100 text-green-800'
-                          else 'bg-gray-100 text-gray-800'
-                          end
-            status_label = case ps[:project].status
-                           when 'estimating' then '見積中'
-                           when 'ordered' then '受注済'
-                           when 'preparing' then '準備中'
-                           when 'in_progress' then '施工中'
-                           else ps[:project].status
-                           end
-            has_custom = SafetyFolder.has_custom_requirements?(ps[:project])
-          %>
-          <div class="bg-white shadow rounded-lg overflow-hidden border-l-4 <%= status_bg %>">
-            <!-- 案件ヘッダー -->
-            <div class="px-4 py-3 flex flex-wrap items-center justify-between gap-4">
-              <div class="flex items-center gap-3">
-                <div>
-                  <div class="flex items-center gap-2">
-                    <span class="text-sm font-bold text-gray-900"><%= ps[:project].name %></span>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <%= badge_class %>">
-                      <%= status_label %>
-                    </span>
-                    <% if has_custom %>
-                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800" title="この案件は個別設定があります">
-                        個別設定
-                      </span>
-                    <% end %>
-                  </div>
-                  <div class="text-xs text-gray-500"><%= ps[:project].client&.name %></div>
-                </div>
-              </div>
-              <div class="flex items-center gap-4">
-                <!-- 進捗 -->
-                <div class="flex items-center gap-2">
-                  <div class="w-32 bg-gray-200 rounded-full h-2.5">
-                    <div class="h-2.5 rounded-full <%= ps[:rate] == 100 ? 'bg-green-600' : ps[:rate] >= 50 ? 'bg-yellow-500' : 'bg-red-500' %>" style="width: <%= ps[:rate] %>%"></div>
-                  </div>
-                  <span class="text-sm font-medium <%= ps[:rate] == 100 ? 'text-green-600' : ps[:rate] >= 50 ? 'text-yellow-600' : 'text-red-600' %>">
-                    <%= ps[:submitted_count] %>/<%= ps[:total_count] %> (<%= ps[:rate] %>%)
-                  </span>
-                </div>
-                <!-- 操作ボタン -->
-                <div class="flex items-center gap-2">
-                  <%= link_to project_requirements_safety_documents_path(project_id: ps[:project].id),
-                      class: "p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg",
-                      title: "必要書類を設定" do %>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                  <% end %>
-                  <%= link_to safety_documents_path(view: "folders", project_id: ps[:project].id),
-                      class: "p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg",
-                      title: "フォルダを見る" do %>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                    </svg>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-
-            <!-- 書類一覧 -->
-            <div class="px-4 py-3 border-t bg-gray-50">
-              <div class="flex flex-wrap gap-2">
-                <% ps[:status].each do |doc_status| %>
-                  <% if doc_status[:submitted] && doc_status[:files_count] > 0 %>
-                    <%= link_to safety_document_path(doc_status[:folder]), class: "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 hover:bg-green-200" do %>
-                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                      </svg>
-                      <%= doc_status[:name] %>
-                      <span class="text-green-600">(<%= doc_status[:files_count] %>)</span>
-                    <% end %>
-                  <% elsif doc_status[:submitted] %>
-                    <%= link_to safety_document_path(doc_status[:folder]), class: "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800 hover:bg-yellow-200" do %>
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-                      </svg>
-                      <%= doc_status[:name] %>
-                    <% end %>
-                  <% else %>
-                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500">
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                      </svg>
-                      <%= doc_status[:name] %>
-                    </span>
-                  <% end %>
-                <% end %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-
-        <% if @project_statuses.empty? %>
-          <div class="bg-white shadow rounded-lg p-8 text-center text-gray-500">
-            該当する案件がありません
-          </div>
-        <% end %>
-      </div>
-
-      <!-- 凡例 -->
-      <div class="mt-6 bg-white shadow rounded-lg p-4">
-        <!-- ステータス色分け -->
-        <h3 class="text-sm font-medium text-gray-900 mb-3">案件ステータス</h3>
-        <div class="flex flex-wrap items-center gap-3 text-xs mb-4">
-          <span class="inline-flex items-center px-2 py-1 rounded bg-purple-100 text-purple-800">見積中</span>
-          <span class="inline-flex items-center px-2 py-1 rounded bg-blue-100 text-blue-800">受注済</span>
-          <span class="inline-flex items-center px-2 py-1 rounded bg-yellow-100 text-yellow-800">準備中</span>
-          <span class="inline-flex items-center px-2 py-1 rounded bg-green-100 text-green-800">施工中</span>
-          <span class="inline-flex items-center px-2 py-1 rounded bg-orange-100 text-orange-800">個別設定</span>
-        </div>
-
-        <!-- 提出状況アイコン -->
-        <h3 class="text-sm font-medium text-gray-900 mb-3">提出状況</h3>
-        <div class="flex flex-wrap items-center gap-4 text-xs text-gray-500">
-          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-800">
-            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-            提出済み
-          </span>
-          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-800">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-            フォルダのみ
-          </span>
-          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-500">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            未提出
-          </span>
-        </div>
-      </div>
-
-    <% else %>
-      <!-- フォルダ一覧モード -->
-      <!-- 案件フィルター -->
-      <div class="bg-white shadow rounded-lg p-4 mb-6">
-        <div class="flex flex-wrap items-center gap-4">
-          <label class="text-sm font-medium text-gray-700">案件で絞り込み:</label>
-          <%= form_with url: safety_documents_path(view: "folders"), method: :get, local: true, class: "flex items-center gap-2" do %>
-            <input type="hidden" name="view" value="folders">
-            <%= select_tag :project_id,
-                options_from_collection_for_select(Project.order(:name), :id, :name, params[:project_id]),
-                include_blank: "全ての案件",
-                onchange: "this.form.submit()",
-                class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" %>
+    <!-- フィルター -->
+    <div class="bg-white shadow rounded-lg p-4 mb-6">
+      <div class="flex flex-wrap items-center gap-4">
+        <span class="text-sm font-medium text-gray-700">フィルター:</span>
+        <div class="flex gap-2">
+          <%= link_to safety_documents_path,
+              class: "px-3 py-1 text-sm rounded-full #{params[:filter].blank? ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
+            すべて
           <% end %>
-          <% if params[:project_id].present? %>
-            <% project = Project.find_by(id: params[:project_id]) %>
-            <% if project %>
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                <%= project.name %>
-                <%= link_to safety_documents_path(view: "folders"), class: "ml-2 text-blue-600 hover:text-blue-800" do %>
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          <%= link_to safety_documents_path(filter: "incomplete"),
+              class: "px-3 py-1 text-sm rounded-full #{params[:filter] == 'incomplete' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
+            未完了
+          <% end %>
+          <%= link_to safety_documents_path(filter: "complete"),
+              class: "px-3 py-1 text-sm rounded-full #{params[:filter] == 'complete' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
+            完了
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 案件一覧 -->
+    <div class="space-y-4">
+      <% @project_statuses.each do |ps| %>
+        <%
+          # ステータスに応じた背景色
+          status_bg = case ps[:project].status
+                      when 'estimating' then 'border-l-purple-500'
+                      when 'ordered' then 'border-l-blue-500'
+                      when 'preparing' then 'border-l-yellow-500'
+                      when 'in_progress' then 'border-l-green-500'
+                      else 'border-l-gray-300'
+                      end
+          badge_class = case ps[:project].status
+                        when 'estimating' then 'bg-purple-100 text-purple-800'
+                        when 'ordered' then 'bg-blue-100 text-blue-800'
+                        when 'preparing' then 'bg-yellow-100 text-yellow-800'
+                        when 'in_progress' then 'bg-green-100 text-green-800'
+                        else 'bg-gray-100 text-gray-800'
+                        end
+          status_label = case ps[:project].status
+                         when 'estimating' then '見積中'
+                         when 'ordered' then '受注済'
+                         when 'preparing' then '準備中'
+                         when 'in_progress' then '施工中'
+                         else ps[:project].status
+                         end
+          has_custom = SafetyFolder.has_custom_requirements?(ps[:project])
+        %>
+        <div class="bg-white shadow rounded-lg overflow-hidden border-l-4 <%= status_bg %>">
+          <!-- 案件ヘッダー -->
+          <div class="px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-bold text-gray-900"><%= ps[:project].name %></span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <%= badge_class %>">
+                    <%= status_label %>
+                  </span>
+                  <% if has_custom %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800" title="この案件は個別設定があります">
+                      個別設定
+                    </span>
+                  <% end %>
+                </div>
+                <div class="text-xs text-gray-500"><%= ps[:project].client&.name %></div>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <!-- 進捗 -->
+              <div class="flex items-center gap-2">
+                <div class="w-32 bg-gray-200 rounded-full h-2.5">
+                  <div class="h-2.5 rounded-full <%= ps[:rate] == 100 ? 'bg-green-600' : ps[:rate] >= 50 ? 'bg-yellow-500' : 'bg-red-500' %>" style="width: <%= ps[:rate] %>%"></div>
+                </div>
+                <span class="text-sm font-medium <%= ps[:rate] == 100 ? 'text-green-600' : ps[:rate] >= 50 ? 'text-yellow-600' : 'text-red-600' %>">
+                  <%= ps[:submitted_count] %>/<%= ps[:total_count] %> (<%= ps[:rate] %>%)
+                </span>
+              </div>
+              <!-- 操作ボタン -->
+              <div class="flex items-center gap-2">
+                <%= link_to project_requirements_safety_documents_path(project_id: ps[:project].id),
+                    class: "p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg",
+                    title: "必要書類を設定" do %>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                   </svg>
                 <% end %>
-              </span>
-            <% end %>
-          <% end %>
-        </div>
-      </div>
-
-      <!-- フォルダ一覧 -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <% @folders.each do |folder| %>
-          <%= link_to safety_document_path(folder), class: "bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4 flex items-start space-x-3" do %>
-            <div class="flex-shrink-0">
-              <svg class="w-10 h-10 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path>
-              </svg>
+                <%= link_to project_files_safety_documents_path(project_id: ps[:project].id),
+                    class: "inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg",
+                    title: "ファイルを管理" do %>
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  ファイル管理
+                <% end %>
+              </div>
             </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900 truncate"><%= folder.name %></p>
-              <p class="text-xs text-gray-500">
-                <%= folder.files_count %>件のファイル
-              </p>
-              <% if folder.project.present? %>
-                <p class="text-xs text-blue-600 mt-1 truncate"><%= folder.project.name %></p>
+          </div>
+
+          <!-- 書類一覧 -->
+          <div class="px-4 py-3 border-t bg-gray-50">
+            <div class="flex flex-wrap gap-2">
+              <% ps[:status].each do |doc_status| %>
+                <% if doc_status[:submitted] %>
+                  <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    <%= doc_status[:name] %>
+                    <span class="text-green-600">(<%= doc_status[:files_count] %>)</span>
+                  </span>
+                <% else %>
+                  <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    <%= doc_status[:name] %>
+                  </span>
+                <% end %>
               <% end %>
             </div>
-          <% end %>
-        <% end %>
-
-        <% if @folders.empty? %>
-          <div class="col-span-full text-center py-12">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
-            </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">フォルダがありません</h3>
-            <p class="mt-1 text-sm text-gray-500">フォルダを作成して書類を整理しましょう</p>
-            <%= link_to new_folder_safety_documents_path(project_id: params[:project_id]), class: "mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" do %>
-              新規フォルダ作成
-            <% end %>
           </div>
-        <% end %>
+        </div>
+      <% end %>
+
+      <% if @project_statuses.empty? %>
+        <div class="bg-white shadow rounded-lg p-8 text-center text-gray-500">
+          該当する案件がありません
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 凡例 -->
+    <div class="mt-6 bg-white shadow rounded-lg p-4">
+      <!-- ステータス色分け -->
+      <h3 class="text-sm font-medium text-gray-900 mb-3">案件ステータス</h3>
+      <div class="flex flex-wrap items-center gap-3 text-xs mb-4">
+        <span class="inline-flex items-center px-2 py-1 rounded bg-purple-100 text-purple-800">見積中</span>
+        <span class="inline-flex items-center px-2 py-1 rounded bg-blue-100 text-blue-800">受注済</span>
+        <span class="inline-flex items-center px-2 py-1 rounded bg-yellow-100 text-yellow-800">準備中</span>
+        <span class="inline-flex items-center px-2 py-1 rounded bg-green-100 text-green-800">施工中</span>
+        <span class="inline-flex items-center px-2 py-1 rounded bg-orange-100 text-orange-800">個別設定</span>
       </div>
-    <% end %>
+
+      <!-- 提出状況アイコン -->
+      <h3 class="text-sm font-medium text-gray-900 mb-3">提出状況</h3>
+      <div class="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-800">
+          <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+          提出済み
+        </span>
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-500">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          未提出
+        </span>
+      </div>
+    </div>
   </div>
 </div>

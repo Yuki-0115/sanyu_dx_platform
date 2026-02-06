@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_06_044514) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_06_045751) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -851,12 +851,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_044514) do
   end
 
   create_table "safety_files", force: :cascade do |t|
-    t.bigint "safety_folder_id", null: false
+    t.bigint "safety_folder_id"
     t.string "name", null: false
     t.text "description"
     t.bigint "uploaded_by_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "project_id"
+    t.bigint "safety_document_type_id"
+    t.index ["project_id"], name: "index_safety_files_on_project_id"
+    t.index ["safety_document_type_id"], name: "index_safety_files_on_safety_document_type_id"
     t.index ["safety_folder_id"], name: "index_safety_files_on_safety_folder_id"
   end
 
@@ -942,6 +946,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_044514) do
   add_foreign_key "project_safety_requirements", "safety_document_types"
   add_foreign_key "projects", "clients"
   add_foreign_key "safety_files", "employees", column: "uploaded_by_id"
+  add_foreign_key "safety_files", "projects"
+  add_foreign_key "safety_files", "safety_document_types"
   add_foreign_key "safety_files", "safety_folders"
   add_foreign_key "safety_folders", "projects"
   add_foreign_key "work_schedules", "employees"

@@ -35,6 +35,7 @@ class Project < ApplicationRecord
   has_many :project_assignments, dependent: :destroy
   has_many :assigned_employees, through: :project_assignments, source: :employee
   has_many :safety_folders, dependent: :nullify
+  has_many :safety_files, dependent: :destroy
   has_many :project_safety_requirements, dependent: :destroy
   has_many :required_safety_document_types, through: :project_safety_requirements, source: :safety_document_type
   has_many :project_documents, dependent: :destroy

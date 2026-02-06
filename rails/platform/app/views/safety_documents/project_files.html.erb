@@ -1,0 +1,174 @@
+<div class="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="px-4 py-6 sm:px-0">
+    <!-- 戻るリンク -->
+    <div class="mb-4">
+      <%= link_to safety_documents_path, class: "text-blue-600 hover:text-blue-800 text-sm" do %>
+        ← 安全書類一覧に戻る
+      <% end %>
+    </div>
+
+    <!-- ヘッダー -->
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900"><%= @project.name %></h2>
+        <p class="text-gray-600">安全書類ファイル管理</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <%= link_to project_requirements_safety_documents_path(project_id: @project.id),
+            class: "inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50",
+            title: "必要書類を設定" do %>
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          設定
+        <% end %>
+        <%= link_to new_project_file_safety_documents_path(project_id: @project.id),
+            class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" do %>
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          ファイル追加
+        <% end %>
+      </div>
+    </div>
+
+    <!-- カテゴリ別ファイル一覧 -->
+    <div class="space-y-6">
+      <% @document_types.each do |doc| %>
+        <%
+          doc_type = SafetyDocumentType.find_by(name: doc[:name])
+          files = doc_type ? (@files_by_type[doc_type.id] || []) : []
+          has_files = files.any?
+        %>
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <!-- カテゴリヘッダー -->
+          <div class="px-4 py-3 border-b flex items-center justify-between <%= has_files ? 'bg-green-50' : 'bg-gray-50' %>">
+            <div class="flex items-center gap-2">
+              <% if has_files %>
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                </span>
+              <% else %>
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 text-gray-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                  </svg>
+                </span>
+              <% end %>
+              <div>
+                <span class="font-medium text-gray-900"><%= doc[:name] %></span>
+                <span class="ml-2 text-sm text-gray-500">(<%= files.size %>件)</span>
+              </div>
+            </div>
+            <% if doc_type %>
+              <%= link_to new_project_file_safety_documents_path(project_id: @project.id, category_id: doc_type.id),
+                  class: "text-sm text-blue-600 hover:text-blue-800" do %>
+                + 追加
+              <% end %>
+            <% end %>
+          </div>
+
+          <!-- ファイル一覧 -->
+          <% if files.any? %>
+            <div class="divide-y divide-gray-200">
+              <% files.each do |file| %>
+                <div class="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <div>
+                      <p class="text-sm font-medium text-gray-900"><%= file.name %></p>
+                      <% if file.description.present? %>
+                        <p class="text-xs text-gray-500"><%= file.description %></p>
+                      <% end %>
+                      <p class="text-xs text-gray-400">
+                        <%= file.uploaded_by&.name %> -
+                        <%= l(file.created_at, format: :short) %>
+                        <% if file.attachments.attached? %>
+                          (<%= file.attachments.size %>ファイル)
+                        <% end %>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <% if file.attachments.attached? %>
+                      <% file.attachments.each do |attachment| %>
+                        <%= link_to rails_blob_path(attachment, disposition: "attachment"),
+                            class: "p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg",
+                            title: attachment.filename.to_s do %>
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                          </svg>
+                        <% end %>
+                      <% end %>
+                    <% end %>
+                    <%= link_to edit_safety_file_path(file),
+                        class: "p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg",
+                        title: "編集" do %>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                    <% end %>
+                    <%= button_to safety_file_path(file),
+                        method: :delete,
+                        data: { turbo_confirm: "「#{file.name}」を削除しますか？" },
+                        class: "p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg",
+                        title: "削除" do %>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="px-4 py-6 text-center text-gray-400 text-sm">
+              ファイルがありません
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- 未分類ファイル -->
+      <% if @uncategorized_files.any? %>
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="px-4 py-3 border-b bg-orange-50 flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 text-orange-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+            </span>
+            <span class="font-medium text-gray-900">未分類</span>
+            <span class="ml-2 text-sm text-gray-500">(<%= @uncategorized_files.size %>件)</span>
+          </div>
+          <div class="divide-y divide-gray-200">
+            <% @uncategorized_files.each do |file| %>
+              <div class="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+                <div class="flex items-center gap-3">
+                  <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  <div>
+                    <p class="text-sm font-medium text-gray-900"><%= file.name %></p>
+                    <p class="text-xs text-orange-600">カテゴリを設定してください</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <%= link_to edit_safety_file_path(file),
+                      class: "text-sm text-blue-600 hover:text-blue-800" do %>
+                    編集
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
