@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_06_005403) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_06_010912) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -187,6 +187,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_005403) do
     t.index ["category"], name: "index_cost_breakdown_templates_on_category"
     t.index ["employee_id"], name: "index_cost_breakdown_templates_on_employee_id"
     t.index ["is_shared"], name: "index_cost_breakdown_templates_on_is_shared"
+  end
+
+  create_table "cost_units", force: :cascade do |t|
+    t.string "name", null: false
+    t.integer "sort_order", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_cost_units_on_name", unique: true
+    t.index ["sort_order"], name: "index_cost_units_on_sort_order"
   end
 
   create_table "daily_reports", force: :cascade do |t|

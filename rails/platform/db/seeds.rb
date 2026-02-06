@@ -469,3 +469,14 @@ cost_breakdown_templates.each_with_index do |data, idx|
 end
 
 puts "  Created #{cost_breakdown_templates.size} cost breakdown templates"
+
+# 単位テンプレート
+puts "Creating cost units..."
+
+CostUnit::DEFAULT_UNITS.each_with_index do |name, idx|
+  CostUnit.find_or_create_by!(name: name) do |u|
+    u.sort_order = idx
+  end
+end
+
+puts "  Created #{CostUnit::DEFAULT_UNITS.size} cost units"

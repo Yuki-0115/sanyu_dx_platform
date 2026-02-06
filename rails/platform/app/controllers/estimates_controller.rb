@@ -124,7 +124,7 @@ class EstimatesController < ApplicationController
     @condition_templates = EstimateTemplate.condition_templates_for(current_employee)
     @confirmation_templates = EstimateTemplate.confirmation_templates_for(current_employee)
     @cost_breakdown_templates = CostBreakdownTemplate.available_for(current_employee).ordered
-    @cost_units = CostBreakdownTemplate::UNITS
+    @cost_units = CostUnit.all_names
   end
 
   def build_default_confirmations
