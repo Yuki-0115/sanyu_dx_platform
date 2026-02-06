@@ -304,6 +304,17 @@ Rails.application.routes.draw do
       delete :destroy_folder
     end
   end
+
+  # 安全書類種類マスタ
+  resources :safety_document_types, except: [:show] do
+    member do
+      post :toggle_active
+      post :move
+    end
+    collection do
+      post :seed_defaults
+    end
+  end
   # 安全書類ファイル
   resources :safety_files, only: [] do
     collection do

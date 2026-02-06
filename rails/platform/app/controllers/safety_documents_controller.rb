@@ -8,6 +8,7 @@ class SafetyDocumentsController < ApplicationController
   # 案件一覧（提出状況）
   def index
     @view_mode = params[:view] || "projects"
+    @required_documents = SafetyFolder.required_documents
 
     if @view_mode == "folders"
       # フォルダ一覧モード

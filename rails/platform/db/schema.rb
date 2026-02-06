@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_06_011630) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_06_015437) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -827,6 +827,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_011630) do
     t.index ["scheduled_end_date"], name: "index_projects_on_scheduled_end_date"
     t.index ["scheduled_start_date"], name: "index_projects_on_scheduled_start_date"
     t.index ["status"], name: "index_projects_on_status"
+  end
+
+  create_table "safety_document_types", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "description"
+    t.integer "position", default: 0, null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_safety_document_types_on_active"
+    t.index ["position"], name: "index_safety_document_types_on_position"
   end
 
   create_table "safety_files", force: :cascade do |t|

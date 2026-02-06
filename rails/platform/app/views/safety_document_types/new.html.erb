@@ -1,0 +1,14 @@
+<div class="max-w-2xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="px-4 py-6 sm:px-0">
+    <div class="mb-6">
+      <%= link_to safety_document_types_path, class: "text-blue-600 hover:text-blue-800 text-sm" do %>
+        ← 書類種類一覧に戻る
+      <% end %>
+    </div>
+
+    <div class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-xl font-bold text-gray-900 mb-6">書類種類の追加</h2>
+      <%= render "form" %>
+    </div>
+  </div>
+</div>

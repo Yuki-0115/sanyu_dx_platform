@@ -1,0 +1,155 @@
+<div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="px-4 py-6 sm:px-0">
+    <!-- ヘッダー -->
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">必要安全書類の設定</h2>
+        <p class="text-gray-600">案件に必要な安全書類の種類を管理</p>
+      </div>
+      <div class="flex gap-2">
+        <% if @safety_document_types.empty? %>
+          <%= link_to seed_defaults_safety_document_types_path, method: :post, data: { turbo_method: :post },
+              class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            デフォルト登録
+          <% end %>
+        <% end %>
+        <%= link_to new_safety_document_type_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" do %>
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          新規追加
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 戻るリンク -->
+    <div class="mb-4">
+      <%= link_to safety_documents_path, class: "text-blue-600 hover:text-blue-800 text-sm" do %>
+        ← 安全書類一覧に戻る
+      <% end %>
+    </div>
+
+    <!-- 書類種類一覧 -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+      <% if @safety_document_types.any? %>
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">順序</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">名称</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">説明</th>
+              <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">状態</th>
+              <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">操作</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% @safety_document_types.each_with_index do |doc_type, index| %>
+              <tr class="<%= doc_type.active ? '' : 'bg-gray-50 opacity-60' %>">
+                <td class="px-4 py-4 text-center">
+                  <div class="flex items-center gap-1">
+                    <% if index > 0 %>
+                      <%= link_to move_safety_document_type_path(doc_type, direction: "up"), method: :post, data: { turbo_method: :post },
+                          class: "text-gray-400 hover:text-gray-600" do %>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                        </svg>
+                      <% end %>
+                    <% else %>
+                      <span class="w-4"></span>
+                    <% end %>
+                    <span class="text-sm text-gray-500 w-6 text-center"><%= doc_type.position %></span>
+                    <% if index < @safety_document_types.size - 1 %>
+                      <%= link_to move_safety_document_type_path(doc_type, direction: "down"), method: :post, data: { turbo_method: :post },
+                          class: "text-gray-400 hover:text-gray-600" do %>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                      <% end %>
+                    <% else %>
+                      <span class="w-4"></span>
+                    <% end %>
+                  </div>
+                </td>
+                <td class="px-4 py-4">
+                  <span class="text-sm font-medium text-gray-900"><%= doc_type.name %></span>
+                </td>
+                <td class="px-4 py-4">
+                  <span class="text-sm text-gray-500"><%= doc_type.description %></span>
+                </td>
+                <td class="px-4 py-4 text-center">
+                  <%= link_to toggle_active_safety_document_type_path(doc_type), method: :post, data: { turbo_method: :post },
+                      class: "inline-flex items-center" do %>
+                    <% if doc_type.active %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        有効
+                      </span>
+                    <% else %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        無効
+                      </span>
+                    <% end %>
+                  <% end %>
+                </td>
+                <td class="px-4 py-4 text-center">
+                  <div class="flex items-center justify-center gap-2">
+                    <%= link_to edit_safety_document_type_path(doc_type), class: "text-blue-600 hover:text-blue-800" do %>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                    <% end %>
+                    <%= link_to safety_document_type_path(doc_type), method: :delete,
+                        data: { turbo_method: :delete, turbo_confirm: "「#{doc_type.name}」を削除しますか？" },
+                        class: "text-red-600 hover:text-red-800" do %>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="text-center py-12">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">書類種類が登録されていません</h3>
+          <p class="mt-1 text-sm text-gray-500">デフォルトの書類種類を登録するか、新規追加してください</p>
+          <div class="mt-4 flex justify-center gap-2">
+            <%= link_to seed_defaults_safety_document_types_path, method: :post, data: { turbo_method: :post },
+                class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
+              デフォルト登録
+            <% end %>
+            <%= link_to new_safety_document_type_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" do %>
+              新規追加
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 説明 -->
+    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="flex">
+        <svg class="h-5 w-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+        </svg>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-blue-800">書類種類について</h3>
+          <div class="mt-1 text-sm text-blue-700">
+            <ul class="list-disc ml-4 space-y-1">
+              <li>ここで登録した書類種類が、案件別の提出状況チェック対象になります</li>
+              <li>「有効」な書類のみが提出状況の計算に含まれます</li>
+              <li>順序を変更すると、一覧での表示順が変わります</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,19 +1,13 @@
 # frozen_string_literal: true
 
 class SafetyFolder < ApplicationRecord
-  # 必須安全書類の種類
-  REQUIRED_DOCUMENTS = [
-    { name: "作業員名簿", description: "現場作業員の名簿" },
-    { name: "新規入場者教育記録", description: "新規入場時の安全教育記録" },
-    { name: "安全衛生管理計画書", description: "現場の安全衛生計画" },
-    { name: "工事安全衛生計画書", description: "工事全体の安全計画" },
-    { name: "施工体制台帳", description: "下請業者を含む施工体制" },
-    { name: "再下請負通知書", description: "再下請負の通知書類" },
-    { name: "持込機械届", description: "持込機械の届出書類" },
-    { name: "火気使用届", description: "溶接等火気使用の届出" },
-    { name: "有資格者一覧", description: "資格保有者の一覧" },
-    { name: "健康診断結果報告書", description: "作業員の健康診断結果" }
-  ].freeze
+  # 後方互換性のための定数（SafetyDocumentTypeから取得）
+  def self.required_documents
+    SafetyDocumentType.required_documents_with_fallback
+  end
+
+  # ビュー用の別名（REQUIRED_DOCUMENTSとして使われていた箇所に対応）
+  REQUIRED_DOCUMENTS = SafetyDocumentType::DEFAULT_DOCUMENTS
 
   # Associations
   belongs_to :project, optional: true
@@ -35,8 +29,9 @@ class SafetyFolder < ApplicationRecord
   # 案件の安全書類提出状況を取得
   def self.submission_status_for(project)
     existing_folders = where(project_id: project.id).pluck(:name)
+    docs = required_documents
 
-    REQUIRED_DOCUMENTS.map do |doc|
+    docs.map do |doc|
       folder = find_by(project_id: project.id, name: doc[:name])
       {
         name: doc[:name],
