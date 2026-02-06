@@ -2,11 +2,16 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["content", "chevron", "total", "costTotal", "costsContainer", "emptyState", "templateSelect"]
-  static values = { qty: Number, units: Array }
+  static values = { qty: Number, units: Array, templates: Array }
 
   // 単位の選択肢
   get unitOptions() {
     return this.unitsValue.length > 0 ? this.unitsValue : ["式", "m", "m²", "m³", "t", "kg", "本", "個", "台", "人工", "日", "回", "箇所", "セット"]
+  }
+
+  // テンプレートデータ
+  get templateData() {
+    return this.templatesValue || []
   }
 
   toggle(event) {
@@ -57,13 +62,18 @@ export default class extends Controller {
       `<option value="${u}" ${templateData?.unit === u ? 'selected' : ''}>${u}</option>`
     ).join("")
 
+    // datalistのオプションを生成
+    const datalistId = `cost-name-list-${itemIndex}`
+
     const template = `
       <tr class="cost-row bg-gray-50 border-t">
         <td class="px-2 py-1">
           <input type="text" name="estimate[estimate_items_attributes][${itemIndex}][estimate_item_costs_attributes][${costIndex}][cost_name]"
                  value="${templateData?.name || ''}"
-                 class="block w-full rounded border-gray-300 text-sm"
-                 placeholder="材料費、労務費など">
+                 list="${datalistId}"
+                 class="block w-full rounded border-gray-300 text-sm cost-name"
+                 data-action="change->budget-item#onNameChange"
+                 placeholder="選択または入力">
         </td>
         <td class="px-2 py-1">
           <input type="number" name="estimate[estimate_items_attributes][${itemIndex}][estimate_item_costs_attributes][${costIndex}][quantity]"
@@ -119,6 +129,31 @@ export default class extends Controller {
     } catch (e) {
       console.error("Template parse error:", e)
     }
+  }
+
+  // 内訳名称を選択/入力したときにテンプレートから単位・単価を自動入力
+  onNameChange(event) {
+    const input = event.currentTarget
+    const selectedName = input.value
+    const row = input.closest("tr")
+
+    // テンプレートから一致するものを検索
+    const template = this.templateData.find(t => t.name === selectedName)
+    if (!template) return
+
+    // 単位を設定
+    const unitSelect = row.querySelector("select[name*='[unit]']")
+    if (unitSelect && template.unit) {
+      unitSelect.value = template.unit
+    }
+
+    // 単価を設定（空の場合のみ）
+    const priceInput = row.querySelector(".cost-price")
+    if (priceInput && !priceInput.value && template.unit_price) {
+      priceInput.value = template.unit_price
+    }
+
+    this.calculate()
   }
 
   removeCost(event) {

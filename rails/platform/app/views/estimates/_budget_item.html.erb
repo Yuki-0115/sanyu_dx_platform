@@ -1,6 +1,8 @@
+<% cost_template_names = cost_templates.map { |t| { name: t.name, unit: t.unit, unit_price: t.default_unit_price, note: t.note } } %>
 <div class="budget-item-section" data-controller="budget-item"
      data-budget-item-qty-value="<%= item.quantity %>"
-     data-budget-item-units-value="<%= cost_units.to_json %>">
+     data-budget-item-units-value="<%= cost_units.to_json %>"
+     data-budget-item-templates-value="<%= cost_template_names.to_json %>">
   <%= hidden_field_tag "estimate[estimate_items_attributes][#{item_index}][id]", item.id if item.persisted? %>
 
   <!-- 項目ヘッダー -->
@@ -71,6 +73,13 @@
       </div>
     </div>
 
+    <!-- 内訳名称のdatalist（このアイテム内で共有） -->
+    <datalist id="cost-name-list-<%= item_index %>">
+      <% cost_templates.each do |t| %>
+        <option value="<%= t.name %>"></option>
+      <% end %>
+    </datalist>
+
     <div class="overflow-x-auto">
       <table class="min-w-full bg-white rounded border">
         <thead class="bg-blue-100">
@@ -92,8 +101,10 @@
                 <%= hidden_field_tag "estimate[estimate_items_attributes][#{item_index}][estimate_item_costs_attributes][#{cost_idx}][_destroy]", "0", class: "destroy-flag" %>
                 <input type="text" name="estimate[estimate_items_attributes][<%= item_index %>][estimate_item_costs_attributes][<%= cost_idx %>][cost_name]"
                        value="<%= cost.cost_name %>"
-                       class="block w-full rounded border-gray-300 text-sm"
-                       placeholder="材料費、労務費など">
+                       list="cost-name-list-<%= item_index %>"
+                       class="block w-full rounded border-gray-300 text-sm cost-name"
+                       data-action="change->budget-item#onNameChange"
+                       placeholder="選択または入力">
               </td>
               <td class="px-2 py-1">
                 <input type="number" name="estimate[estimate_items_attributes][<%= item_index %>][estimate_item_costs_attributes][<%= cost_idx %>][quantity]"
