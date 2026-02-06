@@ -11,10 +11,10 @@ class CompanyEvent < ApplicationRecord
   # 色オプション
   COLORS = {
     "purple" => "紫",
-    "orange" => "オレンジ",
-    "pink" => "ピンク",
-    "teal" => "ティール",
-    "indigo" => "インディゴ"
+    "orange" => "橙",
+    "pink" => "桃",
+    "teal" => "青緑",
+    "indigo" => "藍"
   }.freeze
 
   validates :event_date, presence: true
