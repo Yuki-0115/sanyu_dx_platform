@@ -8,6 +8,7 @@ class Partner < ApplicationRecord
   has_many :offsets, dependent: :restrict_with_error
   has_many :payment_terms, as: :termable, dependent: :destroy
   has_many :cash_flow_entries, dependent: :nullify
+  has_many :outsourcing_schedules, dependent: :destroy
 
   # Validations
   validates :code, uniqueness: true

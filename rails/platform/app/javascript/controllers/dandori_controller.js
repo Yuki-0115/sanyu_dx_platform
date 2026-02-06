@@ -6,6 +6,7 @@ export default class extends Controller {
     "cellModal", "cellModalTitle", "cellModalDate", "cellEmployeeList",
     "cellEmployeeCheckbox", "cellRoleSelect", "cellSelectedCount", "cellSaveBtn",
     "cellModalHeader", "cellModalShiftBadge",
+    "outsourcingList", "outsourcingRowTemplate",
     "bulkModal", "projectSelect", "bulkEmployeeCheckbox", "selectedEmployeesCount",
     "bulkStartDate", "bulkEndDate", "bulkRole", "bulkShift", "bulkSummary", "bulkSubmitBtn",
     "noteModal", "noteModalTitle", "noteModalDate", "noteSaveBtn", "notePasteBtn",
@@ -234,6 +235,10 @@ export default class extends Controller {
     this.cellEmployeeCheckboxTargets.forEach(cb => cb.checked = false)
     this.cellRoleSelectTargets.forEach(select => select.value = "worker")
     document.querySelectorAll('.cell-worker-status').forEach(el => el.textContent = '')
+    // 外注リストをクリア
+    if (this.hasOutsourcingListTarget) {
+      this.outsourcingListTarget.innerHTML = ""
+    }
     this.updateCellSelectedCount()
   }
 
@@ -262,6 +267,15 @@ export default class extends Controller {
         }
       })
 
+      // 外注データを読み込み
+      const outsourcingData = this.currentShift === "day" ? data.day_outsourcing : data.night_outsourcing
+      if (outsourcingData && this.hasOutsourcingListTarget) {
+        this.outsourcingListTarget.innerHTML = ""
+        outsourcingData.forEach(os => {
+          this.addOutsourcingRow(null, os)
+        })
+      }
+
       this.updateCellSelectedCount()
     } catch (error) {
       console.error("Failed to load assignments:", error)
@@ -288,6 +302,60 @@ export default class extends Controller {
     this.cellSelectedCountTarget.textContent = `${count}名選択中`
   }
 
+  // ========================
+  // 外注行の追加・削除
+  // ========================
+
+  addOutsourcingRow(event, existingData = null) {
+    if (!this.hasOutsourcingRowTemplateTarget || !this.hasOutsourcingListTarget) return
+
+    const template = this.outsourcingRowTemplateTarget.content.cloneNode(true)
+    const row = template.querySelector("[data-outsourcing-row]")
+
+    if (existingData) {
+      const partnerSelect = row.querySelector("[data-field='partner_id']")
+      const billingTypeSelect = row.querySelector("[data-field='billing_type']")
+      const headcountInput = row.querySelector("[data-field='headcount']")
+      const headcountLabel = row.querySelector("[data-headcount-label]")
+
+      if (partnerSelect) partnerSelect.value = existingData.partner_id
+      if (billingTypeSelect) billingTypeSelect.value = existingData.billing_type
+      if (headcountInput) headcountInput.value = existingData.headcount || 1
+
+      // 請負の場合は人数入力を非表示
+      if (existingData.billing_type === "contract") {
+        if (headcountInput) headcountInput.classList.add("hidden")
+        if (headcountLabel) headcountLabel.classList.add("hidden")
+      }
+    }
+
+    this.outsourcingListTarget.appendChild(row)
+  }
+
+  removeOutsourcingRow(event) {
+    const row = event.currentTarget.closest("[data-outsourcing-row]")
+    if (row) row.remove()
+  }
+
+  toggleHeadcount(event) {
+    const row = event.currentTarget.closest("[data-outsourcing-row]")
+    const billingType = event.currentTarget.value
+    const headcountInput = row.querySelector("[data-field='headcount']")
+    const headcountLabel = row.querySelector("[data-headcount-label]")
+
+    if (billingType === "contract") {
+      if (headcountInput) headcountInput.classList.add("hidden")
+      if (headcountLabel) headcountLabel.classList.add("hidden")
+    } else {
+      if (headcountInput) headcountInput.classList.remove("hidden")
+      if (headcountLabel) headcountLabel.classList.remove("hidden")
+    }
+  }
+
+  // ========================
+  // セル保存（社員＋外注）
+  // ========================
+
   async saveCellAssignments() {
     const selectedEmployees = this.cellEmployeeCheckboxTargets
       .filter(cb => cb.checked)
@@ -301,12 +369,31 @@ export default class extends Controller {
         }
       })
 
+    // 外注データを収集
+    const outsourcingEntries = []
+    if (this.hasOutsourcingListTarget) {
+      const rows = this.outsourcingListTarget.querySelectorAll("[data-outsourcing-row]")
+      rows.forEach(row => {
+        const partnerId = row.querySelector("[data-field='partner_id']")?.value
+        const billingType = row.querySelector("[data-field='billing_type']")?.value || "man_days"
+        const headcount = row.querySelector("[data-field='headcount']")?.value || 1
+
+        if (partnerId) {
+          outsourcingEntries.push({
+            partner_id: partnerId,
+            billing_type: billingType,
+            headcount: parseInt(headcount, 10)
+          })
+        }
+      })
+    }
+
     this.cellSaveBtnTarget.disabled = true
     this.cellSaveBtnTarget.textContent = "保存中..."
 
     try {
-      // save_cell APIは既存の配置をクリアして新しい配置を作成する
-      const response = await fetch("/schedule/save_cell", {
+      // 社員配置を保存
+      const employeeResponse = await fetch("/schedule/save_cell", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -325,12 +412,32 @@ export default class extends Controller {
         })
       })
 
-      const data = await response.json()
+      // 外注配置を保存
+      const outsourcingResponse = await fetch("/schedule/save_outsourcing", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          project_id: this.currentProjectId,
+          date: this.currentDate,
+          shift: this.currentShift,
+          outsourcing_entries: outsourcingEntries
+        })
+      })
 
-      if (data.success) {
+      const employeeData = await employeeResponse.json()
+      const outsourcingData = await outsourcingResponse.json()
+
+      if (employeeData.success && outsourcingData.success) {
         window.location.reload()
       } else {
-        alert("エラー:\n" + (data.errors?.join("\n") || "保存に失敗しました"))
+        const errors = []
+        if (!employeeData.success) errors.push(...(employeeData.errors || ["社員配置の保存に失敗"]))
+        if (!outsourcingData.success) errors.push(...(outsourcingData.errors || ["外注配置の保存に失敗"]))
+        alert("エラー:\n" + errors.join("\n"))
         this.cellSaveBtnTarget.disabled = false
         this.cellSaveBtnTarget.textContent = "保存"
       }

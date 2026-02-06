@@ -126,3 +126,21 @@ ja:
       client:
         code: 顧客コード
         name: 顧客名
+      daily_report:
+        labor_cost: 労務費
+        material_cost: 材料費
+        outsourcing_cost: 外注費
+        transportation_cost: 運搬費
+        machinery_own_cost: 機械（自社）
+        machinery_rental_cost: 機械（レンタル）
+        fuel_amount: ガソリン代
+        highway_amount: 高速代
+      budget:
+        labor_cost: 労務費
+        material_cost: 材料費
+        outsourcing_cost: 外注費
+        machinery_own_cost: 機械（自社）
+        machinery_rental_cost: 機械（レンタル）
+        expense_cost: 経費（その他）
+        regular_labor_unit_price: 正社員単価
+        outsourcing_unit_price: 外注単価

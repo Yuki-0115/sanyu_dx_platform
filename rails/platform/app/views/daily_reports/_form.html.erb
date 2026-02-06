@@ -573,6 +573,18 @@
         <%= f.number_field :transportation_cost, step: 1, placeholder: "0",
             class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
       </div>
+      <div>
+        <%= f.label :machinery_own_cost, "機械・自社 (円)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :machinery_own_cost, step: 1, placeholder: "0",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        <p class="text-xs text-gray-400 mt-1">自社保有機械の使用</p>
+      </div>
+      <div>
+        <%= f.label :machinery_rental_cost, "機械・レンタル (円)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :machinery_rental_cost, step: 1, placeholder: "0",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        <p class="text-xs text-gray-400 mt-1">レンタル機械の費用</p>
+      </div>
     </div>
 
     <!-- 詳細メモ -->
@@ -734,13 +746,15 @@
           <div>
             <label class="block text-sm font-medium text-gray-700">カテゴリ</label>
             <select name="daily_report[expenses_attributes][NEW_RECORD][category]"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                data-action="change->expense-form#categoryChanged"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm expense-category">
               <option value="material">材料費</option>
-              <option value="transport">交通費</option>
-              <option value="equipment">設備費</option>
-              <option value="rental">リース費</option>
+              <option value="machinery_rental">機械（レンタル）</option>
+              <option value="transport">運搬費</option>
+              <option value="equipment">機材費</option>
+              <option value="rental">リース・レンタル</option>
               <option value="consumable">消耗品</option>
-              <option value="meal">食事代</option>
+              <option value="meal">飲食費</option>
               <option value="other">その他</option>
             </select>
           </div>
@@ -753,15 +767,26 @@
           <div>
             <label class="block text-sm font-medium text-gray-700">支払方法</label>
             <select name="daily_report[expenses_attributes][NEW_RECORD][payment_method]"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                data-action="change->expense-form#paymentMethodChanged"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm expense-payment-method">
+              <option value="credit">掛け払い</option>
               <option value="advance">立替（現金）</option>
               <option value="company_card">会社カード</option>
-              <option value="credit">掛け払い</option>
             </select>
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-          <div>
+          <div class="expense-supplier-field">
+            <label class="block text-sm font-medium text-gray-700">仕入先 <span class="text-red-500">*</span></label>
+            <select name="daily_report[expenses_attributes][NEW_RECORD][supplier_id]"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm expense-supplier">
+              <option value="">選択してください</option>
+              <% Partner.order(:name).each do |partner| %>
+                <option value="<%= partner.id %>"><%= partner.name %></option>
+              <% end %>
+            </select>
+          </div>
+          <div class="expense-payee-field hidden">
             <label class="block text-sm font-medium text-gray-700">支払先</label>
             <input type="text" name="daily_report[expenses_attributes][NEW_RECORD][payee_name]"
                 placeholder="例: コンビニ、ホームセンター"
@@ -822,9 +847,9 @@
             <div>
               <label class="block text-sm font-medium text-gray-700">カテゴリ</label>
               <%= ef.select :category,
-                  [["材料費", "material"], ["交通費", "transport"], ["設備費", "equipment"], ["リース費", "rental"], ["消耗品", "consumable"], ["食事代", "meal"], ["その他", "other"]],
+                  [["材料費", "material"], ["機械（レンタル）", "machinery_rental"], ["運搬費", "transport"], ["機材費", "equipment"], ["リース・レンタル", "rental"], ["消耗品", "consumable"], ["飲食費", "meal"], ["その他", "other"]],
                   {},
-                  { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+                  { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm expense-category", data: { action: "change->expense-form#categoryChanged" } } %>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">金額 (円)</label>
@@ -834,13 +859,20 @@
             <div>
               <label class="block text-sm font-medium text-gray-700">支払方法</label>
               <%= ef.select :payment_method,
-                  [["立替（現金）", "advance"], ["会社カード", "company_card"], ["掛け払い", "credit"]],
+                  [["掛け払い", "credit"], ["立替（現金）", "advance"], ["会社カード", "company_card"]],
                   {},
-                  { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+                  { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm expense-payment-method", data: { action: "change->expense-form#paymentMethodChanged" } } %>
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-            <div>
+            <% show_supplier = ef.object.payment_method == "credit" || %w[material machinery_rental].include?(ef.object.category) %>
+            <div class="expense-supplier-field <%= 'hidden' unless show_supplier %>">
+              <label class="block text-sm font-medium text-gray-700">仕入先 <span class="text-red-500">*</span></label>
+              <%= ef.collection_select :supplier_id, Partner.order(:name), :id, :name,
+                  { include_blank: "選択してください" },
+                  { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm expense-supplier" } %>
+            </div>
+            <div class="expense-payee-field <%= 'hidden' if show_supplier %>">
               <label class="block text-sm font-medium text-gray-700">支払先</label>
               <%= ef.text_field :payee_name, placeholder: "例: コンビニ、ホームセンター",
                   class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>

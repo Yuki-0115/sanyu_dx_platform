@@ -93,6 +93,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_045751) do
     t.decimal "regular_labor_unit_price", precision: 10, default: "18000"
     t.decimal "temporary_labor_unit_price", precision: 10, default: "18000"
     t.decimal "outsourcing_unit_price", precision: 10, default: "18000"
+    t.decimal "machinery_own_cost", precision: 12, default: "0"
+    t.decimal "machinery_rental_cost", precision: 12, default: "0"
     t.index ["confirmed_by_id"], name: "index_budgets_on_confirmed_by_id"
     t.index ["project_id"], name: "index_budgets_on_project_id"
   end
@@ -232,6 +234,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_045751) do
     t.decimal "highway_confirmed_amount", precision: 12, scale: 2
     t.string "fuel_type", default: "regular"
     t.decimal "fuel_unit_price", precision: 10, scale: 2
+    t.decimal "machinery_own_cost", precision: 12, default: "0"
+    t.decimal "machinery_rental_cost", precision: 12, default: "0"
     t.index ["foreman_id"], name: "index_daily_reports_on_foreman_id"
     t.index ["project_id"], name: "index_daily_reports_on_project_id"
     t.index ["revised_by_id"], name: "index_daily_reports_on_revised_by_id"
@@ -658,6 +662,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_045751) do
     t.index ["partner_id"], name: "index_outsourcing_entries_on_partner_id"
   end
 
+  create_table "outsourcing_schedules", force: :cascade do |t|
+    t.date "scheduled_date", null: false
+    t.string "shift", default: "day", null: false
+    t.bigint "project_id", null: false
+    t.bigint "partner_id", null: false
+    t.integer "headcount", default: 1
+    t.string "billing_type", default: "man_days", null: false
+    t.string "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["partner_id"], name: "index_outsourcing_schedules_on_partner_id"
+    t.index ["project_id"], name: "index_outsourcing_schedules_on_project_id"
+    t.index ["scheduled_date", "project_id", "partner_id", "shift"], name: "idx_outsourcing_schedules_unique", unique: true
+  end
+
   create_table "paid_leave_grants", force: :cascade do |t|
     t.bigint "employee_id", null: false
     t.date "grant_date", null: false, comment: "付与日（基準日）"
@@ -839,6 +858,44 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_045751) do
     t.index ["status"], name: "index_projects_on_status"
   end
 
+  create_table "received_invoices", force: :cascade do |t|
+    t.bigint "partner_id"
+    t.bigint "project_id"
+    t.bigint "uploaded_by_id"
+    t.bigint "approved_by_id"
+    t.string "invoice_number"
+    t.string "vendor_name"
+    t.date "invoice_date"
+    t.date "due_date"
+    t.decimal "amount", precision: 12
+    t.decimal "tax_amount", precision: 12
+    t.string "description"
+    t.string "status", default: "pending", null: false
+    t.text "rejection_reason"
+    t.datetime "approved_at"
+    t.datetime "paid_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "client_id"
+    t.bigint "accounting_approved_by_id"
+    t.datetime "accounting_approved_at"
+    t.bigint "sales_approved_by_id"
+    t.datetime "sales_approved_at"
+    t.bigint "engineering_approved_by_id"
+    t.datetime "engineering_approved_at"
+    t.index ["accounting_approved_by_id"], name: "index_received_invoices_on_accounting_approved_by_id"
+    t.index ["approved_by_id"], name: "index_received_invoices_on_approved_by_id"
+    t.index ["client_id"], name: "index_received_invoices_on_client_id"
+    t.index ["due_date"], name: "index_received_invoices_on_due_date"
+    t.index ["engineering_approved_by_id"], name: "index_received_invoices_on_engineering_approved_by_id"
+    t.index ["invoice_date"], name: "index_received_invoices_on_invoice_date"
+    t.index ["partner_id"], name: "index_received_invoices_on_partner_id"
+    t.index ["project_id"], name: "index_received_invoices_on_project_id"
+    t.index ["sales_approved_by_id"], name: "index_received_invoices_on_sales_approved_by_id"
+    t.index ["status"], name: "index_received_invoices_on_status"
+    t.index ["uploaded_by_id"], name: "index_received_invoices_on_uploaded_by_id"
+  end
+
   create_table "safety_document_types", force: :cascade do |t|
     t.string "name", null: false
     t.string "description"
@@ -932,6 +989,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_045751) do
   add_foreign_key "offsets", "partners"
   add_foreign_key "outsourcing_entries", "daily_reports"
   add_foreign_key "outsourcing_entries", "partners"
+  add_foreign_key "outsourcing_schedules", "partners"
+  add_foreign_key "outsourcing_schedules", "projects"
   add_foreign_key "paid_leave_grants", "employees"
   add_foreign_key "paid_leave_requests", "employees"
   add_foreign_key "paid_leave_requests", "employees", column: "approved_by_id"
@@ -945,6 +1004,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_045751) do
   add_foreign_key "project_safety_requirements", "projects"
   add_foreign_key "project_safety_requirements", "safety_document_types"
   add_foreign_key "projects", "clients"
+  add_foreign_key "received_invoices", "clients"
+  add_foreign_key "received_invoices", "employees", column: "accounting_approved_by_id"
+  add_foreign_key "received_invoices", "employees", column: "approved_by_id"
+  add_foreign_key "received_invoices", "employees", column: "engineering_approved_by_id"
+  add_foreign_key "received_invoices", "employees", column: "sales_approved_by_id"
+  add_foreign_key "received_invoices", "employees", column: "uploaded_by_id"
+  add_foreign_key "received_invoices", "partners"
+  add_foreign_key "received_invoices", "projects"
   add_foreign_key "safety_files", "employees", column: "uploaded_by_id"
   add_foreign_key "safety_files", "projects"
   add_foreign_key "safety_files", "safety_document_types"

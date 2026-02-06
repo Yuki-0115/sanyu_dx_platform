@@ -30,11 +30,15 @@ module DailyReportsHelper
 
   EXPENSE_CATEGORY_LABELS = {
     "material" => "材料費",
-    "transport" => "交通費",
-    "equipment" => "設備費",
-    "rental" => "リース費",
+    "transport" => "運搬費",
+    "equipment" => "機材費",
+    "rental" => "リース・レンタル",
+    "machinery_own" => "機械（自社）",
+    "machinery_rental" => "機械（レンタル）",
     "consumable" => "消耗品",
-    "meal" => "食事代",
+    "meal" => "飲食費",
+    "fuel" => "燃料費",
+    "highway_toll" => "高速代",
     "other" => "その他"
   }.freeze
 

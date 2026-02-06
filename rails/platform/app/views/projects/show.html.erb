@@ -646,29 +646,29 @@
             <div class="bg-white shadow rounded-lg p-6 mt-6">
               <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-medium text-gray-900">安全書類</h3>
-                <%= link_to "全て見る", safety_documents_path(project_id: @project.id),
+                <%= link_to "全て見る", project_files_safety_documents_path(project_id: @project.id),
                     class: "text-sm text-blue-600 hover:underline" %>
               </div>
-              <% safety_folders = @project.safety_folders.order(:name) %>
-              <% if safety_folders.any? %>
+              <% safety_files = @project.safety_files.includes(:safety_document_type).order(created_at: :desc) %>
+              <% if safety_files.any? %>
                 <ul class="space-y-2">
-                  <% safety_folders.limit(5).each do |folder| %>
+                  <% safety_files.limit(5).each do |file| %>
                     <li class="flex items-center text-sm">
-                      <svg class="w-5 h-5 text-yellow-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path>
+                      <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                       </svg>
-                      <%= link_to folder.name, safety_document_path(folder), class: "text-blue-600 hover:underline" %>
-                      <span class="text-gray-400 ml-2">(<%= folder.files_count %>件)</span>
+                      <span class="text-gray-700"><%= file.safety_document_type&.name || "その他" %></span>
+                      <span class="text-gray-400 ml-2 text-xs"><%= file.name %></span>
                     </li>
                   <% end %>
                 </ul>
-                <% if safety_folders.count > 5 %>
-                  <p class="text-xs text-gray-500 mt-2">他 <%= safety_folders.count - 5 %> フォルダ</p>
+                <% if safety_files.count > 5 %>
+                  <p class="text-xs text-gray-500 mt-2">他 <%= safety_files.count - 5 %> 件</p>
                 <% end %>
               <% else %>
-                <p class="text-sm text-gray-500">安全書類フォルダがありません</p>
+                <p class="text-sm text-gray-500">安全書類がありません</p>
               <% end %>
-              <%= link_to "新規フォルダ作成", new_folder_safety_documents_path(project_id: @project.id),
+              <%= link_to "安全書類を追加", new_project_file_safety_documents_path(project_id: @project.id),
                   class: "mt-3 inline-block text-sm text-blue-600 hover:underline" %>
             </div>
           <% end %>

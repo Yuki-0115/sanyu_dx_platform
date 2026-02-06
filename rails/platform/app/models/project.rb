@@ -40,6 +40,7 @@ class Project < ApplicationRecord
   has_many :required_safety_document_types, through: :project_safety_requirements, source: :safety_document_type
   has_many :project_documents, dependent: :destroy
   has_many :monthly_progresses, class_name: "ProjectMonthlyProgress", dependent: :destroy
+  has_many :outsourcing_schedules, dependent: :destroy
 
   # Validations
   validates :code, uniqueness: true
@@ -267,6 +268,21 @@ class Project < ApplicationRecord
     confirmed_daily_reports.sum(:transportation_cost).to_i
   end
 
+  # 現場台帳：機械費（自社）
+  def site_ledger_machinery_own_cost
+    confirmed_daily_reports.sum(:machinery_own_cost).to_i
+  end
+
+  # 現場台帳：機械費（レンタル）
+  def site_ledger_machinery_rental_cost
+    confirmed_daily_reports.sum(:machinery_rental_cost).to_i
+  end
+
+  # 現場台帳：機械費合計
+  def site_ledger_machinery_cost
+    site_ledger_machinery_own_cost + site_ledger_machinery_rental_cost
+  end
+
   # 現場台帳：その他経費（ガソリン・高速代など）
   def site_ledger_expense_cost
     fuel = confirmed_daily_reports.sum(:fuel_amount).to_i
@@ -278,7 +294,7 @@ class Project < ApplicationRecord
   def site_ledger_total_cost
     site_ledger_labor_cost + site_ledger_outsourcing_cost +
       site_ledger_material_cost + site_ledger_transportation_cost +
-      site_ledger_expense_cost
+      site_ledger_machinery_cost + site_ledger_expense_cost
   end
 
   # ========================================
@@ -340,6 +356,8 @@ class Project < ApplicationRecord
       labor: (budget.labor_cost || 0) - site_ledger_labor_cost,
       material: (budget.material_cost || 0) - site_ledger_material_cost,
       outsourcing: (budget.outsourcing_cost || 0) - site_ledger_outsourcing_cost,
+      machinery_own: (budget.machinery_own_cost || 0) - site_ledger_machinery_own_cost,
+      machinery_rental: (budget.machinery_rental_cost || 0) - site_ledger_machinery_rental_cost,
       expense: (budget.expense_cost || 0) - site_ledger_expense_cost,
       total: (budget.total_cost || 0) - site_ledger_total_cost
     }

@@ -68,6 +68,9 @@ Rails.application.routes.draw do
   # セル操作
   get "schedule/cell_data", to: "schedule#cell_data", as: :schedule_cell_data
   post "schedule/save_cell", to: "schedule#save_cell", as: :schedule_save_cell
+  # 外注スケジュール
+  post "schedule/save_outsourcing", to: "schedule#save_outsourcing", as: :schedule_save_outsourcing
+  delete "schedule/remove_outsourcing/:id", to: "schedule#remove_outsourcing", as: :schedule_remove_outsourcing
   # 案件別配置取得
   get "schedule/project_assignments/:id", to: "schedule#project_assignments", as: :schedule_project_assignments
   # 一括配置
@@ -280,6 +283,14 @@ Rails.application.routes.draw do
         get :reimbursed
       end
     end
+
+    # 受領請求書管理
+    resources :received_invoices, only: %i[index new create destroy] do
+      member do
+        patch :approve
+        patch :reject
+      end
+    end
   end
 
   # 月次帳票
@@ -310,6 +321,7 @@ Rails.application.routes.draw do
   get "safety_files/:id/edit", to: "safety_documents#edit_file", as: :edit_safety_file
   patch "safety_files/:id", to: "safety_documents#update_file", as: :safety_file
   delete "safety_files/:id", to: "safety_documents#destroy_file"
+  delete "safety_files/:id/attachment", to: "safety_documents#purge_attachment", as: :purge_attachment_safety_file
 
   # 安全書類種類マスタ
   resources :safety_document_types, except: [:show] do

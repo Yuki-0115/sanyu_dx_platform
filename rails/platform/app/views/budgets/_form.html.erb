@@ -85,6 +85,86 @@
     </div>
   </div>
 
+  <%# 予算金額 %>
+  <div class="bg-white border border-gray-200 rounded-lg p-6">
+    <h4 class="text-lg font-medium text-gray-900 mb-2">予算金額</h4>
+    <p class="text-sm text-gray-500 mb-6">現場台帳で予算対比を表示するための予算額です。</p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div>
+        <%= f.label :labor_cost, "労務費", class: "block text-sm font-medium text-gray-700" %>
+        <div class="relative rounded-md shadow-sm mt-1">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">¥</span>
+          </div>
+          <%= f.number_field :labor_cost, step: 1000,
+              class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+              placeholder: "0" %>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :material_cost, "材料費", class: "block text-sm font-medium text-gray-700" %>
+        <div class="relative rounded-md shadow-sm mt-1">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">¥</span>
+          </div>
+          <%= f.number_field :material_cost, step: 1000,
+              class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+              placeholder: "0" %>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :outsourcing_cost, "外注費", class: "block text-sm font-medium text-gray-700" %>
+        <div class="relative rounded-md shadow-sm mt-1">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">¥</span>
+          </div>
+          <%= f.number_field :outsourcing_cost, step: 1000,
+              class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+              placeholder: "0" %>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :machinery_own_cost, "機械（自社）", class: "block text-sm font-medium text-gray-700" %>
+        <div class="relative rounded-md shadow-sm mt-1">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">¥</span>
+          </div>
+          <%= f.number_field :machinery_own_cost, step: 1000,
+              class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+              placeholder: "0" %>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :machinery_rental_cost, "機械（レンタル）", class: "block text-sm font-medium text-gray-700" %>
+        <div class="relative rounded-md shadow-sm mt-1">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">¥</span>
+          </div>
+          <%= f.number_field :machinery_rental_cost, step: 1000,
+              class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+              placeholder: "0" %>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :expense_cost, "経費（その他）", class: "block text-sm font-medium text-gray-700" %>
+        <div class="relative rounded-md shadow-sm mt-1">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">¥</span>
+          </div>
+          <%= f.number_field :expense_cost, step: 1000,
+              class: "block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+              placeholder: "0" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
     <%= link_to "キャンセル", project_budget_path(@project),
         class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>

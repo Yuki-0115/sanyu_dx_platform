@@ -122,6 +122,8 @@
                   is_today = date == Date.current
                   day_schedules = @schedule_map[[project.id, date, "day"]] || []
                   night_schedules = @schedule_map[[project.id, date, "night"]] || []
+                  day_outsourcing = @outsourcing_map[[project.id, date, "day"]] || []
+                  night_outsourcing = @outsourcing_map[[project.id, date, "night"]] || []
                   overlapping_ids = @overlapping_employees[date] || Set.new
                   note = @notes_map[[project.id, date]]
                   has_note = note&.has_content?
@@ -140,9 +142,10 @@
                            data-date="<%= date.strftime('%Y-%m-%d') %>"
                            data-date-label="<%= date_label %>"
                            data-shift="day">
-                        <% if day_schedules.any? %>
+                        <% if day_schedules.any? || day_outsourcing.any? %>
                           <div class="flex flex-wrap gap-0.5 justify-center">
-                            <% day_schedules.take(4).each do |s| %>
+                            <%# 社員表示 %>
+                            <% day_schedules.take(3).each do |s| %>
                               <% is_overlapping = overlapping_ids.include?(s.employee_id) %>
                               <% is_foreman = s.role == "foreman" %>
                               <span class="text-xs <%= is_overlapping ? 'text-red-600 font-bold' : '' %>"
@@ -150,8 +153,16 @@
                                 <%= is_foreman ? '★' : '' %><%= s.employee.name.first(2) %>
                               </span>
                             <% end %>
-                            <% if day_schedules.size > 4 %>
-                              <span class="text-xs text-gray-500">+<%= day_schedules.size - 4 %></span>
+                            <%# 外注表示 %>
+                            <% day_outsourcing.take(2).each do |os| %>
+                              <span class="text-xs text-purple-700 bg-purple-50 px-0.5 rounded"
+                                    title="<%= os.display_label %>">
+                                <%= os.short_label %>
+                              </span>
+                            <% end %>
+                            <% total_count = day_schedules.size + day_outsourcing.size %>
+                            <% if total_count > 5 %>
+                              <span class="text-xs text-gray-500">+<%= total_count - 5 %></span>
                             <% end %>
                           </div>
                         <% else %>
@@ -181,9 +192,10 @@
                            data-date="<%= date.strftime('%Y-%m-%d') %>"
                            data-date-label="<%= date_label %>"
                            data-shift="night">
-                        <% if night_schedules.any? %>
+                        <% if night_schedules.any? || night_outsourcing.any? %>
                           <div class="flex flex-wrap gap-0.5 justify-center">
-                            <% night_schedules.take(4).each do |s| %>
+                            <%# 社員表示 %>
+                            <% night_schedules.take(3).each do |s| %>
                               <% is_overlapping = overlapping_ids.include?(s.employee_id) %>
                               <% is_foreman = s.role == "foreman" %>
                               <span class="text-xs <%= is_overlapping ? 'text-red-600 font-bold' : '' %>"
@@ -191,8 +203,16 @@
                                 <%= is_foreman ? '★' : '' %><%= s.employee.name.first(2) %>
                               </span>
                             <% end %>
-                            <% if night_schedules.size > 4 %>
-                              <span class="text-xs text-gray-500">+<%= night_schedules.size - 4 %></span>
+                            <%# 外注表示 %>
+                            <% night_outsourcing.take(2).each do |os| %>
+                              <span class="text-xs text-purple-700 bg-purple-50 px-0.5 rounded"
+                                    title="<%= os.display_label %>">
+                                <%= os.short_label %>
+                              </span>
+                            <% end %>
+                            <% total_count = night_schedules.size + night_outsourcing.size %>
+                            <% if total_count > 5 %>
+                              <span class="text-xs text-gray-500">+<%= total_count - 5 %></span>
                             <% end %>
                           </div>
                         <% else %>
@@ -261,13 +281,13 @@
           </div>
 
           <!-- 社員選択（チェックボックス形式） -->
-          <div class="space-y-4 max-h-[50vh] overflow-y-auto">
+          <div class="space-y-4 max-h-[30vh] overflow-y-auto">
             <!-- 正社員 -->
             <div>
-              <p class="text-xs font-medium text-gray-700 mb-2 sticky top-0 bg-white">正社員</p>
+              <p class="text-xs font-medium text-blue-700 mb-2 sticky top-0 bg-white py-1 border-b border-blue-200">正社員</p>
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 <% @regular_employees.each do |emp| %>
-                  <label class="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <label class="flex items-center gap-2 p-2 border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer">
                     <input type="checkbox"
                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                            data-dandori-target="cellEmployeeCheckbox"
@@ -287,7 +307,7 @@
             <!-- 仮社員 -->
             <% if @temporary_employees.any? %>
               <div>
-                <p class="text-xs font-medium text-gray-700 mb-2 sticky top-0 bg-white">仮社員</p>
+                <p class="text-xs font-medium text-yellow-700 mb-2 sticky top-0 bg-white py-1 border-b border-yellow-200">仮社員</p>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <% @temporary_employees.each do |emp| %>
                     <label class="flex items-center gap-2 p-2 border border-yellow-200 rounded-lg hover:bg-yellow-50 cursor-pointer">
@@ -307,30 +327,42 @@
                 </div>
               </div>
             <% end %>
+          </div>
 
-            <!-- 外注 -->
-            <% if @external_employees.any? %>
-              <div>
-                <p class="text-xs font-medium text-gray-700 mb-2 sticky top-0 bg-white">外注</p>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  <% @external_employees.each do |emp| %>
-                    <label class="flex items-center gap-2 p-2 border border-purple-200 rounded-lg hover:bg-purple-50 cursor-pointer">
-                      <input type="checkbox"
-                             class="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                             data-dandori-target="cellEmployeeCheckbox"
-                             data-employee-id="<%= emp.id %>"
-                             data-employee-name="<%= emp.name %>">
-                      <span class="text-sm truncate"><%= emp.name %></span>
-                      <select data-dandori-target="cellRoleSelect" data-employee-id="<%= emp.id %>"
-                              class="ml-auto text-xs border-gray-300 rounded py-0.5 px-1">
-                        <option value="worker">作業</option>
-                        <option value="foreman">職長</option>
-                      </select>
-                    </label>
+          <!-- 外注（協力会社） -->
+          <div class="mt-4 pt-4 border-t">
+            <div class="flex justify-between items-center mb-2">
+              <p class="text-xs font-medium text-purple-700">外注（協力会社）</p>
+              <button type="button" data-action="click->dandori#addOutsourcingRow"
+                      class="text-xs text-purple-600 hover:underline">+ 追加</button>
+            </div>
+            <div data-dandori-target="outsourcingList" class="space-y-2">
+              <!-- 外注行はJSで動的に追加 -->
+            </div>
+            <!-- 外注行テンプレート（非表示） -->
+            <template data-dandori-target="outsourcingRowTemplate">
+              <div class="flex items-center gap-2 p-2 border border-purple-200 rounded-lg bg-purple-50" data-outsourcing-row>
+                <select data-field="partner_id" class="flex-1 text-sm border-gray-300 rounded">
+                  <option value="">会社を選択</option>
+                  <% @partners.each do |partner| %>
+                    <option value="<%= partner.id %>"><%= partner.name %></option>
                   <% end %>
-                </div>
+                </select>
+                <select data-field="billing_type" class="text-sm border-gray-300 rounded" data-action="change->dandori#toggleHeadcount">
+                  <option value="man_days">人工</option>
+                  <option value="contract">請負</option>
+                </select>
+                <input type="number" data-field="headcount" value="1" min="1" max="99"
+                       class="w-14 text-sm text-center border-gray-300 rounded">
+                <span class="text-xs text-gray-500" data-headcount-label>人</span>
+                <button type="button" data-action="click->dandori#removeOutsourcingRow"
+                        class="text-red-500 hover:text-red-700 p-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
               </div>
-            <% end %>
+            </template>
           </div>
 
           <div class="mt-6 flex justify-end gap-3">

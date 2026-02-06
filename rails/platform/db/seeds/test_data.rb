@@ -3,16 +3,7 @@
 # 3ヶ月分のテストデータ作成
 puts "=== テストデータ作成開始 ==="
 
-# admin@sanyu.example.com のテナントを使用（Tenant ID 2）
-admin_user = Employee.find_by(email: "admin@sanyu.example.com")
-tenant = admin_user&.tenant || Tenant.find_by(id: 2) || Tenant.first
-unless tenant
-  puts "テナントがありません。先にdb:seedを実行してください。"
-  exit
-end
-puts "使用テナント: #{tenant.name} (ID: #{tenant.id})"
-
-Current.tenant_id = tenant.id
+# シングルテナント運用のため、テナント設定は不要
 
 # 顧客マスタ
 clients = [
@@ -214,10 +205,12 @@ puts "案件: #{created_projects.size}件"
 created_projects.select { |p| p.budget_amount.present? }.each do |project|
   budget = Budget.find_or_initialize_by(project: project)
   budget.assign_attributes(
-    material_cost: (project.budget_amount * 0.35).round,
-    outsourcing_cost: (project.budget_amount * 0.25).round,
-    labor_cost: (project.budget_amount * 0.30).round,
-    expense_cost: (project.budget_amount * 0.10).round,
+    material_cost: (project.budget_amount * 0.30).round,
+    outsourcing_cost: (project.budget_amount * 0.20).round,
+    labor_cost: (project.budget_amount * 0.25).round,
+    machinery_own_cost: (project.budget_amount * 0.10).round,
+    machinery_rental_cost: (project.budget_amount * 0.08).round,
+    expense_cost: (project.budget_amount * 0.07).round,
     status: project.status.in?(%w[in_progress completed invoiced paid]) ? "confirmed" : "draft"
   )
   budget.save!
@@ -262,6 +255,8 @@ created_projects.select { |p| p.actual_start_date.present? }.each do |project|
       material_cost: rand(10_000..80_000),
       outsourcing_cost: rand < 0.3 ? rand(30_000..100_000) : 0,
       transportation_cost: rand(5_000..20_000),
+      machinery_own_cost: rand < 0.4 ? rand(10_000..50_000) : 0,
+      machinery_rental_cost: rand < 0.3 ? rand(20_000..80_000) : 0,
       status: date < Date.current ? "confirmed" : "draft",
       confirmed_at: date < Date.current ? date + 1.day : nil
     )
@@ -271,10 +266,12 @@ created_projects.select { |p| p.actual_start_date.present? }.each do |project|
 
       # 出面データ
       workers.sample(rand(2..5)).each do |worker|
-        Attendance.find_or_create_by!(daily_report: report, employee: worker) do |a|
-          a.attendance_type = %w[full full full half absent].sample
-          a.hours_worked = a.attendance_type == "full" ? 8.0 : (a.attendance_type == "half" ? 4.0 : 0)
-        end
+        att = Attendance.find_or_initialize_by(daily_report: report, employee: worker)
+        next if att.persisted?
+
+        att.attendance_type = %w[full full full half absent].sample
+        att.hours_worked = att.attendance_type == "full" ? 8.0 : (att.attendance_type == "half" ? 4.0 : 0)
+        att.save
       end
     end
   end
@@ -294,6 +291,8 @@ external_sites = ["○○建設 新宿現場", "△△工務店 横浜作業所"
     weather: weathers.sample,
     work_content: "常用作業（応援）",
     labor_cost: rand(80_000..200_000),
+    machinery_own_cost: rand < 0.2 ? rand(5_000..30_000) : 0,
+    machinery_rental_cost: rand < 0.3 ? rand(10_000..50_000) : 0,
     status: date < Date.current ? "confirmed" : "draft",
     confirmed_at: date < Date.current ? date + 1.day : nil
   )
@@ -303,17 +302,68 @@ external_sites = ["○○建設 新宿現場", "△△工務店 横浜作業所"
 
     # 出面（作業員の出勤記録）
     workers.sample(rand(1..3)).each do |worker|
-      Attendance.find_or_create_by!(
-        daily_report: report,
-        employee: worker
-      ) do |a|
-        a.attendance_type = "full"
-        a.hours_worked = 8.0
-      end
+      att = Attendance.find_or_initialize_by(daily_report: report, employee: worker)
+      next if att.persisted?
+
+      att.attendance_type = "full"
+      att.hours_worked = 8.0
+      att.save
     end
   end
 end
 puts "日報: #{daily_report_count}件"
+
+# ========================================
+# 経費データ（日報に紐づく）
+# ========================================
+expense_count = 0
+expense_categories = %w[fuel highway material machinery_own machinery_rental transportation other]
+
+DailyReport.where(status: "confirmed").limit(50).each do |report|
+  next if report.expenses.any? # 既に経費があればスキップ
+
+  # 各日報に1-3件の経費
+  rand(1..3).times do
+    category = expense_categories.sample
+    amount = case category
+             when "fuel" then rand(3_000..15_000)
+             when "highway" then rand(1_000..5_000)
+             when "material" then rand(5_000..50_000)
+             when "machinery_own" then rand(10_000..50_000)
+             when "machinery_rental" then rand(20_000..80_000)
+             when "transportation" then rand(5_000..20_000)
+             else rand(1_000..10_000)
+             end
+
+    expense = Expense.new(
+      daily_report: report,
+      project: report.project,
+      category: category,
+      expense_type: "site",  # site, sales, admin
+      amount: amount,
+      description: case category
+                   when "fuel" then "ガソリン代"
+                   when "highway" then "高速道路代（#{%w[首都高 東名 中央道].sample}）"
+                   when "material" then "#{%w[ビス 接着剤 テープ 養生材].sample}購入"
+                   when "machinery_own" then "#{%w[バックホー クレーン 発電機].sample}使用"
+                   when "machinery_rental" then "#{%w[高所作業車 コンプレッサー 溶接機].sample}レンタル"
+                   when "transportation" then "資材運搬"
+                   else "その他経費"
+                   end,
+      payment_method: %w[cash company_card reimbursement].sample,
+      status: "approved",  # pending, approved, rejected
+      payer_id: workers.sample.id
+    )
+
+    if expense.save
+      expense_count += 1
+    else
+      # バリデーションエラーを表示（デバッグ用）
+      # puts expense.errors.full_messages.join(", ")
+    end
+  end
+end
+puts "経費: #{expense_count}件"
 
 # ========================================
 # 請求書データ
@@ -340,20 +390,24 @@ created_projects.select { |p| p.status.in?(%w[completed invoiced paid]) }.each d
     invoice_count += 1
 
     # 明細行
-    InvoiceItem.find_or_create_by!(invoice: invoice, name: project.name) do |item|
+    item = InvoiceItem.find_or_initialize_by(invoice: invoice, name: project.name)
+    unless item.persisted?
       item.work_date = project.actual_end_date || Date.current
       item.quantity = 1
       item.unit = "式"
       item.unit_price = amount
       item.subtotal = amount
+      item.save
     end
 
     # 入金データ（完了案件）
     if project.status == "paid"
-      Payment.find_or_create_by!(invoice: invoice) do |p|
-        p.amount = invoice.total_amount
-        p.payment_date = invoice.due_date - rand(1..10).days
-        p.notes = "入金確認済"
+      payment = Payment.find_or_initialize_by(invoice: invoice)
+      unless payment.persisted?
+        payment.amount = invoice.total_amount
+        payment.payment_date = invoice.due_date - rand(1..10).days
+        payment.notes = "入金確認済"
+        payment.save
       end
     end
   end
@@ -408,6 +462,90 @@ created_projects.first(5).each do |project|
   end
 end
 puts "安全書類フォルダ: #{SafetyFolder.count}件"
+
+# ========================================
+# 受領請求書データ
+# ========================================
+received_invoice_count = 0
+
+# 協力会社からの請求書
+partners.each_with_index do |partner, idx|
+  3.times do |i|
+    invoice_date = Date.current - (idx * 10 + i * 3).days
+    invoice = ReceivedInvoice.find_or_initialize_by(
+      partner: partner,
+      invoice_date: invoice_date
+    )
+    next if invoice.persisted?
+
+    invoice.assign_attributes(
+      vendor_name: partner.name,
+      invoice_number: "RI-#{partner.code}-#{invoice_date.strftime('%Y%m')}",
+      amount: rand(100_000..500_000),
+      tax_amount: rand(10_000..50_000),
+      description: ["#{(Date.current.month - i).abs + 1}月分請求", "追加工事分", "材料費請求"][i] || "請求書",
+      due_date: invoice_date + 30.days,
+      uploaded_by: admin,
+      status: "pending"
+    )
+
+    # ステータスを分散
+    case (idx * 3 + i) % 5
+    when 0 # 全員確認済み
+      invoice.accounting_approved_by = admin
+      invoice.accounting_approved_at = 2.days.ago
+      invoice.sales_approved_by = sales
+      invoice.sales_approved_at = 1.day.ago
+      invoice.engineering_approved_by = engineering
+      invoice.engineering_approved_at = 1.day.ago
+      invoice.status = "approved"
+    when 1 # 経理のみ確認
+      invoice.accounting_approved_by = admin
+      invoice.accounting_approved_at = 1.day.ago
+    when 2 # 経理＋営業確認
+      invoice.accounting_approved_by = admin
+      invoice.accounting_approved_at = 2.days.ago
+      invoice.sales_approved_by = sales
+      invoice.sales_approved_at = 1.day.ago
+    when 3 # 却下
+      invoice.status = "rejected"
+      invoice.rejection_reason = "金額に相違があります。再確認をお願いします。"
+    else # 未確認
+      # デフォルト状態
+    end
+
+    if invoice.save
+      received_invoice_count += 1
+    end
+  end
+end
+
+# 顧客からの請求書（リベートなど）
+clients.first(3).each_with_index do |client, idx|
+  invoice_date = Date.current - (idx * 7).days
+  invoice = ReceivedInvoice.find_or_initialize_by(
+    client: client,
+    invoice_date: invoice_date
+  )
+  next if invoice.persisted?
+
+  invoice.assign_attributes(
+    vendor_name: client.name,
+    invoice_number: "RI-#{client.code}-#{invoice_date.strftime('%Y%m')}",
+    amount: rand(50_000..200_000),
+    tax_amount: rand(5_000..20_000),
+    description: "リベート請求書",
+    due_date: invoice_date + 30.days,
+    uploaded_by: admin,
+    status: "pending"
+  )
+
+  if invoice.save
+    received_invoice_count += 1
+  end
+end
+
+puts "受領請求書: #{received_invoice_count}件"
 
 puts ""
 puts "=== テストデータ作成完了 ==="

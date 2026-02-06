@@ -1,4 +1,4 @@
-<div class="max-w-2xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+<div class="max-w-2xl mx-auto py-6 px-4 sm:px-6 lg:px-8" data-controller="file-preview">
   <div class="px-4 py-6 sm:px-0">
     <!-- 戻るリンク -->
     <div class="mb-4">
@@ -57,7 +57,7 @@
           <%= form.text_area :description, rows: 2, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
         </div>
 
-        <!-- 現在のファイル -->
+        <!-- 現在のファイル（差し替え可能） -->
         <% persisted_attachments = @file.attachments.select(&:persisted?) %>
         <% if persisted_attachments.any? %>
           <div>
@@ -69,24 +69,64 @@
                     <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    <%= attachment.filename %>
+                    <span><%= attachment.filename %></span>
+                    <span class="ml-2 text-gray-400">(<%= number_to_human_size(attachment.byte_size) %>)</span>
                   </div>
-                  <%= link_to rails_blob_path(attachment, disposition: "attachment"),
-                      class: "text-blue-600 hover:text-blue-800 text-sm" do %>
-                    ダウンロード
-                  <% end %>
+                  <div class="flex items-center gap-2">
+                    <!-- プレビューボタン -->
+                    <button type="button"
+                        class="text-green-600 hover:text-green-800 text-sm flex items-center"
+                        data-action="click->file-preview#open"
+                        data-file-preview-url-value="<%= url_for(attachment) %>"
+                        data-file-preview-filename-value="<%= attachment.filename %>"
+                        data-file-preview-content-type-value="<%= attachment.content_type %>"
+                        data-file-preview-filesize-value="<%= number_to_human_size(attachment.byte_size) %>">
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                      </svg>
+                      プレビュー
+                    </button>
+                    <!-- ダウンロード -->
+                    <%= link_to rails_blob_path(attachment, disposition: "attachment"),
+                        class: "text-blue-600 hover:text-blue-800 text-sm" do %>
+                      ダウンロード
+                    <% end %>
+                    <!-- 削除ボタン -->
+                    <%= button_to purge_attachment_safety_file_path(@file, attachment_id: attachment.id),
+                        method: :delete,
+                        data: { turbo_confirm: "「#{attachment.filename}」を削除しますか？" },
+                        class: "text-red-600 hover:text-red-800 text-sm" do %>
+                      削除
+                    <% end %>
+                  </div>
                 </li>
               <% end %>
             </ul>
           </div>
         <% end %>
 
-        <!-- ファイル追加 -->
+        <!-- ファイル差し替え/追加 -->
         <div>
-          <%= form.label :attachments, "ファイルを追加", class: "block text-sm font-medium text-gray-700" %>
-          <%= form.file_field :attachments, multiple: true,
-              class: "mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" %>
-          <p class="mt-1 text-xs text-gray-500">新しいファイルを選択すると追加されます</p>
+          <%= form.label :attachments, persisted_attachments.any? ? "ファイルを差し替え・追加" : "ファイルをアップロード", class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-400 transition-colors">
+            <div class="space-y-1 text-center">
+              <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <div class="flex text-sm text-gray-600">
+                <label class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
+                  <span>ファイルを選択</span>
+                  <%= form.file_field :attachments, multiple: true, class: "sr-only" %>
+                </label>
+                <p class="pl-1">またはドラッグ＆ドロップ</p>
+              </div>
+              <p class="text-xs text-gray-500">PDF、画像、Word、Excel（各100MBまで）</p>
+              <% if persisted_attachments.any? %>
+                <p class="text-xs text-orange-600 mt-2">※ 新しいファイルは既存ファイルに追加されます。差し替えたい場合は先に上の削除ボタンで削除してください。</p>
+              <% end %>
+            </div>
+          </div>
         </div>
 
         <!-- 送信ボタン -->
@@ -99,6 +139,40 @@
           <%= form.submit "更新", class: "px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 cursor-pointer" %>
         </div>
       <% end %>
+    </div>
+  </div>
+
+  <!-- プレビューモーダル -->
+  <div data-file-preview-target="modal"
+       class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0"
+         data-file-preview-target="backdrop"
+         data-action="click->file-preview#closeOnBackdrop">
+      <!-- 背景オーバーレイ -->
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+      <!-- モーダルコンテンツ -->
+      <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+        <!-- ヘッダー -->
+        <div class="bg-gray-50 px-4 py-3 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-medium text-gray-900" data-file-preview-target="filename">ファイル名</h3>
+            <p class="text-sm text-gray-500" data-file-preview-target="filesize">0 KB</p>
+          </div>
+          <button type="button"
+                  class="text-gray-400 hover:text-gray-500"
+                  data-action="click->file-preview#close">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- コンテンツ -->
+        <div class="bg-gray-100 p-4" data-file-preview-target="content">
+          <!-- ここにプレビューコンテンツが動的に挿入される -->
+        </div>
+      </div>
     </div>
   </div>
 </div>

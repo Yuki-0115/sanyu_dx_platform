@@ -77,13 +77,7 @@
               <%= number_with_delimiter(expense.amount.to_i) %>円
             </td>
             <td class="px-4 py-3 text-center">
-              <span class="px-2 py-1 text-xs rounded
-                <%= case expense.payment_method
-                    when 'company_card' then 'bg-purple-100 text-purple-800'
-                    when 'gas_card' then 'bg-orange-100 text-orange-800'
-                    when 'etc_card' then 'bg-green-100 text-green-800'
-                    else 'bg-gray-100'
-                    end %>">
+              <span class="px-2 py-1 text-xs rounded bg-purple-100 text-purple-800">
                 <%= expense.payment_method_label %>
               </span>
             </td>

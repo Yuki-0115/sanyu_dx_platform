@@ -5,12 +5,14 @@ class Expense < ApplicationRecord
 
   # Constants
   EXPENSE_TYPES = %w[site sales admin].freeze
-  CATEGORIES = %w[material transport equipment rental consumable meal fuel highway_toll other].freeze
+  CATEGORIES = %w[material transport equipment rental machinery_own machinery_rental consumable meal fuel highway_toll other].freeze
   CATEGORY_LABELS = {
     "material" => "材料費",
     "transport" => "運搬費",
     "equipment" => "機材費",
     "rental" => "リース・レンタル",
+    "machinery_own" => "機械（自社）",
+    "machinery_rental" => "機械（レンタル）",
     "consumable" => "消耗品",
     "meal" => "飲食費",
     "fuel" => "燃料費",
@@ -61,6 +63,8 @@ class Expense < ApplicationRecord
     "transport" => { code: "513", name: "運搬費", freee: "運搬費", moneyforward: "運搬費" },
     "equipment" => { code: "514", name: "機材費", freee: "消耗品費", moneyforward: "工具器具備品" },
     "rental" => { code: "515", name: "リース料", freee: "リース料", moneyforward: "賃借料" },
+    "machinery_own" => { code: "516", name: "機械費（自社）", freee: "減価償却費", moneyforward: "減価償却費" },
+    "machinery_rental" => { code: "517", name: "機械費（レンタル）", freee: "リース料", moneyforward: "賃借料" },
     # 販管費系
     "consumable" => { code: "720", name: "消耗品費", freee: "消耗品費", moneyforward: "消耗品費" },
     "meal" => { code: "730", name: "会議費", freee: "会議費", moneyforward: "会議費" },
@@ -75,6 +79,8 @@ class Expense < ApplicationRecord
     { code: "513", name: "運搬費" },
     { code: "514", name: "機材費" },
     { code: "515", name: "リース料" },
+    { code: "516", name: "機械費（自社）" },
+    { code: "517", name: "機械費（レンタル）" },
     { code: "520", name: "外注費" },
     { code: "530", name: "労務費" },
     { code: "720", name: "消耗品費" },
@@ -101,6 +107,9 @@ class Expense < ApplicationRecord
   has_one_attached :receipt
   has_one_attached :voucher
 
+  # 仕入先必須カテゴリ（掛け払い対象）
+  SUPPLIER_REQUIRED_CATEGORIES = %w[material machinery_rental].freeze
+
   # Validations
   validates :expense_type, presence: true, inclusion: { in: EXPENSE_TYPES }
   validates :category, presence: true, inclusion: { in: CATEGORIES }
@@ -110,6 +119,7 @@ class Expense < ApplicationRecord
   validates :quantity, numericality: { greater_than: 0 }, allow_blank: true
   validates :accounting_status, inclusion: { in: ACCOUNTING_STATUSES }, allow_nil: true
   validates :tax_category, inclusion: { in: TAX_CATEGORIES }, allow_nil: true
+  validate :supplier_required_for_credit_categories
 
   # Defaults
   attribute :status, :string, default: "pending"
@@ -133,8 +143,9 @@ class Expense < ApplicationRecord
   scope :ready_for_accounting, -> { approved.pending_accounting }
 
   # 支払方法別スコープ
+  # 注: gas_card, etc_cardは仮経費確定画面で処理するため、card_paymentには含めない
   scope :credit_payment, -> { where(payment_method: "credit") }
-  scope :card_payment, -> { where(payment_method: %w[company_card gas_card etc_card]) }
+  scope :card_payment, -> { where(payment_method: "company_card") }
   scope :cash_payment, -> { where(payment_method: %w[cash advance]) }
 
   # 精算用スコープ
@@ -307,9 +318,9 @@ class Expense < ApplicationRecord
     payment_method == "credit"
   end
 
-  # カード払いか
+  # カード払いか（会社カードのみ、ガソリン・ETCは仮経費確定で処理）
   def card_payment?
-    %w[company_card gas_card etc_card].include?(payment_method)
+    payment_method == "company_card"
   end
 
   # 現金・立替払いか
@@ -393,5 +404,12 @@ class Expense < ApplicationRecord
       record_type: "Expense",
       record_id: id
     )
+  end
+
+  # 材料費・機械レンタルは仕入先必須
+  def supplier_required_for_credit_categories
+    if SUPPLIER_REQUIRED_CATEGORIES.include?(category) && supplier_id.blank?
+      errors.add(:supplier_id, "を選択してください（#{category_label}は仕入先必須です）")
+    end
   end
 end

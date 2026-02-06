@@ -156,12 +156,14 @@ class MonthlyIncomeStatementsController < ApplicationController
     total
   end
 
+  # 経費合計（自社機械は固定費として計上済みのため除外）
   def calculate_expenses(year, month)
     start_date = Date.new(year, month, 1)
     end_date = start_date.end_of_month
 
     expenses = Expense.joins(:daily_report)
                       .where(daily_reports: { report_date: start_date..end_date, status: %w[confirmed revised] })
+                      .where.not(category: "machinery_own")
                       .where(status: "approved")
                       .group(:category)
                       .sum(:amount)

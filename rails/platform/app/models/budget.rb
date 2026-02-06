@@ -20,6 +20,8 @@ class Budget < ApplicationRecord
   attribute :outsourcing_cost, :decimal, default: 0
   attribute :labor_cost, :decimal, default: 0
   attribute :expense_cost, :decimal, default: 0
+  attribute :machinery_own_cost, :decimal, default: 0
+  attribute :machinery_rental_cost, :decimal, default: 0
   attribute :total_cost, :decimal, default: 0
   attribute :regular_labor_unit_price, :decimal, default: 18_000
   attribute :temporary_labor_unit_price, :decimal, default: 18_000
@@ -49,6 +51,7 @@ class Budget < ApplicationRecord
   end
 
   def calculate_total_cost
-    self.total_cost = material_cost.to_d + outsourcing_cost.to_d + labor_cost.to_d + expense_cost.to_d
+    self.total_cost = material_cost.to_d + outsourcing_cost.to_d + labor_cost.to_d +
+                      expense_cost.to_d + machinery_own_cost.to_d + machinery_rental_cost.to_d
   end
 end

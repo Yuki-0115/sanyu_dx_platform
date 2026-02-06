@@ -92,13 +92,28 @@
 
           <% if @daily_report.transportation_cost.present? && @daily_report.transportation_cost > 0 %>
             <div>
-              <dt class="text-sm font-medium text-gray-500">輸送費</dt>
+              <dt class="text-sm font-medium text-gray-500">運搬費</dt>
               <dd class="mt-1 text-sm text-gray-900"><%= number_to_currency(@daily_report.transportation_cost, unit: "¥", precision: 0) %></dd>
+            </div>
+          <% end %>
+
+          <% if @daily_report.machinery_own_cost.present? && @daily_report.machinery_own_cost > 0 %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">機械（自社）</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= number_to_currency(@daily_report.machinery_own_cost, unit: "¥", precision: 0) %></dd>
+            </div>
+          <% end %>
+
+          <% if @daily_report.machinery_rental_cost.present? && @daily_report.machinery_rental_cost > 0 %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">機械（レンタル）</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= number_to_currency(@daily_report.machinery_rental_cost, unit: "¥", precision: 0) %></dd>
             </div>
           <% end %>
         </dl>
 
-        <% unless @daily_report.materials_used.present? || @daily_report.machines_used.present? || @daily_report.labor_details.present? || @daily_report.outsourcing_details.present? || (@daily_report.transportation_cost.present? && @daily_report.transportation_cost > 0) %>
+        <% has_cost_info = @daily_report.materials_used.present? || @daily_report.machines_used.present? || @daily_report.labor_details.present? || @daily_report.outsourcing_details.present? || (@daily_report.transportation_cost.present? && @daily_report.transportation_cost > 0) || (@daily_report.machinery_own_cost.present? && @daily_report.machinery_own_cost > 0) || (@daily_report.machinery_rental_cost.present? && @daily_report.machinery_rental_cost > 0) %>
+        <% unless has_cost_info %>
           <p class="text-sm text-gray-500">原価情報は入力されていません</p>
         <% end %>
       </div>

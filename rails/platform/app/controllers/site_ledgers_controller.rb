@@ -52,6 +52,8 @@ class SiteLedgersController < ApplicationController
         material_cost: report.material_cost.to_i,
         outsourcing_cost: report.outsourcing_cost.to_i,
         transportation_cost: report.transportation_cost.to_i,
+        machinery_own_cost: report.machinery_own_cost.to_i,
+        machinery_rental_cost: report.machinery_rental_cost.to_i,
         # ガソリン・高速代
         fuel_cost: report.fuel_amount.to_i,
         highway_cost: report.highway_amount.to_i

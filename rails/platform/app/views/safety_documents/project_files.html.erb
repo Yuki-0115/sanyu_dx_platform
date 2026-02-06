@@ -1,4 +1,4 @@
-<div class="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+<div class="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8" data-controller="file-preview">
   <div class="px-4 py-6 sm:px-0">
     <!-- 戻るリンク -->
     <div class="mb-4">
@@ -94,12 +94,27 @@
                       </p>
                     </div>
                   </div>
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-1">
                     <% if file.attachments.attached? %>
                       <% file.attachments.each do |attachment| %>
+                        <!-- プレビューボタン -->
+                        <button type="button"
+                            class="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg"
+                            title="プレビュー: <%= attachment.filename %>"
+                            data-action="click->file-preview#open"
+                            data-file-preview-url-value="<%= url_for(attachment) %>"
+                            data-file-preview-filename-value="<%= attachment.filename %>"
+                            data-file-preview-content-type-value="<%= attachment.content_type %>"
+                            data-file-preview-filesize-value="<%= number_to_human_size(attachment.byte_size) %>">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                          </svg>
+                        </button>
+                        <!-- ダウンロードボタン -->
                         <%= link_to rails_blob_path(attachment, disposition: "attachment"),
                             class: "p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg",
-                            title: attachment.filename.to_s do %>
+                            title: "ダウンロード: #{attachment.filename}" do %>
                           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                           </svg>
@@ -159,6 +174,23 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
+                  <% if file.attachments.attached? %>
+                    <% file.attachments.each do |attachment| %>
+                      <button type="button"
+                          class="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg"
+                          title="プレビュー"
+                          data-action="click->file-preview#open"
+                          data-file-preview-url-value="<%= url_for(attachment) %>"
+                          data-file-preview-filename-value="<%= attachment.filename %>"
+                          data-file-preview-content-type-value="<%= attachment.content_type %>"
+                          data-file-preview-filesize-value="<%= number_to_human_size(attachment.byte_size) %>">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                      </button>
+                    <% end %>
+                  <% end %>
                   <%= link_to edit_safety_file_path(file),
                       class: "text-sm text-blue-600 hover:text-blue-800" do %>
                     編集
@@ -169,6 +201,40 @@
           </div>
         </div>
       <% end %>
+    </div>
+  </div>
+
+  <!-- プレビューモーダル -->
+  <div data-file-preview-target="modal"
+       class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0"
+         data-file-preview-target="backdrop"
+         data-action="click->file-preview#closeOnBackdrop">
+      <!-- 背景オーバーレイ -->
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+      <!-- モーダルコンテンツ -->
+      <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+        <!-- ヘッダー -->
+        <div class="bg-gray-50 px-4 py-3 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-medium text-gray-900" data-file-preview-target="filename">ファイル名</h3>
+            <p class="text-sm text-gray-500" data-file-preview-target="filesize">0 KB</p>
+          </div>
+          <button type="button"
+                  class="text-gray-400 hover:text-gray-500"
+                  data-action="click->file-preview#close">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- コンテンツ -->
+        <div class="bg-gray-100 p-4" data-file-preview-target="content">
+          <!-- ここにプレビューコンテンツが動的に挿入される -->
+        </div>
+      </div>
     </div>
   </div>
 </div>

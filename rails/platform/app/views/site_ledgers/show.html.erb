@@ -184,6 +184,36 @@
           </tr>
 
           <tr>
+            <td class="px-4 py-3 text-sm font-medium text-gray-900">機械（自社）</td>
+            <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">
+              <%= number_to_currency(@project.site_ledger_machinery_own_cost, unit: "¥", precision: 0) %>
+            </td>
+            <% if @budget %>
+              <td class="px-4 py-3 text-sm text-right text-gray-500">
+                <%= number_to_currency(@budget.machinery_own_cost || 0, unit: "¥", precision: 0) %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right <%= variance[:machinery_own].to_i >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                <%= variance[:machinery_own].to_i >= 0 ? '+' : '' %><%= number_to_currency(variance[:machinery_own] || 0, unit: "¥", precision: 0) %>
+              </td>
+            <% end %>
+          </tr>
+
+          <tr>
+            <td class="px-4 py-3 text-sm font-medium text-gray-900">機械（レンタル）</td>
+            <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">
+              <%= number_to_currency(@project.site_ledger_machinery_rental_cost, unit: "¥", precision: 0) %>
+            </td>
+            <% if @budget %>
+              <td class="px-4 py-3 text-sm text-right text-gray-500">
+                <%= number_to_currency(@budget.machinery_rental_cost || 0, unit: "¥", precision: 0) %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right <%= variance[:machinery_rental].to_i >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                <%= variance[:machinery_rental].to_i >= 0 ? '+' : '' %><%= number_to_currency(variance[:machinery_rental] || 0, unit: "¥", precision: 0) %>
+              </td>
+            <% end %>
+          </tr>
+
+          <tr>
             <td class="px-4 py-3 text-sm font-medium text-gray-900">ガソリン・高速代</td>
             <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">
               <%= number_to_currency(@project.site_ledger_expense_cost, unit: "¥", precision: 0) %>
@@ -253,6 +283,7 @@
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">材料費</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">外注費</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">運搬費</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">機械</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">燃料・高速</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">小計</th>
               <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase"></th>
@@ -260,8 +291,9 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <% @daily_summary.each do |day| %>
+              <% machinery_cost = day[:machinery_own_cost] + day[:machinery_rental_cost] %>
               <% expense_cost = day[:fuel_cost] + day[:highway_cost] %>
-              <% subtotal = day[:labor_cost] + day[:material_cost] + day[:outsourcing_cost] + day[:transportation_cost] + expense_cost %>
+              <% subtotal = day[:labor_cost] + day[:material_cost] + day[:outsourcing_cost] + day[:transportation_cost] + machinery_cost + expense_cost %>
               <tr class="hover:bg-gray-50">
                 <td class="px-4 py-3 text-sm text-gray-900">
                   <%= day[:date].strftime("%Y/%m/%d (%a)") %>
@@ -277,6 +309,9 @@
                 </td>
                 <td class="px-4 py-3 text-sm text-right text-gray-700">
                   <%= number_to_currency(day[:transportation_cost], unit: "¥", precision: 0) %>
+                </td>
+                <td class="px-4 py-3 text-sm text-right text-gray-700">
+                  <%= number_to_currency(machinery_cost, unit: "¥", precision: 0) %>
                 </td>
                 <td class="px-4 py-3 text-sm text-right text-gray-700">
                   <%= number_to_currency(expense_cost, unit: "¥", precision: 0) %>
@@ -309,10 +344,13 @@
                 <%= number_to_currency(@daily_summary.sum { |d| d[:transportation_cost] }, unit: "¥", precision: 0) %>
               </td>
               <td class="px-4 py-3 text-sm text-right text-gray-900">
+                <%= number_to_currency(@daily_summary.sum { |d| d[:machinery_own_cost] + d[:machinery_rental_cost] }, unit: "¥", precision: 0) %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right text-gray-900">
                 <%= number_to_currency(@daily_summary.sum { |d| d[:fuel_cost] + d[:highway_cost] }, unit: "¥", precision: 0) %>
               </td>
               <td class="px-4 py-3 text-sm text-right text-gray-900">
-                <% total = @daily_summary.sum { |d| d[:labor_cost] + d[:material_cost] + d[:outsourcing_cost] + d[:transportation_cost] + d[:fuel_cost] + d[:highway_cost] } %>
+                <% total = @daily_summary.sum { |d| d[:labor_cost] + d[:material_cost] + d[:outsourcing_cost] + d[:transportation_cost] + d[:machinery_own_cost] + d[:machinery_rental_cost] + d[:fuel_cost] + d[:highway_cost] } %>
                 <%= number_to_currency(total, unit: "¥", precision: 0) %>
               </td>
               <td class="px-4 py-3"></td>

@@ -3,7 +3,7 @@
 class SafetyDocumentsController < ApplicationController
   authorize_with :safety_documents
   before_action :set_project, only: %i[project_files new_project_file create_project_file]
-  before_action :set_file, only: %i[edit_file update_file destroy_file]
+  before_action :set_file, only: %i[edit_file update_file destroy_file purge_attachment]
 
   # 案件一覧（提出状況）
   def index
@@ -88,6 +88,18 @@ class SafetyDocumentsController < ApplicationController
     @file.destroy
     redirect_to project_files_safety_documents_path(project_id: project.id),
                 notice: "ファイルを削除しました"
+  end
+
+  # 添付ファイル個別削除（差し替え用）
+  def purge_attachment
+    attachment = @file.attachments.find { |a| a.id.to_s == params[:attachment_id] }
+
+    if attachment
+      attachment.purge
+      redirect_to edit_safety_file_path(@file), notice: "ファイルを削除しました"
+    else
+      redirect_to edit_safety_file_path(@file), alert: "ファイルが見つかりません"
+    end
   end
 
   # 案件別必要書類設定フォーム

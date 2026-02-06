@@ -42,7 +42,7 @@
     <h3 class="text-lg font-medium text-gray-900 mb-4">原価情報</h3>
 
     <!-- 金額入力 -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 p-4 bg-blue-50 rounded-lg">
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 p-4 bg-blue-50 rounded-lg">
       <div>
         <%= f.label :labor_cost, "労務費 (円)", class: "block text-sm font-medium text-gray-700" %>
         <%= f.number_field :labor_cost, step: 1, placeholder: "0",
@@ -59,8 +59,18 @@
             class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
       </div>
       <div>
-        <%= f.label :transportation_cost, "輸送費 (円)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.label :transportation_cost, "運搬費 (円)", class: "block text-sm font-medium text-gray-700" %>
         <%= f.number_field :transportation_cost, step: 1, placeholder: "0",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+      <div>
+        <%= f.label :machinery_own_cost, "機械・自社 (円)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :machinery_own_cost, step: 1, placeholder: "0",
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+      <div>
+        <%= f.label :machinery_rental_cost, "機械・レンタル (円)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.number_field :machinery_rental_cost, step: 1, placeholder: "0",
             class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
       </div>
     </div>

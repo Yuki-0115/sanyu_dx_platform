@@ -1,0 +1,223 @@
+<div class="max-w-5xl mx-auto py-6 px-4 sm:px-6 lg:px-8" data-controller="invoice-approval">
+  <!-- ヘッダー -->
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">受領請求書</h1>
+      <p class="text-gray-600">請求書の確認（経理・営業・工務）</p>
+    </div>
+    <%= link_to new_accounting_received_invoice_path,
+        class: "inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" do %>
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      請求書を登録
+    <% end %>
+  </div>
+
+  <!-- 確認待ち一覧 -->
+  <% if @pending_invoices.any? %>
+    <div class="bg-white shadow rounded-lg mb-6">
+      <div class="px-4 py-3 border-b bg-yellow-50">
+        <h2 class="text-lg font-medium text-yellow-900">確認中（<%= @pending_invoices.count %>件）</h2>
+      </div>
+      <div class="divide-y divide-gray-200">
+        <% @pending_invoices.each do |invoice| %>
+          <div class="p-4 hover:bg-gray-50">
+            <div class="flex flex-col gap-3">
+              <!-- 上部：会社名・メモ・ファイル -->
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <p class="font-medium text-gray-900"><%= invoice.vendor_display_name %></p>
+                  <% if invoice.description.present? %>
+                    <p class="mt-1 text-sm text-gray-600"><%= invoice.description %></p>
+                  <% end %>
+                  <p class="mt-1 text-xs text-gray-400">
+                    登録: <%= invoice.uploaded_by.name %> (<%= l(invoice.created_at, format: :short) %>)
+                  </p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <% if invoice.attachments.attached? %>
+                    <% invoice.attachments.each do |attachment| %>
+                      <%= link_to url_for(attachment), target: "_blank",
+                          class: "p-2 text-blue-600 hover:bg-blue-50 rounded-lg",
+                          title: attachment.filename do %>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                      <% end %>
+                    <% end %>
+                  <% end %>
+                  <button type="button"
+                          class="px-3 py-1.5 bg-red-100 text-red-700 text-sm rounded-md hover:bg-red-200"
+                          data-action="click->invoice-approval#showRejectModal"
+                          data-invoice-id="<%= invoice.id %>"
+                          data-vendor-name="<%= invoice.vendor_display_name %>">
+                    却下
+                  </button>
+                </div>
+              </div>
+
+              <!-- 下部：3つの承認ボタン -->
+              <div class="flex items-center gap-3 pt-2 border-t">
+                <!-- 経理確認 -->
+                <% if invoice.accounting_approved? %>
+                  <div class="flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 text-sm rounded-md">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span>経理OK</span>
+                    <span class="text-xs text-green-600">(<%= invoice.accounting_approved_by&.name %>)</span>
+                  </div>
+                <% else %>
+                  <%= button_to approve_accounting_received_invoice_path(invoice, approval_type: "accounting"),
+                      method: :patch,
+                      class: "px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700" do %>
+                    経理OK
+                  <% end %>
+                <% end %>
+
+                <!-- 営業確認 -->
+                <% if invoice.sales_approved? %>
+                  <div class="flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 text-sm rounded-md">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span>営業OK</span>
+                    <span class="text-xs text-green-600">(<%= invoice.sales_approved_by&.name %>)</span>
+                  </div>
+                <% else %>
+                  <%= button_to approve_accounting_received_invoice_path(invoice, approval_type: "sales"),
+                      method: :patch,
+                      class: "px-3 py-1.5 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700" do %>
+                    営業OK
+                  <% end %>
+                <% end %>
+
+                <!-- 工務確認 -->
+                <% if invoice.engineering_approved? %>
+                  <div class="flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 text-sm rounded-md">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span>工務OK</span>
+                    <span class="text-xs text-green-600">(<%= invoice.engineering_approved_by&.name %>)</span>
+                  </div>
+                <% else %>
+                  <%= button_to approve_accounting_received_invoice_path(invoice, approval_type: "engineering"),
+                      method: :patch,
+                      class: "px-3 py-1.5 bg-orange-600 text-white text-sm rounded-md hover:bg-orange-700" do %>
+                    工務OK
+                  <% end %>
+                <% end %>
+
+                <!-- 進捗表示 -->
+                <span class="ml-auto text-sm text-gray-500">
+                  <%= invoice.approval_count %>/3 確認済み
+                </span>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <div class="bg-white shadow rounded-lg mb-6 p-8 text-center text-gray-500">
+      確認待ちの請求書はありません
+    </div>
+  <% end %>
+
+  <!-- 確認完了一覧 -->
+  <% if @approved_invoices.any? %>
+    <details class="bg-white shadow rounded-lg mb-6">
+      <summary class="px-4 py-3 cursor-pointer hover:bg-gray-50">
+        <span class="font-medium text-gray-700">確認完了（最近20件）</span>
+      </summary>
+      <div class="border-t divide-y divide-gray-200">
+        <% @approved_invoices.each do |invoice| %>
+          <div class="p-3 hover:bg-gray-50">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-gray-900"><%= invoice.vendor_display_name %></p>
+                <div class="flex gap-2 mt-1 text-xs text-gray-500">
+                  <span>経理: <%= invoice.accounting_approved_by&.name %></span>
+                  <span>営業: <%= invoice.sales_approved_by&.name %></span>
+                  <span>工務: <%= invoice.engineering_approved_by&.name %></span>
+                </div>
+              </div>
+              <% if invoice.attachments.attached? %>
+                <% invoice.attachments.each do |attachment| %>
+                  <%= link_to url_for(attachment), target: "_blank",
+                      class: "p-2 text-blue-600 hover:bg-blue-50 rounded-lg" do %>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                  <% end %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
+
+  <!-- 却下一覧 -->
+  <% if @rejected_invoices.any? %>
+    <details class="bg-white shadow rounded-lg">
+      <summary class="px-4 py-3 cursor-pointer hover:bg-gray-50">
+        <span class="font-medium text-gray-700">却下（最近10件）</span>
+      </summary>
+      <div class="border-t divide-y divide-gray-200">
+        <% @rejected_invoices.each do |invoice| %>
+          <div class="p-3 hover:bg-gray-50 bg-red-50">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-gray-900"><%= invoice.vendor_display_name %></p>
+                <p class="text-sm text-red-600"><%= invoice.rejection_reason %></p>
+                <p class="text-xs text-gray-500">却下: <%= invoice.approved_by&.name %></p>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
+
+  <!-- 却下モーダル -->
+  <div data-invoice-approval-target="modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" data-action="click->invoice-approval#hideModal"></div>
+      <div class="relative bg-white rounded-lg shadow-xl transform transition-all max-w-md w-full">
+        <div class="px-4 py-3 border-b bg-red-50">
+          <h3 class="text-lg font-medium text-red-900">請求書を却下</h3>
+        </div>
+        <div class="p-4">
+          <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600">会社名: <span data-invoice-approval-target="vendorName" class="font-medium text-gray-900"></span></p>
+          </div>
+          <%= form_with url: "", method: :patch, data: { invoice_approval_target: "form" }, local: true do |f| %>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">却下理由（必須）</label>
+              <textarea name="rejection_reason" rows="3" required
+                        data-invoice-approval-target="reason"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                        placeholder="却下理由を入力してください"></textarea>
+            </div>
+            <div class="flex justify-end gap-3">
+              <button type="button" data-action="click->invoice-approval#hideModal"
+                      class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                キャンセル
+              </button>
+              <button type="submit"
+                      class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700">
+                却下する
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

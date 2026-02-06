@@ -84,6 +84,7 @@ module DailyReportActions
       :materials_used, :machines_used, :labor_details,
       :outsourcing_details, :transportation_cost,
       :labor_cost, :material_cost, :outsourcing_cost,
+      :machinery_own_cost, :machinery_rental_cost,
       # 燃料費・高速代（カード精算）
       :fuel_type, :fuel_quantity, :fuel_amount,
       :highway_count, :highway_amount, :highway_route,
@@ -96,7 +97,7 @@ module DailyReportActions
   end
 
   def expense_params
-    { expenses_attributes: %i[id expense_type category description amount payment_method payee_name voucher_number receipt voucher _destroy] }
+    { expenses_attributes: %i[id expense_type category description amount payment_method payee_name supplier_id voucher_number receipt voucher _destroy] }
   end
 
   def outsourcing_entry_params

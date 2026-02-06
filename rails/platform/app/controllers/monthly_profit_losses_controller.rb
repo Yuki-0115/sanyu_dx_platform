@@ -288,12 +288,15 @@ class MonthlyProfitLossesController < ApplicationController
                  .find_each do |report|
         next unless report.project
 
+        project = report.project
+        next unless project
+
         report.attendances.joins(:employee)
               .where(employees: { employment_type: "regular" })
               .includes(:employee)
               .each do |att|
           days = att.attendance_type == "full" ? 1 : 0.5
-          cost = (report.project.regular_labor_unit_price * days).round(0)
+          cost = (project.regular_labor_unit_price * days).round(0)
           employee_costs[att.employee.name] ||= 0
           employee_costs[att.employee.name] += cost
         end
@@ -347,13 +350,14 @@ class MonthlyProfitLossesController < ApplicationController
   end
 
   # 経費詳細（カテゴリ別）
+  # 注：machinery_own（自社機械）は固定費（減価償却費）として計上済みのため除外
   def build_expense_details(year, month)
     start_date = Date.new(year, month, 1)
     end_date = start_date.end_of_month
 
     Expense.joins(:daily_report)
            .where(daily_reports: { report_date: start_date..end_date, status: %w[confirmed revised] })
-           .where.not(category: "material")
+           .where.not(category: %w[material machinery_own])
            .where(status: "approved")
            .group(:category)
            .sum(:amount)
@@ -363,13 +367,19 @@ class MonthlyProfitLossesController < ApplicationController
 
   def expense_category_label(category)
     {
+      "material" => "材料費",
+      "transport" => "運搬費",
+      "equipment" => "機材費",
+      "rental" => "リース・レンタル",
+      "machinery_own" => "機械（自社）",
+      "machinery_rental" => "機械（レンタル）",
+      "consumable" => "消耗品",
+      "meal" => "飲食費",
       "fuel" => "燃料費",
+      "highway_toll" => "高速代",
       "highway" => "高速代",
       "parking" => "駐車場代",
       "accommodation" => "宿泊費",
-      "meal" => "食事代",
-      "transport" => "交通費",
-      "consumable" => "消耗品",
       "equipment_rental" => "機材リース",
       "other" => "その他"
     }[category] || category
@@ -461,23 +471,28 @@ class MonthlyProfitLossesController < ApplicationController
   def calculate_daily_report_cost_breakdown(report)
     project = report.project
 
+    # 単価取得（案件がない場合はデフォルト値を使用）
+    regular_unit_price = project&.regular_labor_unit_price || 18_000
+    outsourcing_unit_price = project&.outsourcing_unit_price || 18_000
+
     # 労務費（正社員）
     regular_days = report.attendances.joins(:employee)
                          .where(employees: { employment_type: "regular" })
                          .sum("CASE attendance_type WHEN 'full' THEN 1 WHEN 'half' THEN 0.5 ELSE 0 END").to_d
-    labor = (project.regular_labor_unit_price * regular_days).round(0)
+    labor = (regular_unit_price * regular_days).round(0)
 
     # 外注費（人工）
     outsourcing_days = report.outsourcing_entries
                              .where(billing_type: "man_days")
                              .sum("CASE attendance_type WHEN 'full' THEN headcount WHEN 'half' THEN headcount * 0.5 ELSE 0 END").to_d
-    outsourcing_man_days = (project.outsourcing_unit_price * outsourcing_days).round(0)
+    outsourcing_man_days = (outsourcing_unit_price * outsourcing_days).round(0)
 
     # 外注費（請負）
     outsourcing_contract = report.outsourcing_entries.where(billing_type: "contract").sum(:contract_amount).to_i
 
-    # 経費（カテゴリ別）
+    # 経費（カテゴリ別）- 自社機械は固定費として計上済みのため除外
     expenses_by_cat = Expense.where(daily_report_id: report.id, status: "approved")
+                             .where.not(category: "machinery_own")
                              .group(:category).sum(:amount)
     material = (expenses_by_cat["material"] || 0).to_i
     expense = expenses_by_cat.except("material").values.sum.to_i
@@ -626,12 +641,14 @@ class MonthlyProfitLossesController < ApplicationController
     total
   end
 
+  # 経費合計（材料費を除く、自社機械は固定費のため除外）
   def calculate_expense_cost(year, month)
     start_date = Date.new(year, month, 1)
     end_date = start_date.end_of_month
 
     Expense.joins(:daily_report)
            .where(daily_reports: { report_date: start_date..end_date, status: %w[confirmed revised] })
+           .where.not(category: "machinery_own")
            .where(status: "approved")
            .sum(:amount).to_i
   end

@@ -138,6 +138,18 @@
             class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{template_controllers.include?(controller_name) ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
           <span>見積テンプレート</span>
         <% end %>
+        <% pending_invoice_count_sales = ReceivedInvoice.pending.count rescue 0 %>
+        <%= link_to accounting_received_invoices_path,
+            class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_path == 'accounting/received_invoices' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
+          <span class="flex items-center">
+            受領請求書
+            <% if pending_invoice_count_sales > 0 %>
+              <span class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-yellow-600 rounded-full">
+                <%= pending_invoice_count_sales %>
+              </span>
+            <% end %>
+          </span>
+        <% end %>
       </div>
     </div>
 
@@ -190,6 +202,18 @@
           <%= link_to accounting_reimbursements_path,
               class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_path == 'accounting/reimbursements' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
             <span>立替精算</span>
+          <% end %>
+          <% pending_invoice_count = ReceivedInvoice.pending.count rescue 0 %>
+          <%= link_to accounting_received_invoices_path,
+              class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_path == 'accounting/received_invoices' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
+            <span class="flex items-center">
+              受領請求書
+              <% if pending_invoice_count > 0 %>
+                <span class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-yellow-600 rounded-full">
+                  <%= pending_invoice_count %>
+                </span>
+              <% end %>
+            </span>
           <% end %>
           <% if current_employee.can_access?(:cash_flow) %>
             <%= link_to cash_flow_calendar_path,
@@ -253,6 +277,10 @@
               </span>
             <% end %>
           </span>
+        <% end %>
+        <%= link_to provisional_expenses_path,
+            class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_name == 'provisional_expenses' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
+          <span>仮経費確定</span>
         <% end %>
       </div>
     </div>
