@@ -1,0 +1,96 @@
+<div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">見積テンプレート管理</h1>
+    <p class="mt-1 text-sm text-gray-600">見積作成で使用する各種テンプレートを管理できます</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- 条件書・確認書テンプレート -->
+    <%= link_to estimate_templates_path, class: "block bg-white shadow rounded-lg p-6 hover:shadow-md transition-shadow" do %>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 p-3 bg-blue-100 rounded-lg">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-lg font-medium text-gray-900">条件書・確認書</h3>
+            <p class="text-sm text-gray-500">見積条件書・工事見積確認書のテンプレート</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+            <%= @estimate_templates_count %>件
+          </span>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 項目テンプレート -->
+    <%= link_to estimate_item_templates_path, class: "block bg-white shadow rounded-lg p-6 hover:shadow-md transition-shadow" do %>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 p-3 bg-green-100 rounded-lg">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-lg font-medium text-gray-900">項目テンプレート</h3>
+            <p class="text-sm text-gray-500">内訳明細の項目名・規格・単価</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+            <%= @estimate_item_templates_count %>件
+          </span>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 原価内訳テンプレート -->
+    <%= link_to cost_breakdown_templates_path, class: "block bg-white shadow rounded-lg p-6 hover:shadow-md transition-shadow" do %>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 p-3 bg-yellow-100 rounded-lg">
+            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-lg font-medium text-gray-900">原価内訳テンプレート</h3>
+            <p class="text-sm text-gray-500">予算明細の原価内訳項目</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+            <%= @cost_breakdown_templates_count %>件
+          </span>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 単位テンプレート -->
+    <%= link_to cost_units_path, class: "block bg-white shadow rounded-lg p-6 hover:shadow-md transition-shadow" do %>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 p-3 bg-purple-100 rounded-lg">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-lg font-medium text-gray-900">単位テンプレート</h3>
+            <p class="text-sm text-gray-500">数量の単位（式、m、m²など）</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+            <%= @cost_units_count %>件
+          </span>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

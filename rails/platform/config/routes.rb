@@ -117,6 +117,9 @@ Rails.application.routes.draw do
     resources :project_documents, only: %i[index new create destroy], path: "documents"
   end
 
+  # テンプレート管理（統合ダッシュボード）
+  get "templates", to: "templates#index", as: :templates
+
   # 見積テンプレート管理
   resources :estimate_templates, except: [:show] do
     collection do
