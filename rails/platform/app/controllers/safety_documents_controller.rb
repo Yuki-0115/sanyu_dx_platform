@@ -5,10 +5,40 @@ class SafetyDocumentsController < ApplicationController
   before_action :set_folder, only: %i[show edit_folder update_folder destroy_folder]
   before_action :set_file, only: %i[edit_file update_file destroy_file]
 
-  # フォルダ一覧
+  # 案件一覧（提出状況）
   def index
-    @folders = SafetyFolder.includes(:project).order(:name)
-    @folders = @folders.for_project(params[:project_id]) if params[:project_id].present?
+    @view_mode = params[:view] || "projects"
+
+    if @view_mode == "folders"
+      # フォルダ一覧モード
+      @folders = SafetyFolder.includes(:project).order(:name)
+      @folders = @folders.for_project(params[:project_id]) if params[:project_id].present?
+    else
+      # 案件一覧モード（デフォルト）
+      @projects = Project.where(status: %w[in_progress preparing ordered])
+                         .includes(:client, :sales_user)
+                         .order(scheduled_start_date: :desc)
+
+      # 各案件の提出状況を計算
+      @project_statuses = @projects.map do |project|
+        status = SafetyFolder.submission_status_for(project)
+        submitted_count = status.count { |s| s[:submitted] && s[:files_count] > 0 }
+        {
+          project: project,
+          status: status,
+          submitted_count: submitted_count,
+          total_count: status.size,
+          rate: SafetyFolder.submission_rate_for(project)
+        }
+      end
+
+      # フィルター
+      if params[:filter] == "incomplete"
+        @project_statuses = @project_statuses.select { |ps| ps[:rate] < 100 }
+      elsif params[:filter] == "complete"
+        @project_statuses = @project_statuses.select { |ps| ps[:rate] == 100 }
+      end
+    end
   end
 
   # フォルダ詳細（ファイル一覧）
