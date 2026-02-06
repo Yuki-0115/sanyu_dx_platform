@@ -714,21 +714,42 @@
     </div>
   </div>
 
-  <!-- 経費・領収書入力 -->
-  <div class="bg-white shadow rounded-lg p-6" data-controller="expense-form">
-    <div class="flex justify-between items-center mb-4">
-      <div>
-        <h3 class="text-lg font-medium text-gray-900">経費・領収書</h3>
-        <p class="text-sm text-gray-500">経費を入力し、領収書があれば写真を添付してください。</p>
-      </div>
-      <button type="button" data-action="expense-form#add"
-          class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-        </svg>
-        経費追加
-      </button>
+  <!-- 経費・原価情報 -->
+  <div class="bg-white shadow rounded-lg" data-controller="tabs expense-form"
+       data-tabs-active-class="border-blue-500 text-blue-600"
+       data-tabs-inactive-class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+    <!-- タブヘッダー -->
+    <div class="border-b border-gray-200">
+      <nav class="flex -mb-px">
+        <button type="button" data-tabs-target="tab" data-action="click->tabs#select"
+            class="px-6 py-3 border-b-2 font-medium text-sm border-blue-500 text-blue-600">
+          経費入力
+        </button>
+        <% if @project.project_cost_templates.any? %>
+          <button type="button" data-tabs-target="tab" data-action="click->tabs#select"
+              class="px-6 py-3 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            単価一覧
+            <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700"><%= @project.project_cost_templates.count %></span>
+          </button>
+        <% end %>
+      </nav>
     </div>
+
+    <!-- 経費入力タブ -->
+    <div data-tabs-target="panel" class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h3 class="text-lg font-medium text-gray-900">経費・領収書</h3>
+          <p class="text-sm text-gray-500">経費を入力し、領収書があれば写真を添付してください。</p>
+        </div>
+        <button type="button" data-action="expense-form#add"
+            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          経費追加
+        </button>
+      </div>
 
     <!-- テンプレート（非表示、JSで使用） -->
     <template data-expense-form-target="template">
@@ -943,54 +964,53 @@
       <% end %>
     </div>
 
-    <p class="mt-4 text-sm text-gray-500">
-      「経費追加」ボタンで経費を追加できます。領収書・伝票は画像またはPDFでアップロード可能です。
-    </p>
-  </div>
+      <p class="mt-4 text-sm text-gray-500">
+        「経費追加」ボタンで経費を追加できます。領収書・伝票は画像またはPDFでアップロード可能です。
+      </p>
+    </div>
 
-  <!-- 単価参照（案件別テンプレート） -->
-  <% if @project.project_cost_templates.any? %>
-    <div class="bg-white shadow rounded-lg p-6">
-      <div class="flex justify-between items-center mb-4">
-        <div>
-          <h3 class="text-lg font-medium text-gray-900">単価参照</h3>
+    <!-- 単価一覧タブ -->
+    <% if @project.project_cost_templates.any? %>
+      <div data-tabs-target="panel" class="hidden p-6">
+        <div class="mb-4">
+          <h3 class="text-lg font-medium text-gray-900">単価一覧</h3>
           <p class="text-sm text-gray-500">経費入力時の参考にしてください（営業・工務が設定した単価表）</p>
         </div>
-      </div>
 
-      <% templates_by_cat = @project.project_cost_templates.ordered.group_by(&:category) %>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <% ProjectCostTemplate::CATEGORIES.each do |category| %>
-          <% templates = templates_by_cat[category] || [] %>
-          <% next if templates.empty? %>
+        <% templates_by_cat = @project.project_cost_templates.ordered.group_by(&:category) %>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <% ProjectCostTemplate::CATEGORIES.each do |category| %>
+            <% templates = templates_by_cat[category] || [] %>
+            <% next if templates.empty? %>
 
-          <div class="border rounded-lg overflow-hidden">
-            <div class="px-3 py-2 bg-gray-100 border-b">
-              <span class="font-medium text-sm"><%= ProjectCostTemplate::CATEGORY_LABELS[category] %></span>
-            </div>
-            <table class="w-full text-sm">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">品目</th>
-                  <th class="px-3 py-1 text-right text-xs font-medium text-gray-500">単価</th>
-                  <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">業者</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                <% templates.each do |template| %>
-                  <tr class="hover:bg-blue-50">
-                    <td class="px-3 py-1.5"><%= template.item_name %></td>
-                    <td class="px-3 py-1.5 text-right font-medium"><%= template.formatted_unit_price_with_unit %></td>
-                    <td class="px-3 py-1.5 text-gray-500"><%= template.supplier_name.presence || "-" %></td>
+            <div class="border rounded-lg overflow-hidden">
+              <div class="px-3 py-2 bg-gray-100 border-b">
+                <span class="font-medium text-sm"><%= ProjectCostTemplate::CATEGORY_LABELS[category] %></span>
+              </div>
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">品目</th>
+                    <th class="px-3 py-1 text-right text-xs font-medium text-gray-500">単価</th>
+                    <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">業者</th>
                   </tr>
-                <% end %>
-              </tbody>
-            </table>
-          </div>
-        <% end %>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <% templates.each do |template| %>
+                    <tr class="hover:bg-blue-50">
+                      <td class="px-3 py-1.5"><%= template.item_name %></td>
+                      <td class="px-3 py-1.5 text-right font-medium"><%= template.formatted_unit_price_with_unit %></td>
+                      <td class="px-3 py-1.5 text-gray-500"><%= template.supplier_name.presence || "-" %></td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
+        </div>
       </div>
-    </div>
-  <% end %>
+    <% end %>
+  </div>
 
   <div class="flex justify-end space-x-3">
     <%= link_to "キャンセル", daily_report.persisted? ? project_daily_report_path(@project, daily_report) : project_daily_reports_path(@project),
