@@ -58,11 +58,12 @@
         </div>
 
         <!-- 現在のファイル -->
-        <% if @file.attachments.attached? %>
+        <% persisted_attachments = @file.attachments.select(&:persisted?) %>
+        <% if persisted_attachments.any? %>
           <div>
             <p class="block text-sm font-medium text-gray-700 mb-2">現在のファイル</p>
             <ul class="space-y-2">
-              <% @file.attachments.each do |attachment| %>
+              <% persisted_attachments.each do |attachment| %>
                 <li class="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md">
                   <div class="flex items-center text-sm text-gray-600">
                     <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
