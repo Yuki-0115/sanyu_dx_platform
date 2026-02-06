@@ -98,7 +98,7 @@
                       <tbody class="bg-white divide-y divide-gray-200">
                         <% category.estimate_items.order(:sort_order).each do |item| %>
                           <% next if item.name.blank? %>
-                          <tr>
+                          <tr class="group">
                             <td class="px-3 py-2 text-sm text-gray-700"><%= item.name %></td>
                             <td class="px-3 py-2 text-sm text-gray-500"><%= item.specification.presence || "-" %></td>
                             <td class="px-3 py-2 text-sm text-right text-gray-700">
@@ -115,6 +115,32 @@
                               <%= item.budget_amount.to_i > 0 ? number_to_currency(item.budget_amount, unit: "¥", precision: 0) : "-" %>
                             </td>
                           </tr>
+                          <% if item.estimate_item_costs.any? %>
+                            <tr>
+                              <td colspan="7" class="px-0 py-0">
+                                <div class="bg-blue-50 px-6 py-3 border-t border-blue-100">
+                                  <p class="text-xs font-medium text-blue-800 mb-2">原価内訳</p>
+                                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                    <% item.estimate_item_costs.order(:sort_order).each do |cost| %>
+                                      <div class="bg-white rounded px-3 py-1.5 text-sm border border-blue-100">
+                                        <div class="flex justify-between items-center">
+                                          <span class="text-gray-700"><%= cost.cost_name %></span>
+                                          <span class="font-medium text-gray-900"><%= number_to_currency(cost.amount || 0, unit: "¥", precision: 0) %></span>
+                                        </div>
+                                        <% if cost.note.present? %>
+                                          <p class="text-xs text-gray-500 mt-0.5"><%= cost.note %></p>
+                                        <% end %>
+                                      </div>
+                                    <% end %>
+                                  </div>
+                                  <div class="mt-2 text-right text-sm">
+                                    <span class="text-blue-700">内訳合計:</span>
+                                    <span class="font-medium text-blue-900"><%= number_to_currency(item.cost_breakdown_total, unit: "¥", precision: 0) %></span>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          <% end %>
                         <% end %>
                       </tbody>
                       <tfoot class="bg-green-50">
@@ -164,6 +190,27 @@
                           <%= item.budget_amount.to_i > 0 ? number_to_currency(item.budget_amount, unit: "¥", precision: 0) : "-" %>
                         </td>
                       </tr>
+                      <% if item.estimate_item_costs.any? %>
+                        <tr>
+                          <td colspan="7" class="px-0 py-0">
+                            <div class="bg-blue-50 px-6 py-3 border-t border-blue-100">
+                              <p class="text-xs font-medium text-blue-800 mb-2">原価内訳</p>
+                              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                <% item.estimate_item_costs.order(:sort_order).each do |cost| %>
+                                  <div class="flex justify-between items-center bg-white rounded px-3 py-1.5 text-sm border border-blue-100">
+                                    <span class="text-gray-700"><%= cost.cost_name %></span>
+                                    <span class="font-medium text-gray-900"><%= number_to_currency(cost.amount || 0, unit: "¥", precision: 0) %></span>
+                                  </div>
+                                <% end %>
+                              </div>
+                              <div class="mt-2 text-right text-sm">
+                                <span class="text-blue-700">内訳合計:</span>
+                                <span class="font-medium text-blue-900"><%= number_to_currency(item.cost_breakdown_total, unit: "¥", precision: 0) %></span>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      <% end %>
                     <% end %>
                   </tbody>
                 </table>

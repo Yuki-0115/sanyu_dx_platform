@@ -124,6 +124,9 @@ Rails.application.routes.draw do
     end
   end
 
+  # 原価内訳テンプレート管理
+  resources :cost_breakdown_templates, except: [:show]
+
   # 常用日報（外部現場）
   resources :external_daily_reports, only: %i[index new create show edit update] do
     member do

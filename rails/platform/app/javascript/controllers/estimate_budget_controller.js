@@ -46,82 +46,9 @@ export default class extends Controller {
     }
   }
 
-  // 予算単価変更時の計算
+  // 予算単価変更時の計算（後方互換性のため残す）
   calculateRow(event) {
-    this.calculateTotals()
-  }
-
-  // 全体の予算を計算
-  calculateTotals() {
-    let budgetTotal = 0
-
-    // 各カテゴリの小計を計算
-    this.element.querySelectorAll(".budget-category-section").forEach(section => {
-      let categoryTotal = 0
-
-      section.querySelectorAll(".budget-item-row").forEach(row => {
-        if (row.style.display !== "none") {
-          const qty = parseFloat(row.dataset.estimateQty) || 0
-          const price = parseFloat(row.querySelector(".budget-price")?.value) || 0
-          const amount = Math.round(qty * price)
-          categoryTotal += amount
-
-          const amountCell = row.querySelector(".budget-amount")
-          if (amountCell) {
-            amountCell.textContent = amount > 0 ? this.formatCurrency(amount) : "-"
-          }
-        }
-      })
-
-      // カテゴリヘッダーの予算表示を更新
-      const categoryTotalEl = section.querySelector(".budget-category-total")
-      if (categoryTotalEl) {
-        categoryTotalEl.textContent = "予算: " + this.formatCurrency(categoryTotal)
-      }
-
-      // カテゴリフッターの小計を更新
-      const categorySubtotalEl = section.querySelector(".budget-category-subtotal")
-      if (categorySubtotalEl) {
-        categorySubtotalEl.textContent = this.formatCurrency(categoryTotal)
-      }
-
-      budgetTotal += categoryTotal
-    })
-
-    // 全体の予算表示を更新
-    if (this.hasBudgetTotalTarget) {
-      this.budgetTotalTarget.textContent = this.formatCurrency(budgetTotal)
-    }
-
-    // 見積金額を取得
-    const directCost = this.hasDirectCostTarget
-      ? parseInt(this.directCostTarget.textContent.replace(/[¥,]/g, "")) || 0
-      : 0
-
-    // 粗利計算
-    const grossProfit = directCost - budgetTotal
-    const profitRate = directCost > 0 ? (grossProfit / directCost * 100).toFixed(1) : 0
-
-    if (this.hasGrossProfitTarget) {
-      this.grossProfitTarget.textContent = this.formatCurrency(grossProfit)
-      this.grossProfitTarget.className = "text-xl font-bold " + (grossProfit >= 0 ? "text-green-600" : "text-red-600")
-    }
-
-    if (this.hasProfitRateTarget) {
-      this.profitRateTarget.textContent = profitRate + "%"
-      this.profitRateTarget.className = "text-xl font-bold " + (grossProfit >= 0 ? "text-green-600" : "text-red-600")
-    }
-
-    // 表紙タブの予算情報も更新
-    const coverBudgetTotal = document.getElementById("cover-budget-total")
-    if (coverBudgetTotal) {
-      coverBudgetTotal.textContent = this.formatCurrency(budgetTotal)
-    }
-    const coverGrossProfit = document.getElementById("cover-gross-profit")
-    if (coverGrossProfit) {
-      coverGrossProfit.textContent = this.formatCurrency(grossProfit) + "（" + profitRate + "%）"
-      coverGrossProfit.className = "font-medium " + (grossProfit >= 0 ? "text-green-600" : "text-red-600")
-    }
+    // budget-item コントローラーが処理するため、ここでは何もしない
   }
 
   // 内訳明細タブへ切り替え

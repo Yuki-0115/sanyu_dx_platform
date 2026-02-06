@@ -1,0 +1,166 @@
+<div class="budget-item-section" data-controller="budget-item"
+     data-budget-item-qty-value="<%= item.quantity %>"
+     data-budget-item-units-value="<%= cost_units.to_json %>">
+  <%= hidden_field_tag "estimate[estimate_items_attributes][#{item_index}][id]", item.id if item.persisted? %>
+
+  <!-- 項目ヘッダー -->
+  <div class="px-4 py-3 bg-gray-50 flex justify-between items-center cursor-pointer"
+       data-action="click->budget-item#toggle">
+    <div class="flex items-center gap-3">
+      <svg class="w-4 h-4 text-gray-500 transform transition-transform <%= item.estimate_item_costs.any? ? '' : '-rotate-90' %>" data-budget-item-target="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+      <div>
+        <span class="font-medium text-gray-900"><%= item.name %></span>
+        <% if item.specification.present? %>
+          <span class="text-gray-500 text-sm ml-2">(<%= item.specification %>)</span>
+        <% end %>
+      </div>
+      <div class="text-sm text-gray-500">
+        <%= item.quantity.present? ? number_with_precision(item.quantity, precision: 2, strip_insignificant_zeros: true) : "-" %>
+        <%= item.unit %>
+      </div>
+    </div>
+    <div class="flex items-center gap-6">
+      <div class="text-right">
+        <p class="text-xs text-gray-500">見積</p>
+        <p class="text-sm text-gray-700"><%= number_to_currency(item.amount.to_i, unit: "¥", precision: 0) %></p>
+      </div>
+      <div class="text-right">
+        <p class="text-xs text-gray-500">予算</p>
+        <p class="text-sm font-medium budget-item-total" data-budget-item-target="total">
+          <% budget_total = item.has_cost_breakdown? ? item.cost_breakdown_total : item.budget_amount.to_i %>
+          <%= number_to_currency(budget_total, unit: "¥", precision: 0) %>
+        </p>
+      </div>
+      <div class="w-20">
+        <input type="number" name="estimate[estimate_items_attributes][<%= item_index %>][construction_days]"
+               value="<%= item.construction_days %>"
+               step="0.5" min="0"
+               placeholder="日数"
+               class="block w-full rounded border-gray-300 text-sm text-right"
+               data-action="click->budget-item#stopPropagation">
+      </div>
+    </div>
+  </div>
+
+  <!-- 原価内訳（展開部分） -->
+  <div class="px-4 py-4 bg-blue-50 <%= item.estimate_item_costs.any? ? '' : 'hidden' %>" data-budget-item-target="content">
+    <div class="flex justify-between items-center mb-3">
+      <h5 class="text-sm font-medium text-blue-800">原価内訳</h5>
+      <div class="flex items-center gap-4">
+        <% if cost_templates.any? %>
+          <select data-action="change->budget-item#addFromTemplate"
+                  data-item-index="<%= item_index %>"
+                  class="text-sm rounded border-gray-300 py-1">
+            <option value="">テンプレートから追加...</option>
+            <% cost_templates.group_by(&:category).each do |category, templates| %>
+              <optgroup label="<%= category || 'その他' %>">
+                <% templates.each do |t| %>
+                  <option value="<%= { name: t.name, unit: t.unit, unit_price: t.default_unit_price, note: t.note }.to_json %>">
+                    <%= t.name %><%= t.default_unit_price.present? ? " (¥#{t.default_unit_price.to_i.to_fs(:delimited)})" : "" %>
+                  </option>
+                <% end %>
+              </optgroup>
+            <% end %>
+          </select>
+        <% end %>
+        <span class="text-sm text-blue-700">
+          合計: <span class="font-medium" data-budget-item-target="costTotal"><%= number_to_currency(item.cost_breakdown_total, unit: "¥", precision: 0) %></span>
+        </span>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white rounded border">
+        <thead class="bg-blue-100">
+          <tr>
+            <th class="px-2 py-1.5 text-left text-xs font-medium text-gray-600 w-36">内訳名称</th>
+            <th class="px-2 py-1.5 text-right text-xs font-medium text-gray-600 w-20">数量</th>
+            <th class="px-2 py-1.5 text-center text-xs font-medium text-gray-600 w-20">単位</th>
+            <th class="px-2 py-1.5 text-right text-xs font-medium text-gray-600 w-24">単価</th>
+            <th class="px-2 py-1.5 text-right text-xs font-medium text-gray-600 w-24">金額</th>
+            <th class="px-2 py-1.5 text-left text-xs font-medium text-gray-600 w-32">備考</th>
+            <th class="px-2 py-1.5 text-center text-xs font-medium text-gray-600 w-8"></th>
+          </tr>
+        </thead>
+        <tbody data-budget-item-target="costsContainer">
+          <% item.estimate_item_costs.order(:sort_order).each_with_index do |cost, cost_idx| %>
+            <tr class="cost-row bg-gray-50 border-t">
+              <td class="px-2 py-1">
+                <%= hidden_field_tag "estimate[estimate_items_attributes][#{item_index}][estimate_item_costs_attributes][#{cost_idx}][id]", cost.id if cost.persisted? %>
+                <%= hidden_field_tag "estimate[estimate_items_attributes][#{item_index}][estimate_item_costs_attributes][#{cost_idx}][_destroy]", "0", class: "destroy-flag" %>
+                <input type="text" name="estimate[estimate_items_attributes][<%= item_index %>][estimate_item_costs_attributes][<%= cost_idx %>][cost_name]"
+                       value="<%= cost.cost_name %>"
+                       class="block w-full rounded border-gray-300 text-sm"
+                       placeholder="材料費、労務費など">
+              </td>
+              <td class="px-2 py-1">
+                <input type="number" name="estimate[estimate_items_attributes][<%= item_index %>][estimate_item_costs_attributes][<%= cost_idx %>][quantity]"
+                       value="<%= cost.quantity %>"
+                       step="0.01"
+                       class="block w-full rounded border-gray-300 text-sm text-right cost-qty"
+                       data-action="input->budget-item#calculate">
+              </td>
+              <td class="px-2 py-1">
+                <select name="estimate[estimate_items_attributes][<%= item_index %>][estimate_item_costs_attributes][<%= cost_idx %>][unit]"
+                        class="block w-full rounded border-gray-300 text-sm text-center">
+                  <% cost_units.each do |u| %>
+                    <option value="<%= u %>" <%= cost.unit == u ? 'selected' : '' %>><%= u %></option>
+                  <% end %>
+                </select>
+              </td>
+              <td class="px-2 py-1">
+                <input type="number" name="estimate[estimate_items_attributes][<%= item_index %>][estimate_item_costs_attributes][<%= cost_idx %>][unit_price]"
+                       value="<%= cost.unit_price %>"
+                       step="1"
+                       class="block w-full rounded border-gray-300 text-sm text-right cost-price"
+                       data-action="input->budget-item#calculate">
+              </td>
+              <td class="px-2 py-1 text-right text-sm font-medium cost-amount">
+                <%= number_to_currency(cost.amount || 0, unit: "¥", precision: 0) %>
+              </td>
+              <td class="px-2 py-1">
+                <input type="text" name="estimate[estimate_items_attributes][<%= item_index %>][estimate_item_costs_attributes][<%= cost_idx %>][note]"
+                       value="<%= cost.note %>"
+                       class="block w-full rounded border-gray-300 text-sm"
+                       placeholder="備考">
+              </td>
+              <td class="px-2 py-1 text-center">
+                <button type="button" data-action="click->budget-item#removeCost"
+                        class="text-red-500 hover:text-red-700">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <button type="button" data-action="click->budget-item#addCost"
+            data-item-index="<%= item_index %>"
+            class="mt-3 text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      内訳を追加
+    </button>
+  </div>
+
+  <!-- 内訳がない場合の追加ボタン -->
+  <% unless item.estimate_item_costs.any? %>
+    <div class="px-4 py-3 bg-gray-50 border-t" data-budget-item-target="emptyState">
+      <button type="button" data-action="click->budget-item#showCosts"
+              data-item-index="<%= item_index %>"
+              class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        原価内訳を入力
+      </button>
+    </div>
+  <% end %>
+</div>

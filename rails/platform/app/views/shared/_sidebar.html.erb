@@ -288,6 +288,10 @@
               class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_name == 'estimate_templates' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
             <span>見積テンプレート</span>
           <% end %>
+          <%= link_to cost_breakdown_templates_path,
+              class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_name == 'cost_breakdown_templates' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
+            <span>原価テンプレート</span>
+          <% end %>
           <%= link_to data_imports_path,
               class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_name == 'data_imports' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
             <span>データ取込</span>

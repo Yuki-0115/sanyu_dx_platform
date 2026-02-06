@@ -421,3 +421,51 @@ EstimateTemplate.find_or_create_by!(template_type: "confirmation", name: "標準
   t.sort_order = 0
 end
 puts "  Created confirmation template"
+
+# 原価内訳テンプレート
+puts "Creating cost breakdown templates..."
+
+cost_breakdown_templates = [
+  # 材料費
+  { name: "As合材", category: "材料費", unit: "t", default_unit_price: 15000 },
+  { name: "RC-40", category: "材料費", unit: "m³", default_unit_price: 3500 },
+  { name: "RM-25", category: "材料費", unit: "m³", default_unit_price: 4000 },
+  { name: "生コンクリート", category: "材料費", unit: "m³", default_unit_price: 18000 },
+  { name: "鉄筋", category: "材料費", unit: "t", default_unit_price: 120000 },
+  { name: "型枠材", category: "材料費", unit: "m²", default_unit_price: 800 },
+  { name: "塗料", category: "材料費", unit: "缶", default_unit_price: 5000 },
+
+  # 労務費
+  { name: "普通作業員", category: "労務費", unit: "人工", default_unit_price: 18000 },
+  { name: "特殊作業員", category: "労務費", unit: "人工", default_unit_price: 22000 },
+  { name: "交通誘導員", category: "労務費", unit: "人工", default_unit_price: 15000 },
+  { name: "職長手当", category: "労務費", unit: "日", default_unit_price: 3000 },
+
+  # 外注費
+  { name: "舗装外注", category: "外注費", unit: "m²" },
+  { name: "電気設備外注", category: "外注費", unit: "式" },
+  { name: "配管外注", category: "外注費", unit: "式" },
+  { name: "塗装外注", category: "外注費", unit: "m²" },
+  { name: "重機回送", category: "外注費", unit: "回", default_unit_price: 50000 },
+
+  # 経費
+  { name: "重機損料", category: "経費", unit: "日", default_unit_price: 30000 },
+  { name: "足場損料", category: "経費", unit: "月", default_unit_price: 50000 },
+  { name: "仮設電気", category: "経費", unit: "月", default_unit_price: 20000 },
+  { name: "仮設水道", category: "経費", unit: "月", default_unit_price: 10000 },
+  { name: "産廃処分費", category: "経費", unit: "t", default_unit_price: 25000 },
+  { name: "残土処分費", category: "経費", unit: "m³", default_unit_price: 3000 },
+  { name: "安全対策費", category: "経費", unit: "式" },
+  { name: "現場管理費", category: "経費", unit: "式" },
+]
+
+cost_breakdown_templates.each_with_index do |data, idx|
+  CostBreakdownTemplate.find_or_create_by!(name: data[:name], is_shared: true) do |t|
+    t.category = data[:category]
+    t.unit = data[:unit] || "式"
+    t.default_unit_price = data[:default_unit_price]
+    t.sort_order = idx
+  end
+end
+
+puts "  Created #{cost_breakdown_templates.size} cost breakdown templates"

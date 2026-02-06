@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_05_052053) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_06_005403) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -171,6 +171,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_05_052053) do
     t.index ["calendar_type"], name: "index_company_holidays_on_calendar_type"
     t.index ["holiday_date", "calendar_type"], name: "index_company_holidays_on_holiday_date_and_calendar_type", unique: true
     t.index ["holiday_date"], name: "index_company_holidays_on_holiday_date"
+  end
+
+  create_table "cost_breakdown_templates", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "category"
+    t.string "unit", default: "式"
+    t.decimal "default_unit_price", precision: 15, scale: 2
+    t.text "note"
+    t.integer "sort_order", default: 0
+    t.boolean "is_shared", default: false
+    t.bigint "employee_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category"], name: "index_cost_breakdown_templates_on_category"
+    t.index ["employee_id"], name: "index_cost_breakdown_templates_on_employee_id"
+    t.index ["is_shared"], name: "index_cost_breakdown_templates_on_is_shared"
   end
 
   create_table "daily_reports", force: :cascade do |t|
@@ -832,6 +848,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_05_052053) do
   add_foreign_key "cash_flow_entries", "employees", column: "confirmed_by_id"
   add_foreign_key "cash_flow_entries", "partners"
   add_foreign_key "cash_flow_entries", "projects"
+  add_foreign_key "cost_breakdown_templates", "employees"
   add_foreign_key "daily_reports", "employees", column: "foreman_id"
   add_foreign_key "daily_reports", "employees", column: "revised_by_id"
   add_foreign_key "daily_reports", "projects"

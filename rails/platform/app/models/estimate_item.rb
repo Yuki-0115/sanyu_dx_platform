@@ -27,15 +27,34 @@ class EstimateItem < ApplicationRecord
     budget_unit.presence || unit
   end
 
-  # 原価内訳の合計
+  # 原価内訳の合計（これが予算金額になる）
+  # 保存時は未保存のレコードも含めて計算
   def cost_breakdown_total
-    estimate_item_costs.sum(:amount) || 0
+    if estimate_item_costs.loaded?
+      # メモリ上で計算（新規・更新時）
+      estimate_item_costs.reject(&:marked_for_destruction?).sum do |cost|
+        (cost.quantity.to_d * cost.unit_price.to_d).round(0)
+      end
+    else
+      # DBから取得（表示時）
+      estimate_item_costs.sum(:amount) || 0
+    end
   end
 
-  # 原価内訳から予算単価を計算
-  def calculate_budget_unit_price_from_costs
-    return 0 if budget_quantity_or_default.to_d.zero?
-    (cost_breakdown_total / budget_quantity_or_default.to_d).round(2)
+  # 原価内訳から予算単価を計算（表示用）
+  def calculated_budget_unit_price
+    qty = budget_quantity_or_default.to_d
+    return 0 if qty.zero?
+    (cost_breakdown_total / qty).round(0)
+  end
+
+  # 内訳があるかどうか
+  def has_cost_breakdown?
+    if estimate_item_costs.loaded?
+      estimate_item_costs.reject(&:marked_for_destruction?).any?
+    else
+      estimate_item_costs.exists?
+    end
   end
 
   private
@@ -44,9 +63,17 @@ class EstimateItem < ApplicationRecord
     # 見積金額
     self.amount = (quantity.to_d * unit_price.to_d).round(0) if quantity.present? && unit_price.present?
 
-    # 予算金額
-    qty = budget_quantity.presence || quantity
-    price = budget_unit_price
-    self.budget_amount = (qty.to_d * price.to_d).round(0) if qty.present? && price.present?
+    # 予算金額：内訳があればその合計、なければ従来通り
+    if has_cost_breakdown?
+      self.budget_amount = cost_breakdown_total
+      # 予算単価も自動計算（表示用に保持）
+      qty = budget_quantity.presence || quantity
+      self.budget_unit_price = calculated_budget_unit_price if qty.to_d > 0
+    else
+      # 内訳がない場合は従来通り
+      qty = budget_quantity.presence || quantity
+      price = budget_unit_price
+      self.budget_amount = (qty.to_d * price.to_d).round(0) if qty.present? && price.present?
+    end
   end
 end
