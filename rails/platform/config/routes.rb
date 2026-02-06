@@ -297,6 +297,11 @@ Rails.application.routes.draw do
     collection do
       get :new_folder
       post :create_folder
+      # 案件別必要書類設定
+      get "projects/:project_id/requirements", action: :project_requirements, as: :project_requirements
+      patch "projects/:project_id/requirements", action: :update_project_requirements
+      post "projects/:project_id/set_all_requirements", action: :set_all_requirements, as: :set_all_project_requirements
+      delete "projects/:project_id/clear_requirements", action: :clear_requirements, as: :clear_project_requirements
     end
     member do
       get :edit_folder

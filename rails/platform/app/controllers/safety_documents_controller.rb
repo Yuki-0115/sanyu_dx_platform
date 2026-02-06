@@ -124,6 +124,53 @@ class SafetyDocumentsController < ApplicationController
     redirect_to safety_document_path(folder), notice: "ファイルを削除しました"
   end
 
+  # 案件別必要書類設定フォーム
+  def project_requirements
+    @project = Project.find(params[:project_id])
+    @document_types = SafetyDocumentType.active.ordered
+    @selected_ids = @project.required_safety_document_types.pluck(:id)
+  end
+
+  # 案件別必要書類設定を保存
+  def update_project_requirements
+    @project = Project.find(params[:project_id])
+
+    # 既存の設定をクリア
+    @project.project_safety_requirements.destroy_all
+
+    # 新しい設定を保存
+    if params[:safety_document_type_ids].present?
+      params[:safety_document_type_ids].each do |type_id|
+        @project.project_safety_requirements.create(safety_document_type_id: type_id)
+      end
+    end
+
+    redirect_to safety_documents_path(view: "projects"), notice: "#{@project.name}の必要書類を設定しました"
+  end
+
+  # 全ての書類を必要に設定
+  def set_all_requirements
+    @project = Project.find(params[:project_id])
+
+    # 既存の設定をクリア
+    @project.project_safety_requirements.destroy_all
+
+    # 全ての有効な書類種類を設定
+    SafetyDocumentType.active.ordered.each do |doc_type|
+      @project.project_safety_requirements.create(safety_document_type: doc_type)
+    end
+
+    redirect_to safety_documents_path(view: "projects"), notice: "#{@project.name}の必要書類を全て設定しました"
+  end
+
+  # 書類設定をクリア（グローバル設定を使用）
+  def clear_requirements
+    @project = Project.find(params[:project_id])
+    @project.project_safety_requirements.destroy_all
+
+    redirect_to safety_documents_path(view: "projects"), notice: "#{@project.name}の必要書類設定をクリアしました（共通設定を使用）"
+  end
+
   private
 
   def set_folder

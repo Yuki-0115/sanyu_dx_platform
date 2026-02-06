@@ -15,6 +15,10 @@ class SafetyDocumentType < ApplicationRecord
     { name: "健康診断結果報告書", description: "作業員の健康診断結果" }
   ].freeze
 
+  # Associations
+  has_many :project_safety_requirements, dependent: :destroy
+  has_many :projects, through: :project_safety_requirements
+
   # Validations
   validates :name, presence: true, uniqueness: true
   validates :position, presence: true
