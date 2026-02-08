@@ -1,0 +1,44 @@
+<%# 案件チャット（折りたたみ式） %>
+<div class="bg-white shadow rounded-lg" data-controller="chat">
+  <!-- ヘッダー（クリックで開閉） -->
+  <button type="button" data-action="click->chat#toggle"
+      class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 rounded-t-lg">
+    <div class="flex items-center">
+      <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+      </svg>
+      <span class="font-medium text-gray-900">チャット</span>
+      <% message_count = project.project_messages.count %>
+      <% if message_count > 0 %>
+        <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
+          <%= message_count %>
+        </span>
+      <% end %>
+    </div>
+    <svg data-chat-target="arrow" class="w-5 h-5 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+    </svg>
+  </button>
+
+  <!-- チャット本体（折りたたみ部分） -->
+  <div data-chat-target="content" class="border-t border-gray-200">
+    <%= turbo_frame_tag "project-chat" do %>
+      <!-- メッセージ一覧 -->
+      <div id="chat-messages" class="max-h-64 overflow-y-auto p-4 space-y-3" data-chat-target="messages">
+        <% messages = project.project_messages.latest(10).includes(:employee).reverse %>
+        <% if messages.empty? %>
+          <p class="text-center text-gray-400 text-sm py-4">メッセージはありません</p>
+        <% else %>
+          <% messages.each do |msg| %>
+            <%= render "project_messages/message", message: msg %>
+          <% end %>
+        <% end %>
+      </div>
+
+      <!-- 入力フォーム -->
+      <div class="border-t border-gray-200 p-3">
+        <%= render "project_messages/form", project: project, message: project.project_messages.build %>
+      </div>
+    <% end %>
+  </div>
+</div>

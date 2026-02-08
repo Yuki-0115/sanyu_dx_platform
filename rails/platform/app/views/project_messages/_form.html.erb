@@ -1,0 +1,15 @@
+<%# メッセージ入力フォーム %>
+<%= form_with model: [project, message], id: "chat-form", data: { controller: "chat-form", action: "turbo:submit-end->chat-form#reset" } do |f| %>
+  <div class="flex gap-2">
+    <%= f.text_field :content,
+        class: "flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm",
+        placeholder: "メッセージを入力...",
+        autocomplete: "off",
+        data: { chat_form_target: "input" } %>
+    <%= f.submit "送信",
+        class: "px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 cursor-pointer" %>
+  </div>
+  <% if message.errors.any? %>
+    <p class="text-red-500 text-xs mt-1"><%= message.errors.full_messages.first %></p>
+  <% end %>
+<% end %>

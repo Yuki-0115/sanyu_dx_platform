@@ -26,6 +26,9 @@ class Employee < ApplicationRecord
   has_many :paid_leave_grants, dependent: :destroy
   has_many :paid_leave_requests, dependent: :destroy
 
+  # チャット
+  has_many :project_messages, dependent: :destroy
+
   # Validations
   validates :code, uniqueness: true
   validates :name, presence: true

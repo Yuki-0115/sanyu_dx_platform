@@ -1,0 +1,11 @@
+<%# メッセージ送信後のTurbo Stream更新 %>
+
+<%# メッセージを一覧に追加 %>
+<%= turbo_stream.append "chat-messages" do %>
+  <%= render "message", message: @message %>
+<% end %>
+
+<%# フォームをリセット %>
+<%= turbo_stream.replace "chat-form" do %>
+  <%= render "form", project: @project, message: @project.project_messages.build %>
+<% end %>

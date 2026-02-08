@@ -104,6 +104,7 @@ Rails.application.routes.draw do
     end
     resource :site_ledger, only: [:show]
     resources :project_cost_templates, only: %i[index new create edit update destroy]
+    resources :project_messages, only: %i[index create]
     resources :outsourcing_reports, only: %i[index new create]
     resources :daily_reports do
       member do

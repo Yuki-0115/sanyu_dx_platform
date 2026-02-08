@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_06_075028) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_08_073619) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -798,6 +798,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_075028) do
     t.index ["uploaded_by_id"], name: "index_project_documents_on_uploaded_by_id"
   end
 
+  create_table "project_messages", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.bigint "employee_id", null: false
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id"], name: "index_project_messages_on_employee_id"
+    t.index ["project_id", "created_at"], name: "index_project_messages_on_project_id_and_created_at"
+    t.index ["project_id"], name: "index_project_messages_on_project_id"
+  end
+
   create_table "project_monthly_progresses", force: :cascade do |t|
     t.bigint "project_id", null: false
     t.integer "year", null: false
@@ -1016,6 +1027,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_075028) do
   add_foreign_key "project_cost_templates", "projects"
   add_foreign_key "project_documents", "employees", column: "uploaded_by_id"
   add_foreign_key "project_documents", "projects"
+  add_foreign_key "project_messages", "employees"
+  add_foreign_key "project_messages", "projects"
   add_foreign_key "project_monthly_progresses", "projects"
   add_foreign_key "project_safety_requirements", "projects"
   add_foreign_key "project_safety_requirements", "safety_document_types"

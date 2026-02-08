@@ -188,8 +188,14 @@
           </div>
         </div>
 
-        <!-- 4点チェック -->
+        <!-- 右カラム -->
         <div class="lg:col-span-1">
+          <!-- チャット -->
+          <div class="mb-6">
+            <%= render "project_messages/chat", project: @project %>
+          </div>
+
+          <!-- 4点チェック -->
           <div class="bg-white shadow rounded-lg p-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">4点チェック</h3>
             <% if @project.four_point_completed? %>
