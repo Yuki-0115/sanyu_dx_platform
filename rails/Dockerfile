@@ -33,6 +33,18 @@ RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
     && rm -rf /var/lib/apt/lists/* \
     && npm install -g yarn
 
+# Puppeteer/Grover依存関係（PDF生成用）
+RUN apt-get update -qq \
+    && apt-get install -y --no-install-recommends \
+        chromium \
+        fonts-ipafont-gothic \
+        fonts-ipafont-mincho \
+        fonts-noto-cjk \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
 # 開発環境イメージ
 FROM base AS development
 

@@ -42,6 +42,7 @@ class Employee < ApplicationRecord
   # Scopes
   scope :regular, -> { where(employment_type: "regular") }
   scope :temporary, -> { where(employment_type: "temporary") }
+  scope :active, -> { all }  # TODO: is_activeカラム追加時に更新
 
   # Instance methods
   def regular?
@@ -58,6 +59,21 @@ class Employee < ApplicationRecord
 
   def management?
     role == "management"
+  end
+
+  # 役割ラベル
+  ROLE_LABELS = {
+    "admin" => "管理者",
+    "management" => "経営",
+    "accounting" => "経理",
+    "sales" => "営業",
+    "engineering" => "工務",
+    "construction" => "施工",
+    "worker" => "作業員"
+  }.freeze
+
+  def role_label
+    ROLE_LABELS[role] || role
   end
 
   # Role check methods

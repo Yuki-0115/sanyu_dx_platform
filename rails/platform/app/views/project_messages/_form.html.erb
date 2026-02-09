@@ -1,13 +1,25 @@
 <%# メッセージ入力フォーム %>
-<%= form_with model: [project, message], id: "chat-form", data: { controller: "chat-form", action: "turbo:submit-end->chat-form#reset" } do |f| %>
-  <div class="flex gap-2">
-    <%= f.text_field :content,
-        class: "flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm",
-        placeholder: "メッセージを入力...",
-        autocomplete: "off",
-        data: { chat_form_target: "input" } %>
-    <%= f.submit "送信",
-        class: "px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 cursor-pointer" %>
+<% employees_for_mention = Employee.active.order(:name).map { |e| { id: e.id, name: e.name, role: e.role_label } } %>
+<%= form_with model: [project, message], id: "chat-form", data: { controller: "chat-form mention-autocomplete", action: "turbo:submit-end->chat-form#reset", mention_autocomplete_employees_value: employees_for_mention.to_json } do |f| %>
+  <div class="relative">
+    <div class="flex gap-2">
+      <%= f.text_field :content,
+          class: "flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm",
+          placeholder: "@で社員にメンション...",
+          autocomplete: "off",
+          data: {
+            chat_form_target: "input",
+            mention_autocomplete_target: "input",
+            action: "input->mention-autocomplete#onInput keydown->mention-autocomplete#onKeydown blur->mention-autocomplete#onBlur"
+          } %>
+      <%= f.submit "送信",
+          class: "px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 cursor-pointer" %>
+    </div>
+    <%# メンション候補ドロップダウン %>
+    <div class="hidden absolute bottom-full left-0 w-64 mb-1 bg-white border border-gray-200 rounded-md shadow-lg z-50"
+         data-mention-autocomplete-target="dropdown">
+      <ul class="py-1 max-h-40 overflow-y-auto" data-mention-autocomplete-target="list"></ul>
+    </div>
   </div>
   <% if message.errors.any? %>
     <p class="text-red-500 text-xs mt-1"><%= message.errors.full_messages.first %></p>

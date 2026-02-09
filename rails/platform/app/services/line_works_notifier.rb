@@ -27,7 +27,8 @@ class LineWorksNotifier
     offset_confirmed: "相殺確定",
     paid_leave_requested: "有給申請",
     paid_leave_approved: "有給承認",
-    paid_leave_rejected: "有給却下"
+    paid_leave_rejected: "有給却下",
+    chat_mention: "チャットでメンション"
   }.freeze
 
   class << self
@@ -36,6 +37,7 @@ class LineWorksNotifier
              :budget_confirmed, :daily_report_submitted, :daily_report_confirmed,
              :invoice_issued, :payment_received, :offset_confirmed,
              :paid_leave_requested, :paid_leave_approved, :paid_leave_rejected,
+             :chat_mention,
              :test_connection, :send_test_message,
              to: :instance
   end
@@ -237,6 +239,20 @@ class LineWorksNotifier
         "申請者: #{request.employee&.name}",
         "取得日: #{request.leave_date.strftime('%Y/%m/%d')}（#{request.leave_type_label}）",
         "却下理由: #{request.rejection_reason}"
+      ])
+    )
+  end
+
+  # === チャットメンション通知 ===
+
+  def chat_mention(message, mentioned_employee)
+    notify(
+      type: :chat_mention,
+      message: build_message(:chat_mention, [
+        "案件: #{message.project&.name}",
+        "送信者: #{message.employee&.name}",
+        "宛先: @#{mentioned_employee.name}",
+        "内容: #{message.content.truncate(100)}"
       ])
     )
   end

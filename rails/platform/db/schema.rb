@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_08_073619) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_09_123128) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -297,6 +297,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_08_073619) do
     t.decimal "daily_rate", precision: 10, default: "0"
     t.date "birth_date"
     t.date "paid_leave_base_date", comment: "有給基準日"
+    t.datetime "last_mention_read_at"
     t.index ["employment_type"], name: "index_employees_on_employment_type"
     t.index ["partner_id"], name: "index_employees_on_partner_id"
     t.index ["reset_password_token"], name: "index_employees_on_reset_password_token", unique: true
@@ -804,7 +805,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_08_073619) do
     t.text "content", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "mentioned_user_ids", default: [], array: true
     t.index ["employee_id"], name: "index_project_messages_on_employee_id"
+    t.index ["mentioned_user_ids"], name: "index_project_messages_on_mentioned_user_ids", using: :gin
     t.index ["project_id", "created_at"], name: "index_project_messages_on_project_id_and_created_at"
     t.index ["project_id"], name: "index_project_messages_on_project_id"
   end

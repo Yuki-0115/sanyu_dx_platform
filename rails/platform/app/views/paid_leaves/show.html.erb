@@ -4,8 +4,17 @@
       <h1 class="text-2xl font-bold text-gray-900"><%= @employee.name %>さんの有給休暇</h1>
       <p class="text-sm text-gray-600 mt-1">社員コード: <%= @employee.code %></p>
     </div>
-    <%= link_to "一覧に戻る", paid_leaves_path,
-        class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+    <div class="flex gap-2">
+      <%= link_to pdf_paid_leafe_path(@employee), target: "_blank",
+          class: "flex items-center gap-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" do %>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        管理簿PDF
+      <% end %>
+      <%= link_to "一覧に戻る", paid_leaves_path,
+          class: "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" %>
+    </div>
   </div>
 
   <%# 基本情報 %>

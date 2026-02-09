@@ -104,7 +104,11 @@ Rails.application.routes.draw do
     end
     resource :site_ledger, only: [:show]
     resources :project_cost_templates, only: %i[index new create edit update destroy]
-    resources :project_messages, only: %i[index create]
+    resources :project_messages, only: %i[index create destroy] do
+      collection do
+        post :mark_mentions_read
+      end
+    end
     resources :outsourcing_reports, only: %i[index new create]
     resources :daily_reports do
       member do
@@ -184,6 +188,7 @@ Rails.application.routes.draw do
     end
     member do
       post :grant
+      get :pdf
     end
   end
 

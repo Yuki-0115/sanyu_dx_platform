@@ -45,4 +45,11 @@ module ApplicationHelper
     holiday = HolidayJp.between(date, date).first
     holiday&.name
   end
+
+  # 未読メンション数
+  def unread_mention_count(employee)
+    return 0 unless employee
+
+    ProjectMessage.unread_mentions_for(employee).count
+  end
 end

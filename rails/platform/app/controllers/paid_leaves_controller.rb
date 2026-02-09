@@ -3,7 +3,7 @@
 class PaidLeavesController < ApplicationController
   before_action :authenticate_employee!
   before_action :require_management_or_accounting!
-  before_action :set_employee, only: [:show, :grant]
+  before_action :set_employee, only: [:show, :grant, :pdf]
 
   def index
     @employees = Employee.where(employment_type: "regular")
@@ -59,6 +59,17 @@ class PaidLeavesController < ApplicationController
     redirect_to paid_leaves_path
   end
 
+  # 年次有給休暇管理簿PDF
+  def pdf
+    pdf_service = PaidLeavePdfService.new(@employee)
+    pdf_data = pdf_service.generate
+
+    send_data pdf_data,
+              filename: "年次有給休暇管理簿_#{@employee.name}_#{Date.current.strftime('%Y%m%d')}.pdf",
+              type: "application/pdf",
+              disposition: "inline"
+  end
+
   # 個別手動付与（初期移行対応）
   def grant
     days = params[:days].to_f
@@ -110,6 +121,15 @@ class PaidLeavesController < ApplicationController
     unless current_employee.role.in?(%w[admin management accounting])
       redirect_to root_path, alert: "アクセス権限がありません"
     end
+  end
+
+  def calculate_period_start(base_date)
+    return nil unless base_date
+    return base_date if base_date > Date.current
+
+    years_since_base = ((Date.current - base_date) / 365.25).floor
+    current_period_start = base_date + years_since_base.years
+    current_period_start > Date.current ? current_period_start - 1.year : current_period_start
   end
 
   def calculate_summary(employees)

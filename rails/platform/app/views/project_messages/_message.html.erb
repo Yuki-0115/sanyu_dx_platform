@@ -1,5 +1,5 @@
 <%# 個別メッセージ %>
-<div id="<%= dom_id(message) %>" class="flex gap-2">
+<div id="<%= dom_id(message) %>" class="flex gap-2 group">
   <div class="flex-shrink-0">
     <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
       <span class="text-xs font-medium text-gray-600"><%= message.employee&.name&.first || "?" %></span>
@@ -12,7 +12,17 @@
         <span class="text-xs text-gray-500">(<%= message.sender_role_label %>)</span>
       <% end %>
       <span class="text-xs text-gray-400"><%= l(message.created_at, format: :short) %></span>
+      <% if message.employee == current_employee || current_employee.admin? %>
+        <%= button_to project_project_message_path(message.project, message),
+            method: :delete,
+            form: { data: { turbo_confirm: "このメッセージを削除しますか？" } },
+            class: "opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 p-0.5" do %>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        <% end %>
+      <% end %>
     </div>
-    <p class="text-sm text-gray-700 whitespace-pre-wrap break-words"><%= message.content %></p>
+    <p class="text-sm text-gray-700 whitespace-pre-wrap break-words"><%= message.content_with_highlighted_mentions %></p>
   </div>
 </div>

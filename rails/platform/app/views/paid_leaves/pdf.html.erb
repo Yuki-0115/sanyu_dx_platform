@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>年次有給休暇管理簿</title>
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 10mm;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      font-size: 9px;
+      background: #fff;
+      color: #222;
+      width: 1020px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #333;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      letter-spacing: 3px;
+    }
+
+    .header-info {
+      display: flex;
+      gap: 12px;
+      font-size: 9px;
+    }
+
+    .header-info span {
+      display: inline-block;
+    }
+
+    .header-info .val {
+      border-bottom: 1px solid #333;
+      min-width: 85px;
+      display: inline-block;
+      margin-left: 3px;
+    }
+
+    .header-info .val.w {
+      min-width: 120px;
+    }
+
+    .main {
+      display: flex;
+      gap: 10px;
+    }
+
+    .col-left {
+      width: 230px;
+      flex-shrink: 0;
+    }
+
+    .col-right {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sec-title {
+      background: #333;
+      color: #fff;
+      font-size: 9px;
+      font-weight: bold;
+      padding: 3px 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #333;
+      padding: 3px 4px;
+      font-size: 8px;
+      text-align: center;
+    }
+
+    th {
+      background: #eee;
+      font-weight: normal;
+    }
+
+    .tbl-grant td {
+      height: 18px;
+    }
+
+    .tbl-summary {
+      margin-top: 8px;
+    }
+
+    .tbl-summary th {
+      text-align: left;
+      padding-left: 6px;
+      width: 130px;
+    }
+
+    .tbl-summary td {
+      width: 80px;
+    }
+
+    .tbl-summary .hl td {
+      background: #fff8dc;
+      font-weight: bold;
+    }
+
+    .legend {
+      margin-top: 8px;
+      padding: 4px 6px;
+      background: #f5f5f5;
+      border: 1px solid #ccc;
+      font-size: 7px;
+      color: #555;
+    }
+
+    .tbl-record {
+      table-layout: fixed;
+    }
+
+    .tbl-record th,
+    .tbl-record td {
+      padding: 2px 2px;
+      font-size: 8px;
+      overflow: hidden;
+    }
+
+    .tbl-record thead th {
+      height: 22px;
+    }
+
+    .tbl-record tbody td {
+      height: 16px;
+    }
+
+    .tbl-record .c-no { width: 20px; background: #f9f9f9; }
+    .tbl-record .c-date { width: 55px; }
+    .tbl-record .c-type { width: 50px; }
+    .tbl-record .c-days { width: 28px; }
+    .tbl-record .c-rem { width: 35px; }
+    .tbl-record .c-note { text-align: left; padding-left: 4px; }
+
+    .tbl-record tbody tr:nth-child(odd) td {
+      background: #fafafa;
+    }
+    .tbl-record tbody tr:nth-child(odd) td.c-no {
+      background: #f0f0f0;
+    }
+
+    .footer {
+      margin-top: 8px;
+      padding-top: 5px;
+      border-top: 1px solid #ccc;
+      font-size: 7px;
+      color: #666;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>年次有給休暇管理簿</h1>
+  <div class="header-info">
+    <span>社名<span class="val w">株式会社サンユウテック</span></span>
+    <span>氏名<span class="val w"><%= @employee.name %></span></span>
+    <span>入社日<span class="val"><%= @employee.hire_date&.strftime('%Y/%m/%d') %></span></span>
+    <span>作成日<span class="val"><%= Date.current.strftime('%Y/%m/%d') %></span></span>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="col-left">
+    <div class="sec-title">付与情報</div>
+    <table class="tbl-grant">
+      <thead>
+        <tr><th>年度</th><th>付与日</th><th>期限</th><th>付与</th><th>使用</th><th>残</th></tr>
+      </thead>
+      <tbody>
+        <% 4.times do |i| %>
+          <% grant = @grants[i] %>
+          <tr>
+            <td><%= grant&.fiscal_year %></td>
+            <td><%= grant&.grant_date&.strftime('%m/%d') %></td>
+            <td><%= grant&.expiry_date&.strftime('%m/%d') %></td>
+            <td><%= grant&.granted_days %></td>
+            <td><%= grant&.used_days %></td>
+            <td><%= grant&.remaining_days %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <div class="sec-title" style="margin-top:8px;">集計</div>
+    <table class="tbl-summary">
+      <tr><th>年間取得日数</th><td><%= @total_taken_this_year %>日</td></tr>
+      <tr class="hl"><th>取得義務(5日)</th><td><%= @obligation_met ? '達成' : '未達' %></td></tr>
+      <tr><th>残(当年度)</th><td><%= @remaining_current %>日</td></tr>
+      <tr><th>残(前年度)</th><td><%= @remaining_previous %>日</td></tr>
+      <tr class="hl"><th>残(合計)</th><td><%= @remaining_total %>日</td></tr>
+    </table>
+
+    <div class="legend">
+      <b>【区分】</b> 全休/午前半休/午後半休
+    </div>
+  </div>
+
+  <div class="col-right">
+    <div class="sec-title">取得記録</div>
+    <table class="tbl-record">
+      <thead>
+        <tr>
+          <th class="c-no">No</th>
+          <th class="c-date">取得日</th>
+          <th class="c-type">区分</th>
+          <th class="c-days">日数</th>
+          <th class="c-rem">残当年</th>
+          <th class="c-rem">残前年</th>
+          <th class="c-rem">残計</th>
+          <th class="c-note">備考</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%
+          # 累積残日数を計算するための変数
+          running_current = @current_year_grant&.granted_days || 0
+          running_previous = @previous_year_grant&.remaining_days.to_f + (@previous_year_grant&.used_days.to_f || 0)
+        %>
+        <% 20.times do |i| %>
+          <% req = @requests[i] %>
+          <% if req %>
+            <%
+              # 前年度から先に消化
+              if running_previous >= req.consumed_days
+                running_previous -= req.consumed_days
+              else
+                remaining_from_prev = running_previous
+                running_previous = 0
+                running_current -= (req.consumed_days - remaining_from_prev)
+              end
+            %>
+          <% end %>
+          <tr>
+            <td class="c-no"><%= i + 1 %></td>
+            <td><%= req&.leave_date&.strftime('%Y/%m/%d') %></td>
+            <td><%= req&.leave_type_label %></td>
+            <td><%= req&.consumed_days %></td>
+            <td><%= req ? running_current.to_f : '' %></td>
+            <td><%= req ? running_previous.to_f : '' %></td>
+            <td><%= req ? (running_current + running_previous).to_f : '' %></td>
+            <td class="c-note"><%= req&.reason&.truncate(20) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>※年10日以上付与者は年5日以上取得義務(労基法39条7項)</span>
+  <span>※本管理簿は付与期間終了後3年間保存(労基法施行規則24条の7)</span>
+</div>
+
+</body>
+</html>

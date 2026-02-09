@@ -72,9 +72,17 @@
       </button>
       <div data-sidebar-menu-target="section" data-section-id="sales" class="hidden ml-4 mt-1 space-y-1">
         <% if current_employee.can_access?(:projects) %>
+          <% mention_count = unread_mention_count(current_employee) %>
           <%= link_to projects_path,
               class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_name == 'projects' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
-            <span>案件</span>
+            <span class="flex items-center">
+              案件
+              <% if mention_count > 0 %>
+                <span class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-blue-600 rounded-full" title="未読メンション">
+                  @<%= mention_count %>
+                </span>
+              <% end %>
+            </span>
           <% end %>
         <% end %>
         <% if current_employee.can_access?(:schedule) %>

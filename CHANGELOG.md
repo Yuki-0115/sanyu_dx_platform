@@ -12,6 +12,10 @@
   - 案件詳細ページの右カラム上部に折りたたみ式で表示
   - Turbo Frameによるメッセージ送信・リアルタイム追加
   - 送信者名・役職・日時を表示
+  - @メンション機能（オートコンプリート対応）
+  - メンションされた社員にLINE WORKS通知
+  - サイドバーに未読メンションバッジ表示
+  - メッセージ削除機能（自分のメッセージのみ、管理者は全て削除可能）
 - 案件別単価テンプレート機能（ProjectCostTemplate）
   - 営業・工務が案件ごとに材料費・外注費・機械費・その他の単価表を登録可能
   - カテゴリ別（材料費/外注費/機械費/その他）に品目名・単位・単価・業者名・備考を設定
@@ -62,6 +66,7 @@
   - 年5日取得義務アラート（経営ダッシュボード連携）
   - FIFO消化ロジック（古い付与分から消化）
   - Stimulusコントローラー: paid_leave_form_controller, paid_leave_approval_controller
+  - 年次有給休暇管理簿PDF出力機能（grover/Puppeteer使用、A4横）
 - ADR-002: JavaScript開発ルール（Stimulus必須）を追加
 - Stimulusコントローラー追加
   - tabs_controller（タブ切り替え）
@@ -72,6 +77,9 @@
   - conditional_field_controller（条件表示切替）
   - toggle_controller（表示切替）
   - redirect_select_controller（選択後リダイレクト）
+  - mention_autocomplete_controller（@メンション候補表示）
+  - chat_controller（チャット折りたたみ）
+  - chat_form_controller（チャットフォーム制御）
 - LINE WORKS通知システム（Bot API直接連携）
   - LineWorksNotifier サービス（JWT認証）
   - NotificationJob 非同期ジョブ
