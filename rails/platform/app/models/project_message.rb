@@ -40,12 +40,18 @@ class ProjectMessage < ApplicationRecord
   end
 
   # メンションをハイライト表示用に変換
+  # XSS対策: ユーザー入力をエスケープしてからHTMLタグを挿入
   def content_with_highlighted_mentions
-    return content if mentioned_user_ids.blank?
+    # まずコンテンツ全体をHTMLエスケープ
+    escaped_content = ERB::Util.html_escape(content)
 
-    result = content.dup
+    return escaped_content if mentioned_user_ids.blank?
+
+    result = escaped_content.dup
     mentioned_employees.each do |emp|
-      result.gsub!(/@#{Regexp.escape(emp.name)}/, "<span class=\"text-blue-600 font-bold\">@#{emp.name}</span>")
+      escaped_name = ERB::Util.html_escape(emp.name)
+      # エスケープ済みの@名前をハイライト付きspanに置換
+      result = result.gsub(/@#{Regexp.escape(escaped_name)}/, "<span class=\"text-blue-600 font-bold\">@#{escaped_name}</span>")
     end
     result.html_safe
   end

@@ -44,6 +44,20 @@ fi
 POSTGRES_USER=${POSTGRES_USER:-sanyu}
 POSTGRES_DB=${POSTGRES_DB:-sanyu_platform_development}
 
+# 通知用Webhook URL（任意）
+BACKUP_WEBHOOK_URL="${BACKUP_WEBHOOK_URL:-}"
+
+# 通知送信関数
+send_notification() {
+    local message="$1"
+    if [ -n "$BACKUP_WEBHOOK_URL" ]; then
+        curl -s -X POST "$BACKUP_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\": {\"type\": \"text\", \"text\": \"$message\"}}" \
+            > /dev/null 2>&1 || true
+    fi
+}
+
 # バックアップディレクトリ作成
 mkdir -p "${BACKUP_DIR}"
 
@@ -221,6 +235,14 @@ main() {
     fi
 
     log_info "完了"
+
+    # 成功通知（DB or n8nバックアップ実行時のみ）
+    if $do_db || $do_n8n; then
+        send_notification "✅ バックアップ完了: $(date '+%Y-%m-%d %H:%M')"
+    fi
 }
+
+# エラー時の通知
+trap 'send_notification "❌ バックアップ失敗: $(date "+%Y-%m-%d %H:%M") - 確認してください"' ERR
 
 main "$@"

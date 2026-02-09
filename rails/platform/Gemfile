@@ -51,6 +51,9 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  # Dependency vulnerability scanner
+  gem "bundler-audit", require: false
 end
 
 group :development do
@@ -98,3 +101,6 @@ gem "whenever", require: false
 
 # Excel file processing
 gem "roo", "~> 2.10"
+
+# Security
+gem "rack-attack"

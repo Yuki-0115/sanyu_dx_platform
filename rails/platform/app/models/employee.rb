@@ -4,7 +4,10 @@ class Employee < ApplicationRecord
   include Auditable
 
   # Devise modules
-  devise :database_authenticatable, :recoverable, :rememberable, :trackable, :validatable
+  # - lockable: 5回失敗でロック、1時間後に自動解除
+  # - timeoutable: 8時間無操作でセッション切れ
+  devise :database_authenticatable, :recoverable, :rememberable,
+         :trackable, :validatable, :lockable, :timeoutable
 
   # Constants
   EMPLOYMENT_TYPES = %w[regular temporary external].freeze

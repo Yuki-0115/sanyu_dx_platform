@@ -42,5 +42,8 @@ module Platform
 
     # Don't generate system test files.
     config.generators.system_tests = nil
+
+    # Rack::Attack でレート制限を有効化
+    config.middleware.use Rack::Attack
   end
 end

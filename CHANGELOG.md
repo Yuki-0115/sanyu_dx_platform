@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+### Security
+- VPS公開前セキュリティ強化
+  - Devise Lockable有効化（5回失敗で1時間ロック）
+  - Devise Timeoutable有効化（8時間無操作でセッション切れ）
+  - パスワード最小文字数を8文字に強化
+  - rack-attack導入（レート制限: ログイン5回/5分、API 60回/分）
+  - XSS対策: project_messageのメンション表示をエスケープ
+  - hosts設定追加（ALLOWED_HOST環境変数で制御）
+  - bundler-audit導入（依存関係の脆弱性チェック）
+  - バックアップ失敗時のWebhook通知機能追加
+
 ### Added
 - 案件チャット機能（ProjectMessage）
   - 営業・工務・事務・経理が案件ごとにやり取りできるチャット
