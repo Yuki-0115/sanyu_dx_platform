@@ -71,7 +71,7 @@ module DailyReportActions
 
   def handle_confirm
     if @daily_report.status == "draft"
-      @daily_report.confirm!
+      @daily_report.confirm!(current_employee)
       yield "確定しました"
     else
       yield nil, "この日報は既に確定済みです"

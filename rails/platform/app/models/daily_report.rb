@@ -64,8 +64,18 @@ class DailyReport < ApplicationRecord
   end
 
   # Instance methods
-  def confirm!
-    update!(status: "confirmed", confirmed_at: Time.current)
+  def confirm!(approver = nil)
+    transaction do
+      update!(status: "confirmed", confirmed_at: Time.current)
+      # 日報確定時に経費も自動承認（経費処理に反映させるため）
+      expenses.pending.find_each do |expense|
+        expense.update!(
+          status: "approved",
+          approved_by: approver || foreman,
+          approved_at: Time.current
+        )
+      end
+    end
   end
 
   def confirmed?

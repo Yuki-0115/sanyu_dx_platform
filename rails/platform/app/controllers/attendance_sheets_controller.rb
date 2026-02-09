@@ -290,7 +290,7 @@ class AttendanceSheetsController < ApplicationController
 
       # 集計情報
       csv << ["月間集計"]
-      csv << %w[出勤日数 公休 有給 欠勤 振休 基本時間 残業時間 深夜時間 合計時間]
+      csv << %w[出勤日数 公休 有給 欠勤 振休 基本時間 残業時間 深夜時間 合計時間 移動距離(km)]
       csv << [
         @summary[:work_days],
         @summary[:day_off_days],
@@ -300,12 +300,13 @@ class AttendanceSheetsController < ApplicationController
         format("%.1f", @summary[:total_regular_hours]),
         format("%.1f", @summary[:total_overtime_hours]),
         format("%.1f", @summary[:total_night_hours]),
-        format("%.1f", @summary[:total_work_hours])
+        format("%.1f", @summary[:total_work_hours]),
+        @summary[:total_travel_distance]
       ]
       csv << []
 
       # 日別データヘッダー
-      csv << %w[日 曜日 区分 出社 退社 休憩(分) 基本(分) 残業(分) 深夜(分) 合計(分) 現場]
+      csv << %w[日 曜日 区分 出社 退社 休憩(分) 基本(分) 残業(分) 深夜(分) 合計(分) 移動(km) 現場]
 
       # 日別データ
       @days.each do |date|
@@ -325,10 +326,11 @@ class AttendanceSheetsController < ApplicationController
             att.overtime_minutes || "",
             att.night_minutes || "",
             att.work_category == "work" ? att.total_work_minutes : "",
+            att.travel_distance || "",
             site
           ]
         else
-          csv << [date.day, wday, "", "", "", "", "", "", "", "", ""]
+          csv << [date.day, wday, "", "", "", "", "", "", "", "", "", ""]
         end
       end
     end
@@ -546,6 +548,7 @@ class AttendanceSheetsController < ApplicationController
     total_overtime_minutes = 0
     total_night_minutes = 0
     total_break_minutes = 0
+    total_travel_distance = 0
 
     # 同じ日に複数の出面がある場合、最も長い勤務時間のレコードを使用
     # 日付ごとにグループ化して代表レコードを選択
@@ -578,6 +581,11 @@ class AttendanceSheetsController < ApplicationController
       total_overtime_minutes += (primary_att.overtime_minutes || 0)
       total_night_minutes += (primary_att.night_minutes || 0)
       total_break_minutes += (primary_att.break_minutes || 0)
+
+      # 移動距離は全てのレコードを合算（複数現場の場合）
+      daily_attendances.each do |att|
+        total_travel_distance += (att.travel_distance || 0)
+      end
     end
 
     {
@@ -590,7 +598,8 @@ class AttendanceSheetsController < ApplicationController
       total_overtime_hours: total_overtime_minutes / 60.0,
       total_night_hours: total_night_minutes / 60.0,
       total_break_hours: total_break_minutes / 60.0,
-      total_work_hours: (total_regular_minutes + total_overtime_minutes + total_night_minutes) / 60.0
+      total_work_hours: (total_regular_minutes + total_overtime_minutes + total_night_minutes) / 60.0,
+      total_travel_distance: total_travel_distance
     }
   end
 end

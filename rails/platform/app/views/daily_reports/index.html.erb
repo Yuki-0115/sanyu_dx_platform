@@ -19,37 +19,41 @@
         <% if @daily_reports.any? %>
           <ul class="divide-y divide-gray-200">
             <% @daily_reports.each do |report| %>
-              <li>
-                <%= link_to project_daily_report_path(@project, report), class: "block hover:bg-gray-50" do %>
-                  <div class="px-4 py-4 sm:px-6">
-                    <div class="flex items-center justify-between">
-                      <div class="flex items-center">
-                        <p class="text-sm font-medium text-blue-600">
-                          <%= l(report.report_date) %>
-                        </p>
-                        <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= daily_report_status_class(report.status) %>">
-                          <%= daily_report_status_label(report.status) %>
+              <li class="hover:bg-gray-50">
+                <div class="px-4 py-4 sm:px-6">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                      <%= link_to project_daily_report_path(@project, report), class: "text-sm font-medium text-blue-600 hover:underline" do %>
+                        <%= l(report.report_date) %>
+                      <% end %>
+                      <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= daily_report_status_class(report.status) %>">
+                        <%= daily_report_status_label(report.status) %>
+                      </span>
+                      <% if report.weather.present? %>
+                        <span class="ml-2 text-sm text-gray-500">
+                          <%= DailyReport::WEATHER_LABELS[report.weather] %>
                         </span>
-                        <% if report.weather.present? %>
-                          <span class="ml-2 text-sm text-gray-500">
-                            <%= DailyReport::WEATHER_LABELS[report.weather] %>
-                          </span>
-                        <% end %>
-                      </div>
-                      <div class="text-sm text-gray-500">
-                        職長: <%= report.foreman.name %>
-                      </div>
+                      <% end %>
                     </div>
-                    <div class="mt-2">
-                      <p class="text-sm text-gray-600 truncate">
-                        出面: <%= report.attendances.present.count %>名
-                        <% if report.work_content.present? %>
-                          | <%= truncate(report.work_content, length: 50) %>
-                        <% end %>
-                      </p>
+                    <div class="flex items-center space-x-3">
+                      <% if report.status == "draft" %>
+                        <%= button_to "確定", confirm_project_daily_report_path(@project, report),
+                            method: :post,
+                            class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-green-600 text-white hover:bg-green-700",
+                            data: { turbo_confirm: "この日報を確定しますか？" } %>
+                      <% end %>
+                      <span class="text-sm text-gray-500">職長: <%= report.foreman.name %></span>
                     </div>
                   </div>
-                <% end %>
+                  <div class="mt-2">
+                    <p class="text-sm text-gray-600 truncate">
+                      出面: <%= report.attendances.present.count %>名
+                      <% if report.work_content.present? %>
+                        | <%= truncate(report.work_content, length: 50) %>
+                      <% end %>
+                    </p>
+                  </div>
+                </div>
               </li>
             <% end %>
           </ul>

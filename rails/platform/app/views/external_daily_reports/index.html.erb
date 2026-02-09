@@ -52,7 +52,13 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 <%= number_to_currency(report.total_cost, unit: "¥", precision: 0) %>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                <% if report.status == "draft" %>
+                  <%= button_to "確定", confirm_external_daily_report_path(report),
+                      method: :post,
+                      class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-green-600 text-white hover:bg-green-700",
+                      data: { turbo_confirm: "この日報を確定しますか？" } %>
+                <% end %>
                 <%= link_to "詳細", external_daily_report_path(report), class: "text-blue-600 hover:text-blue-900" %>
               </td>
             </tr>

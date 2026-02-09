@@ -117,6 +117,11 @@
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
         </td>
         <td class="px-3 py-2">
+          <input type="number" name="daily_report[attendances_attributes][NEW_RECORD][travel_distance]"
+              min="0" step="1" placeholder="0"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+        </td>
+        <td class="px-3 py-2">
           <input type="text" name="daily_report[attendances_attributes][NEW_RECORD][site_note]"
               placeholder="現場名"
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
@@ -217,12 +222,20 @@
           </div>
         </div>
 
-        <!-- 現場メモ -->
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">現場メモ</label>
-          <input type="text" name="daily_report[attendances_attributes][NEW_RECORD][site_note]"
-              placeholder="現場名など"
-              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2">
+        <!-- 移動距離・現場メモ -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">移動距離(km)</label>
+            <input type="number" name="daily_report[attendances_attributes][NEW_RECORD][travel_distance]"
+                min="0" step="1" placeholder="0"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">現場メモ</label>
+            <input type="text" name="daily_report[attendances_attributes][NEW_RECORD][site_note]"
+                placeholder="現場名など"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2">
+          </div>
         </div>
       </div>
     </template>
@@ -247,6 +260,7 @@
             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">出社</th>
             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">退社</th>
             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">休憩(分)</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">移動(km)</th>
             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">現場メモ</th>
             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-12"></th>
           </tr>
@@ -290,6 +304,10 @@
                 <%= af.number_field :break_minutes, min: 0, step: 15,
                     class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm",
                     data: { attendance_time_target: "breakMinutes", action: "change->attendance-time#calculate" } %>
+              </td>
+              <td class="px-3 py-2">
+                <%= af.number_field :travel_distance, min: 0, step: 1, placeholder: "0",
+                    class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" %>
               </td>
               <td class="px-3 py-2">
                 <%= af.text_field :site_note, placeholder: "現場名",
@@ -375,11 +393,18 @@
             </div>
           </div>
 
-          <!-- 現場メモ -->
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">現場メモ</label>
-            <%= af.text_field :site_note, placeholder: "現場名など",
-                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2" %>
+          <!-- 移動距離・現場メモ -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">移動距離(km)</label>
+              <%= af.number_field :travel_distance, min: 0, step: 1, placeholder: "0",
+                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2" %>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">現場メモ</label>
+              <%= af.text_field :site_note, placeholder: "現場名など",
+                  class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2" %>
+            </div>
           </div>
         </div>
       <% end %>
@@ -912,7 +937,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div>
               <label class="block text-sm font-medium text-gray-700">領収書</label>
-              <% if ef.object.receipt.attached? %>
+              <% if ef.object.receipt.attached? && ef.object.receipt.blob&.persisted? %>
                 <div class="mt-1 flex items-center space-x-2">
                   <% if ef.object.receipt.content_type.start_with?("image/") %>
                     <%= image_tag ef.object.receipt, class: "h-16 w-16 object-cover rounded" %>
@@ -932,7 +957,7 @@
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">伝票</label>
-              <% if ef.object.voucher.attached? %>
+              <% if ef.object.voucher.attached? && ef.object.voucher.blob&.persisted? %>
                 <div class="mt-1 flex items-center space-x-2">
                   <% if ef.object.voucher.content_type.start_with?("image/") %>
                     <%= image_tag ef.object.voucher, class: "h-16 w-16 object-cover rounded" %>
