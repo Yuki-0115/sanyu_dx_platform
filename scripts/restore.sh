@@ -41,6 +41,30 @@ fi
 POSTGRES_USER=${POSTGRES_USER:-sanyu}
 POSTGRES_DB=${POSTGRES_DB:-sanyu_platform_development}
 
+# 暗号化キー（暗号化ファイルのリストア時に必要）
+BACKUP_ENCRYPTION_KEY="${BACKUP_ENCRYPTION_KEY:-}"
+
+# 復号関数
+decrypt_file() {
+    local input_file="$1"
+    local output_file="${input_file%.enc}"
+
+    if [ -z "$BACKUP_ENCRYPTION_KEY" ]; then
+        log_error "暗号化ファイルのリストアにはBACKUP_ENCRYPTION_KEYが必要です"
+        exit 1
+    fi
+
+    log_info "復号中: $(basename "$input_file")"
+
+    openssl enc -aes-256-cbc -d -pbkdf2 -iter 100000 \
+        -in "$input_file" \
+        -out "$output_file" \
+        -pass env:BACKUP_ENCRYPTION_KEY
+
+    log_info "復号完了: $(basename "$output_file")"
+    echo "$output_file"
+}
+
 # バックアップ一覧表示
 list_backups() {
     echo ""
@@ -50,14 +74,17 @@ list_backups() {
     local i=1
     BACKUP_FILES=()
 
+    # 暗号化・非暗号化両方を表示
     while IFS= read -r file; do
         local filename=$(basename "$file")
         local size=$(du -h "$file" | cut -f1)
         local date=$(echo "$filename" | sed 's/db_\([0-9]*\)_\([0-9]*\).*/\1 \2/' | sed 's/\([0-9]\{4\}\)\([0-9]\{2\}\)\([0-9]\{2\}\) \([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)/\1-\2-\3 \4:\5:\6/')
-        echo -e "  ${CYAN}[$i]${NC} $filename (${size}) - ${date}"
+        local enc_mark=""
+        [[ "$filename" == *.enc ]] && enc_mark=" [暗号化]"
+        echo -e "  ${CYAN}[$i]${NC} $filename (${size}) - ${date}${enc_mark}"
         BACKUP_FILES+=("$file")
         ((i++))
-    done < <(ls -t "${BACKUP_DIR}"/db_*.sql.gz 2>/dev/null)
+    done < <(ls -t "${BACKUP_DIR}"/db_*.sql.gz* 2>/dev/null)
 
     if [ ${#BACKUP_FILES[@]} -eq 0 ]; then
         log_error "バックアップファイルが見つかりません"
@@ -69,6 +96,7 @@ list_backups() {
 # データベースリストア
 restore_database() {
     local backup_file="$1"
+    local decrypted_temp=""
 
     if [ ! -f "$backup_file" ]; then
         log_error "ファイルが見つかりません: $backup_file"
@@ -76,6 +104,12 @@ restore_database() {
     fi
 
     log_info "リストア対象: $(basename "$backup_file")"
+
+    # 暗号化ファイルの場合は復号
+    if [[ "$backup_file" == *.enc ]]; then
+        backup_file=$(decrypt_file "$backup_file")
+        decrypted_temp="$backup_file"
+    fi
 
     cd "${PROJECT_DIR}"
 
@@ -87,6 +121,8 @@ restore_database() {
 
     if [ "$confirm" != "yes" ]; then
         log_info "キャンセルしました"
+        # 復号した一時ファイルを削除
+        [ -n "$decrypted_temp" ] && rm -f "$decrypted_temp"
         exit 0
     fi
 
@@ -110,8 +146,13 @@ restore_database() {
         log_info "リストア完了"
     else
         log_error "リストア失敗"
+        # 復号した一時ファイルを削除
+        [ -n "$decrypted_temp" ] && rm -f "$decrypted_temp"
         exit 1
     fi
+
+    # 復号した一時ファイルを削除
+    [ -n "$decrypted_temp" ] && rm -f "$decrypted_temp"
 
     echo ""
     log_info "Railsのマイグレーション確認..."
@@ -121,6 +162,7 @@ restore_database() {
 # n8nデータリストア
 restore_n8n() {
     local backup_file="$1"
+    local decrypted_temp=""
 
     if [ ! -f "$backup_file" ]; then
         log_error "ファイルが見つかりません: $backup_file"
@@ -128,6 +170,12 @@ restore_n8n() {
     fi
 
     log_info "n8nリストア対象: $(basename "$backup_file")"
+
+    # 暗号化ファイルの場合は復号
+    if [[ "$backup_file" == *.enc ]]; then
+        backup_file=$(decrypt_file "$backup_file")
+        decrypted_temp="$backup_file"
+    fi
 
     cd "${PROJECT_DIR}"
 
@@ -138,6 +186,8 @@ restore_n8n() {
 
     if [ "$confirm" != "yes" ]; then
         log_info "キャンセルしました"
+        # 復号した一時ファイルを削除
+        [ -n "$decrypted_temp" ] && rm -f "$decrypted_temp"
         exit 0
     fi
 
@@ -151,6 +201,9 @@ restore_n8n() {
 
     # n8nコンテナを再起動
     docker compose start n8n
+
+    # 復号した一時ファイルを削除
+    [ -n "$decrypted_temp" ] && rm -f "$decrypted_temp"
 
     log_info "n8nリストア完了"
 }
@@ -166,10 +219,14 @@ show_help() {
     echo "  -i, --interactive  対話モード（ファイル選択）"
     echo "  -h, --help         このヘルプを表示"
     echo ""
+    echo "環境変数:"
+    echo "  BACKUP_ENCRYPTION_KEY  暗号化ファイル(.enc)のリストア時に必要"
+    echo ""
     echo "例:"
-    echo "  $0 --list                              # 一覧表示"
-    echo "  $0 --interactive                       # 対話モードでリストア"
+    echo "  $0 --list                                  # 一覧表示"
+    echo "  $0 --interactive                           # 対話モードでリストア"
     echo "  $0 --db backups/db_20250130_120000.sql.gz  # 指定ファイルでリストア"
+    echo "  BACKUP_ENCRYPTION_KEY=xxx $0 --db backups/db_*.sql.gz.enc  # 暗号化ファイル"
 }
 
 # 対話モード

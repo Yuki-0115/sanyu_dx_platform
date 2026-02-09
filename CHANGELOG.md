@@ -16,6 +16,11 @@
   - hosts設定追加（ALLOWED_HOST環境変数で制御）
   - bundler-audit導入（依存関係の脆弱性チェック）
   - バックアップ失敗時のWebhook通知機能追加
+- バックアップ暗号化 + Google Drive連携
+  - openssl AES-256-CBC暗号化対応（ENCRYPT_BACKUP=true）
+  - rcloneによるGoogle Drive自動同期（GDRIVE_SYNC=true）
+  - restore.shの暗号化ファイル対応
+  - 環境変数でオン/オフ切り替え可能
 
 ### Added
 - 案件チャット機能（ProjectMessage）
