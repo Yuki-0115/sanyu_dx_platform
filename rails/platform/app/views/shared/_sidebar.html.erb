@@ -272,6 +272,12 @@
             <span>安全書類</span>
           <% end %>
         <% end %>
+        <% if current_employee.can_access?(:attendance_sheets) %>
+          <%= link_to attendance_sheets_path,
+              class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_name == 'attendance_sheets' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
+            <span>勤怠管理</span>
+          <% end %>
+        <% end %>
         <% if current_employee.can_access?(:master) %>
           <%= link_to paid_leaves_path,
               class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_name == 'paid_leaves' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
