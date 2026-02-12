@@ -17,4 +17,21 @@ Rails.application.routes.draw do
 
   # My project assignments
   resources :assignments, only: [:index]
+
+  # Schedule (read-only)
+  resources :schedule, only: [:index]
+
+  # Daily Reports
+  resources :daily_reports, only: [:index, :new, :create, :show, :edit, :update] do
+    member do
+      patch :confirm
+    end
+  end
+
+  # Paid Leave Requests
+  resources :paid_leave_requests, only: [:index, :new, :create] do
+    member do
+      patch :cancel
+    end
+  end
 end

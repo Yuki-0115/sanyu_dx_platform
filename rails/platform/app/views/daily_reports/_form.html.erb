@@ -24,13 +24,13 @@
   </div>
 
   <!-- 出面一括入力（勤怠管理用）-->
-  <div class="bg-white shadow rounded-lg p-6" data-controller="nested-form">
+  <div class="bg-white shadow rounded-lg p-6" data-controller="nested-form attendance-copy" data-action="change->attendance-copy#propagate">
     <div class="flex justify-between items-center mb-4">
       <div>
         <h3 class="text-lg font-medium text-gray-900">出面一括入力 <span class="text-blue-600 text-sm font-normal">（勤怠管理）</span></h3>
         <p class="text-sm text-gray-500">正社員・仮社員の出勤状況を入力してください。</p>
       </div>
-      <button type="button" data-action="nested-form#add"
+      <button type="button" data-action="nested-form#add attendance-copy#copyTimes"
           class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -50,6 +50,9 @@
         <div class="ml-3">
           <p class="text-sm text-yellow-700">
             <strong>段取り表から自動入力されています。</strong>現場の実際の状況に合わせて、出勤区分や人員の追加・削除を正確に行ってください。
+          </p>
+          <p class="text-sm text-yellow-600 mt-1">
+            1人目の出退社時刻・休憩・移動距離・現場メモを変更すると、2人目以降に自動反映されます。
           </p>
         </div>
       </div>
@@ -418,13 +421,15 @@
   </div>
 
   <!-- 外注入力（原価管理用）-->
-  <div class="bg-white shadow rounded-lg p-6" data-controller="nested-form" data-nested-form-new-record-id-value="outsourcing">
+  <div class="bg-white shadow rounded-lg p-6" data-controller="nested-form outsourcing-form" data-nested-form-new-record-id-value="outsourcing"
+      data-outsourcing-form-unit-price-value="<%= @project.outsourcing_unit_price %>"
+  >
     <div class="flex justify-between items-center mb-4">
       <div>
         <h3 class="text-lg font-medium text-gray-900">外注入力 <span class="text-purple-600 text-sm font-normal">（原価管理）</span></h3>
         <p class="text-sm text-gray-500">協力会社の稼働人数や出来高を入力してください。</p>
       </div>
-      <button type="button" data-action="nested-form#add"
+      <button type="button" data-action="nested-form#add outsourcing-form#entryAdded"
           class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -454,21 +459,35 @@
                 class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
           </div>
           <div>
+            <label class="block text-sm font-medium text-gray-700">区分</label>
+            <select name="daily_report[outsourcing_entries_attributes][NEW_RECORD][billing_type]"
+                data-action="change->outsourcing-form#toggleType"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
+              <option value="man_days">常用</option>
+              <option value="contract">請負</option>
+            </select>
+          </div>
+          <%# 常用フィールド %>
+          <div data-man-days-fields>
             <label class="block text-sm font-medium text-gray-700">人数</label>
             <input type="number" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][headcount]"
-                value="0" min="0" step="1" placeholder="0"
+                value="1" min="1" step="1"
+                data-action="input->outsourcing-form#calculateManDays"
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
           </div>
-          <div>
+          <div data-man-days-fields>
             <label class="block text-sm font-medium text-gray-700">出勤区分</label>
             <select name="daily_report[outsourcing_entries_attributes][NEW_RECORD][attendance_type]"
+                data-action="change->outsourcing-form#calculateManDays"
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
               <option value="full">1日</option>
               <option value="half">半日</option>
             </select>
           </div>
+          <%# 請負フィールド %>
+          <div data-contract-fields class="hidden sm:col-span-2"></div>
           <div class="flex items-end">
-            <button type="button" data-action="nested-form#remove"
+            <button type="button" data-action="nested-form#remove outsourcing-form#entryRemoved"
                 class="inline-flex items-center text-sm text-red-600 hover:text-red-800">
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -477,11 +496,13 @@
             </button>
           </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-3">
+        <%# 請負：数量×単価＝出来高 %>
+        <div data-contract-fields class="hidden grid grid-cols-1 sm:grid-cols-4 gap-4 mt-3">
           <div>
             <label class="block text-sm font-medium text-gray-700">数量</label>
             <input type="number" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][quantity]"
-                step="0.01" placeholder="0"
+                step="0.01" min="0" placeholder="0"
+                data-action="input->outsourcing-form#calculateAmount"
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
           </div>
           <div>
@@ -494,17 +515,29 @@
               <% end %>
             </select>
           </div>
-          <div class="sm:col-span-2">
-            <label class="block text-sm font-medium text-gray-700">作業内容</label>
-            <input type="text" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][work_description]"
-                placeholder="例: 電気配線工事、配管敷設"
+          <div>
+            <label class="block text-sm font-medium text-gray-700">単価 (円)</label>
+            <input type="number" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][unit_price]"
+                min="0" placeholder="0"
+                data-action="input->outsourcing-form#calculateAmount"
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">出来高金額</label>
+            <input type="number" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][contract_amount]"
+                readonly class="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm sm:text-sm">
+          </div>
+        </div>
+        <div class="mt-3">
+          <label class="block text-sm font-medium text-gray-700">作業内容</label>
+          <input type="text" name="daily_report[outsourcing_entries_attributes][NEW_RECORD][work_description]"
+              placeholder="例: 電気配線工事、配管敷設"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
         </div>
       </div>
     </template>
 
-    <div data-nested-form-target="container">
+    <div data-nested-form-target="container" data-outsourcing-form-target="container">
       <%= f.fields_for :outsourcing_entries do |oef| %>
         <div class="border border-purple-200 rounded-lg p-4 mb-4 bg-purple-50" data-nested-form-target="item" data-controller="partner-select">
           <%= oef.hidden_field :id %>
@@ -522,19 +555,32 @@
                   class: "mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" %>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">人数</label>
-              <%= oef.number_field :headcount, min: 0, step: 1, placeholder: "0",
-                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" %>
+              <label class="block text-sm font-medium text-gray-700">区分</label>
+              <%= oef.select :billing_type,
+                  [["常用", "man_days"], ["請負", "contract"]],
+                  {},
+                  { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm",
+                    data: { action: "change->outsourcing-form#toggleType" } } %>
             </div>
-            <div>
+            <%# 常用フィールド %>
+            <div data-man-days-fields>
+              <label class="block text-sm font-medium text-gray-700">人数</label>
+              <%= oef.number_field :headcount, min: 1, step: 1,
+                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm",
+                  data: { action: "input->outsourcing-form#calculateManDays" } %>
+            </div>
+            <div data-man-days-fields>
               <label class="block text-sm font-medium text-gray-700">出勤区分</label>
               <%= oef.select :attendance_type,
                   [["1日", "full"], ["半日", "half"]],
                   {},
-                  { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" } %>
+                  { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm",
+                    data: { action: "change->outsourcing-form#calculateManDays" } } %>
             </div>
+            <%# 請負フィールド %>
+            <div data-contract-fields class="hidden sm:col-span-2"></div>
             <div class="flex items-end">
-              <button type="button" data-action="nested-form#remove"
+              <button type="button" data-action="nested-form#remove outsourcing-form#entryRemoved"
                   class="inline-flex items-center text-sm text-red-600 hover:text-red-800">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -543,11 +589,13 @@
               </button>
             </div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-3">
+          <%# 請負：数量×単価＝出来高 %>
+          <div data-contract-fields class="hidden grid grid-cols-1 sm:grid-cols-4 gap-4 mt-3">
             <div>
               <label class="block text-sm font-medium text-gray-700">数量</label>
-              <%= oef.number_field :quantity, step: 0.01, placeholder: "0",
-                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" %>
+              <%= oef.number_field :quantity, step: 0.01, min: 0, placeholder: "0",
+                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm",
+                  data: { action: "input->outsourcing-form#calculateAmount" } %>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">単位</label>
@@ -556,11 +604,22 @@
                   { include_blank: "選択" },
                   { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" } %>
             </div>
-            <div class="sm:col-span-2">
-              <label class="block text-sm font-medium text-gray-700">作業内容</label>
-              <%= oef.text_field :work_description, placeholder: "例: 電気配線工事、配管敷設",
-                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" %>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">単価 (円)</label>
+              <%= oef.number_field :unit_price, min: 0, placeholder: "0",
+                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm",
+                  data: { action: "input->outsourcing-form#calculateAmount" } %>
             </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">出来高金額</label>
+              <%= oef.number_field :contract_amount, min: 0, readonly: true,
+                  class: "mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm sm:text-sm" %>
+            </div>
+          </div>
+          <div class="mt-3">
+            <label class="block text-sm font-medium text-gray-700">作業内容</label>
+            <%= oef.text_field :work_description, placeholder: "例: 電気配線工事、配管敷設",
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" %>
           </div>
         </div>
       <% end %>
@@ -574,71 +633,186 @@
   </div>
 
   <!-- 原価情報 -->
-  <div class="bg-white shadow rounded-lg p-6">
-    <h3 class="text-lg font-medium text-gray-900 mb-4">原価情報</h3>
-    <p class="text-sm text-gray-500 mb-4">
-      ※労務費・外注費（人工）は出面・外注入力から自動計算されます
-    </p>
+  <% site_templates = @project.project_cost_templates.ordered %>
+  <% base_templates = @base_cost_templates || BaseCostTemplate.ordered %>
+  <% has_cost_templates = site_templates.any? || base_templates.any? %>
+  <div class="bg-white shadow rounded-lg" <%= 'data-controller=tabs data-tabs-active-class=border-blue-500\ text-blue-600 data-tabs-inactive-class=border-transparent\ text-gray-500\ hover:text-gray-700\ hover:border-gray-300'.html_safe if has_cost_templates %>>
+    <% if has_cost_templates %>
+      <!-- タブヘッダー -->
+      <div class="border-b border-gray-200">
+        <nav class="flex -mb-px">
+          <button type="button" data-tabs-target="tab" data-action="click->tabs#select"
+              class="px-6 py-3 border-b-2 font-medium text-sm border-blue-500 text-blue-600">
+            原価入力
+          </button>
+          <button type="button" data-tabs-target="tab" data-action="click->tabs#select"
+              class="px-6 py-3 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            単価一覧
+            <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700"><%= site_templates.size + base_templates.size %></span>
+          </button>
+        </nav>
+      </div>
+    <% end %>
 
-    <!-- 金額入力 -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-blue-50 rounded-lg">
-      <div>
-        <%= f.label :material_cost, "材料費 (円)", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.number_field :material_cost, step: 1, placeholder: "0",
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+    <!-- 原価入力 -->
+    <div class="p-6" <%= 'data-tabs-target=panel' if has_cost_templates %>>
+      <% unless has_cost_templates %>
+        <h3 class="text-lg font-medium text-gray-900 mb-4">原価情報</h3>
+      <% end %>
+      <p class="text-sm text-gray-500 mb-4">
+        ※労務費・外注費（人工）は出面・外注入力から自動計算されます
+      </p>
+
+      <!-- 金額入力 -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-blue-50 rounded-lg">
+        <div>
+          <%= f.label :material_cost, "材料費 (円)", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.number_field :material_cost, step: 1, placeholder: "0",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
+        <div>
+          <%= f.label :outsourcing_cost, "外注費・請負 (円)", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.number_field :outsourcing_cost, step: 1, placeholder: "0",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+              data: { outsourcing_cost_field: true } %>
+          <p class="text-xs text-gray-400 mt-1">常用（単価¥<%= number_with_delimiter(@project.outsourcing_unit_price.to_i) %>×人工）+ 請負出来高 = 自動計算</p>
+        </div>
+        <div>
+          <%= f.label :transportation_cost, "運搬費 (円)", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.number_field :transportation_cost, step: 1, placeholder: "0",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
+        <div>
+          <%= f.label :machinery_own_cost, "機械・自社 (円)", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.number_field :machinery_own_cost, step: 1, placeholder: "0",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+          <p class="text-xs text-gray-400 mt-1">自社保有機械の使用</p>
+        </div>
+        <div>
+          <%= f.label :machinery_rental_cost, "機械・レンタル (円)", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.number_field :machinery_rental_cost, step: 1, placeholder: "0",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+          <p class="text-xs text-gray-400 mt-1">レンタル機械の費用</p>
+        </div>
       </div>
-      <div>
-        <%= f.label :outsourcing_cost, "外注費・請負出来高 (円)", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.number_field :outsourcing_cost, step: 1, placeholder: "0",
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-        <p class="text-xs text-gray-400 mt-1">人工計算でない請負の出来高</p>
-      </div>
-      <div>
-        <%= f.label :transportation_cost, "運搬費 (円)", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.number_field :transportation_cost, step: 1, placeholder: "0",
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      </div>
-      <div>
-        <%= f.label :machinery_own_cost, "機械・自社 (円)", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.number_field :machinery_own_cost, step: 1, placeholder: "0",
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-        <p class="text-xs text-gray-400 mt-1">自社保有機械の使用</p>
-      </div>
-      <div>
-        <%= f.label :machinery_rental_cost, "機械・レンタル (円)", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.number_field :machinery_rental_cost, step: 1, placeholder: "0",
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-        <p class="text-xs text-gray-400 mt-1">レンタル機械の費用</p>
+
+      <!-- 詳細メモ -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <%= f.label :materials_used, "使用材料（メモ）", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_area :materials_used, rows: 2, placeholder: "例: 鉄筋 D13 500kg、コンクリート 5m³",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
+
+        <div>
+          <%= f.label :machines_used, "使用機械（メモ）", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_area :machines_used, rows: 2, placeholder: "例: クレーン 1台、バックホー 2台",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
+
+        <div>
+          <%= f.label :outsourcing_details, "外注（メモ）", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_area :outsourcing_details, rows: 2, placeholder: "例: 電気工事 ○○電気 出来高50m、配管工事 △△設備 3式",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+          <p class="text-xs text-gray-400 mt-1">出来高数量・単位なども記載してください</p>
+        </div>
+
+        <div>
+          <%= f.label :notes, "備考", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_area :notes, rows: 2, placeholder: "その他メモ",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
       </div>
     </div>
 
-    <!-- 詳細メモ -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-      <div>
-        <%= f.label :materials_used, "使用材料（メモ）", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.text_area :materials_used, rows: 2, placeholder: "例: 鉄筋 D13 500kg、コンクリート 5m³",
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      </div>
+    <!-- 単価一覧タブ -->
+    <% if has_cost_templates %>
+      <div data-tabs-target="panel" class="hidden p-4 sm:p-6">
+        <p class="text-sm text-gray-500 mb-4">原価入力時の参考にしてください。カテゴリをタップすると展開します。</p>
 
-      <div>
-        <%= f.label :machines_used, "使用機械（メモ）", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.text_area :machines_used, rows: 2, placeholder: "例: クレーン 1台、バックホー 2台",
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      </div>
+        <%# 現場単価（案件専用、優先表示） %>
+        <% if site_templates.any? %>
+          <div class="mb-4">
+            <div class="flex items-center mb-2">
+              <span class="px-2 py-0.5 text-xs font-bold rounded bg-orange-100 text-orange-800">現場単価</span>
+              <span class="ml-2 text-xs text-gray-400">この案件専用</span>
+            </div>
+            <% site_by_cat = site_templates.group_by(&:category) %>
+            <div class="space-y-1">
+              <% ProjectCostTemplate::CATEGORIES.each do |category| %>
+                <% cat_templates = site_by_cat[category] || [] %>
+                <% next if cat_templates.empty? %>
+                <div data-controller="collapsible" data-collapsible-open-value="false" class="border border-orange-200 rounded-lg overflow-hidden">
+                  <button type="button" data-action="click->collapsible#toggle"
+                      class="w-full flex items-center justify-between px-3 py-2 bg-orange-50 hover:bg-orange-100 transition-colors">
+                    <span class="font-medium text-sm text-orange-800"><%= ProjectCostTemplate::CATEGORY_LABELS[category] %></span>
+                    <div class="flex items-center">
+                      <span class="text-xs text-orange-600 mr-2"><%= cat_templates.count %>件</span>
+                      <svg data-collapsible-target="icon" class="w-4 h-4 text-orange-400 transition-transform -rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </div>
+                  </button>
+                  <div data-collapsible-target="content" class="hidden">
+                    <table class="w-full text-sm">
+                      <tbody class="divide-y divide-gray-100">
+                        <% cat_templates.each do |template| %>
+                          <tr class="hover:bg-orange-50">
+                            <td class="px-3 py-1.5 text-gray-800"><%= template.item_name %></td>
+                            <td class="px-3 py-1.5 text-right font-medium text-gray-900 whitespace-nowrap"><%= template.formatted_unit_price_with_unit %></td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
 
-      <div>
-        <%= f.label :outsourcing_details, "外注（メモ）", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.text_area :outsourcing_details, rows: 2, placeholder: "例: 電気工事 ○○電気 出来高50m、配管工事 △△設備 3式",
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-        <p class="text-xs text-gray-400 mt-1">出来高数量・単位なども記載してください</p>
+        <%# 基本単価（全案件共通） %>
+        <% if base_templates.any? %>
+          <div>
+            <div class="flex items-center mb-2">
+              <span class="px-2 py-0.5 text-xs font-bold rounded bg-blue-100 text-blue-800">基本単価</span>
+              <span class="ml-2 text-xs text-gray-400">全案件共通</span>
+            </div>
+            <% base_by_cat = base_templates.group_by(&:category) %>
+            <div class="space-y-1">
+              <% BaseCostTemplate::CATEGORIES.each do |category| %>
+                <% cat_templates = base_by_cat[category] || [] %>
+                <% next if cat_templates.empty? %>
+                <div data-controller="collapsible" data-collapsible-open-value="false" class="border border-blue-200 rounded-lg overflow-hidden">
+                  <button type="button" data-action="click->collapsible#toggle"
+                      class="w-full flex items-center justify-between px-3 py-2 bg-blue-50 hover:bg-blue-100 transition-colors">
+                    <span class="font-medium text-sm text-blue-800"><%= BaseCostTemplate::CATEGORY_LABELS[category] %></span>
+                    <div class="flex items-center">
+                      <span class="text-xs text-blue-600 mr-2"><%= cat_templates.count %>件</span>
+                      <svg data-collapsible-target="icon" class="w-4 h-4 text-blue-400 transition-transform -rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </div>
+                  </button>
+                  <div data-collapsible-target="content" class="hidden">
+                    <table class="w-full text-sm">
+                      <tbody class="divide-y divide-gray-100">
+                        <% cat_templates.each do |template| %>
+                          <tr class="hover:bg-blue-50">
+                            <td class="px-3 py-1.5 text-gray-800"><%= template.item_name %></td>
+                            <td class="px-3 py-1.5 text-right font-medium text-gray-900 whitespace-nowrap"><%= template.formatted_unit_price_with_unit %></td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
       </div>
-
-      <div>
-        <%= f.label :notes, "備考", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.text_area :notes, rows: 2, placeholder: "その他メモ",
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-      </div>
-    </div>
+    <% end %>
   </div>
 
   <!-- ガソリン・ETCカード -->
@@ -665,103 +839,193 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- ガソリンカード -->
-      <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
-        <h4 class="text-base font-medium text-green-800 mb-3 flex items-center">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-          </svg>
-          ガソリンカード
-        </h4>
-        <% if daily_report.fuel_confirmed? %>
-          <div class="mb-3 p-2 bg-green-100 rounded">
-            <span class="text-sm font-medium text-green-800">✓ 確定済み</span>
-            <span class="text-sm text-green-700 ml-2">
-              確定金額: <%= number_to_currency(daily_report.fuel_confirmed_amount, unit: "¥", precision: 0) %>
-            </span>
-          </div>
-        <% end %>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <%= f.label :fuel_type, "油種", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.select :fuel_type,
-                DailyReport::FUEL_TYPE_LABELS.map { |k, v| [v, k] },
-                { include_blank: "選択" },
-                { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" } %>
-          </div>
-          <div>
-            <%= f.label :fuel_quantity, "給油量 (L)", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.number_field :fuel_quantity, step: 0.1, min: 0, placeholder: "0.0",
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" %>
-          </div>
-          <div>
-            <%= f.label :fuel_amount, "仮金額 (円)", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.number_field :fuel_amount, step: 1, min: 0, placeholder: "0",
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm bg-amber-50" %>
-          </div>
+      <!-- ガソリンカード（複数追加可能） -->
+      <div class="p-4 bg-green-50 border border-green-200 rounded-lg" data-controller="nested-form" data-nested-form-new-record-id-value="fuel">
+        <div class="flex justify-between items-center mb-3">
+          <h4 class="text-base font-medium text-green-800 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            ガソリンカード
+          </h4>
+          <button type="button" data-action="click->nested-form#add"
+              class="inline-flex items-center text-sm text-green-700 hover:text-green-900 font-medium">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            追加
+          </button>
         </div>
+
+        <%# テンプレート %>
+        <template data-nested-form-target="template">
+          <%= f.fields_for :fuel_entries, FuelEntry.new, child_index: "NEW_RECORD" do |fe| %>
+            <div data-nested-form-target="item" class="p-3 bg-white border border-green-200 rounded-lg mb-3">
+              <%= fe.hidden_field :_destroy %>
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-medium text-green-700">給油</span>
+                <button type="button" data-action="nested-form#remove"
+                    class="text-sm text-red-600 hover:text-red-800">削除</button>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">油種</label>
+                  <%= fe.select :fuel_type,
+                      FuelEntry::FUEL_TYPE_LABELS.map { |k, v| [v, k] },
+                      { include_blank: "選択" },
+                      { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" } %>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">給油量 (L)</label>
+                  <%= fe.number_field :quantity, step: 0.1, min: 0, placeholder: "0.0",
+                      class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" %>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">仮金額 (円)</label>
+                  <%= fe.number_field :amount, step: 1, min: 0, placeholder: "0",
+                      class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm bg-amber-50" %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </template>
+
+        <div data-nested-form-target="container">
+          <% daily_report.fuel_entries.each_with_index do |entry, index| %>
+            <%= f.fields_for :fuel_entries, entry do |fe| %>
+              <div data-nested-form-target="item" class="p-3 bg-white border border-green-200 rounded-lg mb-3">
+                <%= fe.hidden_field :id %>
+                <%= fe.hidden_field :_destroy %>
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm font-medium text-green-700">給油 #<%= index + 1 %></span>
+                  <% if entry.confirmed? %>
+                    <span class="text-xs text-green-600 font-medium">確定済み: ¥<%= number_with_delimiter(entry.confirmed_amount.to_i) %></span>
+                  <% else %>
+                    <button type="button" data-action="nested-form#remove"
+                        class="text-sm text-red-600 hover:text-red-800">削除</button>
+                  <% end %>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">油種</label>
+                    <%= fe.select :fuel_type,
+                        FuelEntry::FUEL_TYPE_LABELS.map { |k, v| [v, k] },
+                        { include_blank: "選択" },
+                        { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" } %>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">給油量 (L)</label>
+                    <%= fe.number_field :quantity, step: 0.1, min: 0, placeholder: "0.0",
+                        class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" %>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">仮金額 (円)</label>
+                    <%= fe.number_field :amount, step: 1, min: 0, placeholder: "0",
+                        class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm bg-amber-50" %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+
+        <% if daily_report.fuel_entries.empty? %>
+          <p class="text-sm text-gray-500 text-center py-3">「追加」ボタンで給油を追加してください</p>
+        <% end %>
       </div>
 
-      <!-- ETCカード -->
-      <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h4 class="text-base font-medium text-blue-800 mb-3 flex items-center">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-          </svg>
-          ETCカード
-        </h4>
-        <% if daily_report.highway_confirmed? %>
-          <div class="mb-3 p-2 bg-blue-100 rounded">
-            <span class="text-sm font-medium text-blue-800">✓ 確定済み</span>
-            <span class="text-sm text-blue-700 ml-2">
-              確定金額: <%= number_to_currency(daily_report.highway_confirmed_amount, unit: "¥", precision: 0) %>
-            </span>
-          </div>
-        <% end %>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <%= f.label :highway_count, "使用回数", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.number_field :highway_count, step: 1, min: 0, placeholder: "0",
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-          </div>
-          <div>
-            <%= f.label :highway_amount, "仮金額 (円)", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.number_field :highway_amount, step: 1, min: 0, placeholder: "0",
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm bg-amber-50" %>
-          </div>
-          <div>
-            <%= f.label :highway_route, "経路メモ", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.text_field :highway_route, placeholder: "例: 東名→名神",
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-          </div>
+      <!-- ETCカード（複数追加可能） -->
+      <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg" data-controller="nested-form" data-nested-form-new-record-id-value="highway">
+        <div class="flex justify-between items-center mb-3">
+          <h4 class="text-base font-medium text-blue-800 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+            </svg>
+            ETCカード
+          </h4>
+          <button type="button" data-action="click->nested-form#add"
+              class="inline-flex items-center text-sm text-blue-700 hover:text-blue-900 font-medium">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            追加
+          </button>
         </div>
+
+        <%# テンプレート %>
+        <template data-nested-form-target="template">
+          <%= f.fields_for :highway_entries, HighwayEntry.new, child_index: "NEW_RECORD" do |he| %>
+            <div data-nested-form-target="item" class="p-3 bg-white border border-blue-200 rounded-lg mb-3">
+              <%= he.hidden_field :_destroy %>
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-medium text-blue-700">高速</span>
+                <button type="button" data-action="nested-form#remove"
+                    class="text-sm text-red-600 hover:text-red-800">削除</button>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">どこから</label>
+                  <%= he.text_field :route_from, placeholder: "例: 東京IC",
+                      class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">どこまで</label>
+                  <%= he.text_field :route_to, placeholder: "例: 名古屋IC",
+                      class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">仮金額 (円)</label>
+                  <%= he.number_field :amount, step: 1, min: 0, placeholder: "0",
+                      class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm bg-amber-50" %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </template>
+
+        <div data-nested-form-target="container">
+          <% daily_report.highway_entries.each_with_index do |entry, index| %>
+            <%= f.fields_for :highway_entries, entry do |he| %>
+              <div data-nested-form-target="item" class="p-3 bg-white border border-blue-200 rounded-lg mb-3">
+                <%= he.hidden_field :id %>
+                <%= he.hidden_field :_destroy %>
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm font-medium text-blue-700">高速 #<%= index + 1 %></span>
+                  <% if entry.confirmed? %>
+                    <span class="text-xs text-blue-600 font-medium">確定済み: ¥<%= number_with_delimiter(entry.confirmed_amount.to_i) %></span>
+                  <% else %>
+                    <button type="button" data-action="nested-form#remove"
+                        class="text-sm text-red-600 hover:text-red-800">削除</button>
+                  <% end %>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">どこから</label>
+                    <%= he.text_field :route_from, placeholder: "例: 東京IC",
+                        class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">どこまで</label>
+                    <%= he.text_field :route_to, placeholder: "例: 名古屋IC",
+                        class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">仮金額 (円)</label>
+                    <%= he.number_field :amount, step: 1, min: 0, placeholder: "0",
+                        class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm bg-amber-50" %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+
+        <% if daily_report.highway_entries.empty? %>
+          <p class="text-sm text-gray-500 text-center py-3">「追加」ボタンで高速利用を追加してください</p>
+        <% end %>
       </div>
     </div>
   </div>
 
-  <!-- 経費・原価情報 -->
-  <div class="bg-white shadow rounded-lg" data-controller="tabs expense-form"
-       data-tabs-active-class="border-blue-500 text-blue-600"
-       data-tabs-inactive-class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-    <!-- タブヘッダー -->
-    <div class="border-b border-gray-200">
-      <nav class="flex -mb-px">
-        <button type="button" data-tabs-target="tab" data-action="click->tabs#select"
-            class="px-6 py-3 border-b-2 font-medium text-sm border-blue-500 text-blue-600">
-          経費入力
-        </button>
-        <% if @project.project_cost_templates.any? %>
-          <button type="button" data-tabs-target="tab" data-action="click->tabs#select"
-              class="px-6 py-3 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-            単価一覧
-            <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700"><%= @project.project_cost_templates.count %></span>
-          </button>
-        <% end %>
-      </nav>
-    </div>
-
-    <!-- 経費入力タブ -->
-    <div data-tabs-target="panel" class="p-6">
+  <!-- 経費入力 -->
+  <div class="bg-white shadow rounded-lg" data-controller="expense-form">
+    <div class="p-6">
       <div class="flex justify-between items-center mb-4">
         <div>
           <h3 class="text-lg font-medium text-gray-900">経費・領収書</h3>
@@ -808,7 +1072,7 @@
             <label class="block text-sm font-medium text-gray-700">金額 (円)</label>
             <input type="number" name="daily_report[expenses_attributes][NEW_RECORD][amount]"
                 step="1" min="0" placeholder="0"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm expense-amount">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700">支払方法</label>
@@ -820,6 +1084,15 @@
               <option value="company_card">会社カード</option>
             </select>
           </div>
+        </div>
+        <div class="mt-3 expense-amount-pending-field">
+          <label class="inline-flex items-center cursor-pointer">
+            <input type="hidden" name="daily_report[expenses_attributes][NEW_RECORD][amount_pending]" value="0">
+            <input type="checkbox" name="daily_report[expenses_attributes][NEW_RECORD][amount_pending]" value="1"
+                data-action="change->expense-form#amountPendingChanged"
+                class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+            <span class="ml-2 text-sm text-orange-700 font-medium">金額未定（伝票に金額記載なし）</span>
+          </label>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
           <div class="expense-supplier-field">
@@ -899,8 +1172,10 @@
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">金額 (円)</label>
-              <%= ef.number_field :amount, step: 1, min: 0, placeholder: "0",
-                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+              <%= ef.number_field :amount, step: 1, min: 0,
+                  placeholder: ef.object.amount_pending? ? "金額未定" : "0",
+                  disabled: ef.object.amount_pending?,
+                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm expense-amount #{ef.object.amount_pending? ? 'bg-gray-100 text-gray-400' : ''}" %>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">支払方法</label>
@@ -909,6 +1184,13 @@
                   {},
                   { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm expense-payment-method", data: { action: "change->expense-form#paymentMethodChanged" } } %>
             </div>
+          </div>
+          <div class="mt-3 expense-amount-pending-field <%= 'hidden' unless ef.object.payment_method == 'credit' %>">
+            <label class="inline-flex items-center cursor-pointer">
+              <%= ef.hidden_field :amount_pending, value: "0" %>
+              <%= ef.check_box :amount_pending, { data: { action: "change->expense-form#amountPendingChanged" }, class: "rounded border-gray-300 text-orange-600 focus:ring-orange-500" }, "1", "0" %>
+              <span class="ml-2 text-sm text-orange-700 font-medium">金額未定（伝票に金額記載なし）</span>
+            </label>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
             <% show_supplier = ef.object.payment_method == "credit" || %w[material machinery_rental].include?(ef.object.category) %>
@@ -993,48 +1275,6 @@
         「経費追加」ボタンで経費を追加できます。領収書・伝票は画像またはPDFでアップロード可能です。
       </p>
     </div>
-
-    <!-- 単価一覧タブ -->
-    <% if @project.project_cost_templates.any? %>
-      <div data-tabs-target="panel" class="hidden p-6">
-        <div class="mb-4">
-          <h3 class="text-lg font-medium text-gray-900">単価一覧</h3>
-          <p class="text-sm text-gray-500">経費入力時の参考にしてください（営業・工務が設定した単価表）</p>
-        </div>
-
-        <% templates_by_cat = @project.project_cost_templates.ordered.group_by(&:category) %>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <% ProjectCostTemplate::CATEGORIES.each do |category| %>
-            <% templates = templates_by_cat[category] || [] %>
-            <% next if templates.empty? %>
-
-            <div class="border rounded-lg overflow-hidden">
-              <div class="px-3 py-2 bg-gray-100 border-b">
-                <span class="font-medium text-sm"><%= ProjectCostTemplate::CATEGORY_LABELS[category] %></span>
-              </div>
-              <table class="w-full text-sm">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">品目</th>
-                    <th class="px-3 py-1 text-right text-xs font-medium text-gray-500">単価</th>
-                    <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">業者</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                  <% templates.each do |template| %>
-                    <tr class="hover:bg-blue-50">
-                      <td class="px-3 py-1.5"><%= template.item_name %></td>
-                      <td class="px-3 py-1.5 text-right font-medium"><%= template.formatted_unit_price_with_unit %></td>
-                      <td class="px-3 py-1.5 text-gray-500"><%= template.supplier_name.presence || "-" %></td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
   </div>
 
   <div class="flex justify-end space-x-3">

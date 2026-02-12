@@ -1,0 +1,238 @@
+<% content_for(:wide_layout) { true } %>
+
+<div class="space-y-3" data-controller="schedule-view">
+  <%# 週ナビゲーション %>
+  <div class="bg-white rounded-lg shadow p-3">
+    <div class="flex justify-between items-center">
+      <%= link_to schedule_index_path(week: (@current_week_start - 7.days).iso8601),
+          class: "p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg" do %>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      <% end %>
+
+      <div class="text-center">
+        <div class="text-sm font-semibold text-gray-900">
+          <%= @current_week_start.strftime("%Y/%m/%d") %> - <%= @week_dates.last.strftime("%m/%d") %>
+        </div>
+        <% unless @week_dates.include?(@today) %>
+          <%= link_to "今週へ", schedule_index_path, class: "text-xs text-blue-600 hover:underline" %>
+        <% end %>
+      </div>
+
+      <%= link_to schedule_index_path(week: (@current_week_start + 7.days).iso8601),
+          class: "p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg" do %>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      <% end %>
+    </div>
+
+    <%# 表示切替 %>
+    <div class="flex justify-center mt-2 space-x-2">
+      <button type="button" data-action="click->schedule-view#showTable"
+              data-schedule-view-target="tableBtn"
+              class="text-xs px-3 py-1 rounded-full bg-blue-100 text-blue-700">
+        週間表
+      </button>
+      <button type="button" data-action="click->schedule-view#showCards"
+              data-schedule-view-target="cardBtn"
+              class="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">
+        日別
+      </button>
+    </div>
+  </div>
+
+  <%# 凡例 %>
+  <div class="bg-white rounded-lg shadow px-3 py-2">
+    <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
+      <span class="inline-flex items-center"><span class="w-2 h-2 rounded-full bg-orange-400 mr-1"></span>日勤</span>
+      <span class="inline-flex items-center"><span class="w-2 h-2 rounded-full bg-indigo-400 mr-1"></span>夜勤</span>
+      <span>★=職長</span>
+      <span class="px-1 bg-blue-100 text-blue-700 rounded">自分</span>
+    </div>
+  </div>
+
+  <%# === テーブルビュー === %>
+  <div data-schedule-view-target="tableView" class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs border-collapse min-w-[640px]">
+        <thead>
+          <tr class="bg-gray-50 border-b">
+            <th class="sticky left-0 bg-gray-50 z-10 px-2 py-2 text-left font-semibold text-gray-700 min-w-[100px] border-r">
+              案件
+            </th>
+            <% @week_dates.each do |date| %>
+              <th class="px-1 py-2 text-center font-medium min-w-[80px] <%= date_cell_bg(date, @today) %>">
+                <div class="<%= date_color_class(date) %>">
+                  <div><%= weekday_label(date) %></div>
+                  <div class="text-sm"><%= date.day %></div>
+                </div>
+              </th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% @projects.each do |project| %>
+            <tr class="border-b hover:bg-gray-50">
+              <td class="sticky left-0 bg-white z-10 px-2 py-1.5 border-r">
+                <div class="font-medium text-gray-900 truncate max-w-[120px]"><%= project.name %></div>
+                <div class="text-gray-400 truncate max-w-[120px]"><%= project.client&.name %></div>
+              </td>
+              <% @week_dates.each do |date| %>
+                <td class="px-1 py-1 align-top <%= date_cell_bg(date, @today) %> border-l">
+                  <%# 日勤 %>
+                  <% day_workers = @schedule_map[[project.id, date, "day"]] || [] %>
+                  <% if day_workers.any? %>
+                    <div class="mb-0.5">
+                      <% day_workers.each do |ws| %>
+                        <% is_me = ws.employee_id == current_worker.id %>
+                        <div class="truncate <%= is_me ? 'bg-blue-100 text-blue-800 font-bold px-0.5 rounded' : '' %>">
+                          <span class="text-orange-500">●</span>
+                          <%= ws.foreman? ? "★" : "" %><%= ws.employee&.name&.first(4) %>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
+
+                  <%# 夜勤 %>
+                  <% night_workers = @schedule_map[[project.id, date, "night"]] || [] %>
+                  <% if night_workers.any? %>
+                    <div class="mb-0.5">
+                      <% night_workers.each do |ws| %>
+                        <% is_me = ws.employee_id == current_worker.id %>
+                        <div class="truncate <%= is_me ? 'bg-blue-100 text-blue-800 font-bold px-0.5 rounded' : '' %>">
+                          <span class="text-indigo-500">●</span>
+                          <%= ws.foreman? ? "★" : "" %><%= ws.employee&.name&.first(4) %>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
+
+                  <%# 外注 %>
+                  <% outsourcing = @outsourcing_map[[project.id, date, "day"]] || [] %>
+                  <% outsourcing += @outsourcing_map[[project.id, date, "night"]] || [] %>
+                  <% outsourcing.uniq(&:id).each do |os| %>
+                    <div class="truncate text-gray-400"><%= os.short_label %></div>
+                  <% end %>
+
+                  <%# メモ %>
+                  <% note = @notes_map[[project.id, date]] %>
+                  <% if note&.has_content? %>
+                    <div class="mt-0.5 text-[10px] leading-tight text-amber-700 bg-amber-50 rounded px-0.5">
+                      <%= note.work_content.present? ? note.work_content.truncate(20) : note.notes&.truncate(20) %>
+                    </div>
+                  <% end %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+
+          <% if @projects.empty? %>
+            <tr>
+              <td colspan="8" class="text-center py-8 text-gray-500">
+                配置データがありません
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <%# === カードビュー（モバイル向け） === %>
+  <div data-schedule-view-target="cardView" class="hidden space-y-3">
+    <%# 日付セレクター %>
+    <div class="bg-white rounded-lg shadow p-2">
+      <div class="grid grid-cols-7 gap-1">
+        <% @week_dates.each_with_index do |date, i| %>
+          <%= link_to schedule_index_path(week: @current_week_start.iso8601, day: i),
+              class: "text-center py-2 rounded-lg text-xs #{i == @selected_day_index ? 'bg-blue-600 text-white' : date_cell_bg(date, @today) + ' ' + date_color_class(date)}" do %>
+            <div><%= weekday_label(date) %></div>
+            <div class="text-sm font-bold"><%= date.day %></div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <%# 選択日の案件カード %>
+    <% selected_date = @week_dates[@selected_day_index] %>
+    <% @projects.each do |project| %>
+      <% day_workers = @schedule_map[[project.id, selected_date, "day"]] || [] %>
+      <% night_workers = @schedule_map[[project.id, selected_date, "night"]] || [] %>
+      <% outsourcing_day = @outsourcing_map[[project.id, selected_date, "day"]] || [] %>
+      <% outsourcing_night = @outsourcing_map[[project.id, selected_date, "night"]] || [] %>
+      <% note = @notes_map[[project.id, selected_date]] %>
+
+      <% next if day_workers.empty? && night_workers.empty? && outsourcing_day.empty? && outsourcing_night.empty? %>
+
+      <div class="bg-white rounded-lg shadow p-4">
+        <h3 class="text-sm font-semibold text-gray-900"><%= project.name %></h3>
+        <p class="text-xs text-gray-500 mb-2"><%= project.client&.name %></p>
+
+        <% if day_workers.any? %>
+          <div class="mb-2">
+            <div class="text-xs font-medium text-orange-600 mb-1">日勤</div>
+            <div class="flex flex-wrap gap-1">
+              <% day_workers.each do |ws| %>
+                <% is_me = ws.employee_id == current_worker.id %>
+                <span class="inline-block px-2 py-0.5 text-xs rounded <%= is_me ? 'bg-blue-100 text-blue-800 font-bold' : 'bg-gray-100 text-gray-700' %>">
+                  <%= ws.foreman? ? "★" : "" %><%= ws.employee&.name %>
+                </span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <% if night_workers.any? %>
+          <div class="mb-2">
+            <div class="text-xs font-medium text-indigo-600 mb-1">夜勤</div>
+            <div class="flex flex-wrap gap-1">
+              <% night_workers.each do |ws| %>
+                <% is_me = ws.employee_id == current_worker.id %>
+                <span class="inline-block px-2 py-0.5 text-xs rounded <%= is_me ? 'bg-blue-100 text-blue-800 font-bold' : 'bg-gray-100 text-gray-700' %>">
+                  <%= ws.foreman? ? "★" : "" %><%= ws.employee&.name %>
+                </span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <% all_outsourcing = (outsourcing_day + outsourcing_night).uniq(&:id) %>
+        <% if all_outsourcing.any? %>
+          <div class="mb-2">
+            <div class="text-xs font-medium text-gray-500 mb-1">外注</div>
+            <div class="flex flex-wrap gap-1">
+              <% all_outsourcing.each do |os| %>
+                <span class="inline-block px-2 py-0.5 text-xs rounded bg-gray-50 text-gray-600"><%= os.short_label %></span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <% if note&.has_content? %>
+          <div class="mt-2 p-2 bg-amber-50 rounded text-xs text-gray-700 space-y-0.5">
+            <% if note.work_content.present? %>
+              <div><span class="font-medium text-amber-800">作業:</span> <%= note.work_content %></div>
+            <% end %>
+            <% if note.vehicles.present? %>
+              <div><span class="font-medium text-amber-800">車両:</span> <%= note.vehicles %></div>
+            <% end %>
+            <% if note.equipment.present? %>
+              <div><span class="font-medium text-amber-800">機材:</span> <%= note.equipment %></div>
+            <% end %>
+            <% if note.heavy_equipment_transport.present? %>
+              <div><span class="font-medium text-amber-800">重機搬入:</span> <%= note.heavy_equipment_transport %></div>
+            <% end %>
+            <% if note.notes.present? %>
+              <div><span class="font-medium text-amber-800">備考:</span> <%= note.notes %></div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% has_any = @projects.any? { |p| (@schedule_map[[p.id, selected_date, "day"]] || []).any? || (@schedule_map[[p.id, selected_date, "night"]] || []).any? } %>
+    <% unless has_any %>
+      <div class="bg-white rounded-lg shadow p-8 text-center text-sm text-gray-500">
+        この日の配置データはありません
+      </div>
+    <% end %>
+  </div>
+</div>

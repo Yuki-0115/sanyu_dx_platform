@@ -17,11 +17,13 @@ class DailyReportsController < ApplicationController
       foreman: current_employee,
       report_date: Date.current
     )
+    @base_cost_templates = BaseCostTemplate.ordered
     build_attendances
     build_outsourcing_entries
   end
 
   def edit
+    @base_cost_templates = BaseCostTemplate.ordered
     build_attendances
     build_outsourcing_entries
   end
@@ -33,6 +35,7 @@ class DailyReportsController < ApplicationController
     if @daily_report.save
       redirect_to project_daily_report_path(@project, @daily_report), notice: "日報を作成しました"
     else
+      @base_cost_templates = BaseCostTemplate.ordered
       build_attendances
       build_outsourcing_entries
       render :new, status: :unprocessable_entity
@@ -40,6 +43,7 @@ class DailyReportsController < ApplicationController
   end
 
   def update
+    @base_cost_templates = BaseCostTemplate.ordered
     handle_update do |message|
       redirect_to project_daily_report_path(@project, @daily_report), notice: "日報を#{message}"
     end
@@ -66,7 +70,9 @@ class DailyReportsController < ApplicationController
       *base_daily_report_params,
       **attendance_params,
       **expense_params,
-      **outsourcing_entry_params
+      **outsourcing_entry_params,
+      **fuel_entry_params,
+      **highway_entry_params
     )
   end
 end

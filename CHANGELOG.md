@@ -22,7 +22,70 @@
   - restore.shの暗号化ファイル対応
   - 環境変数でオン/オフ切り替え可能
 
+### Fixed
+- DailyReport#total_cost が fuel_entries / highway_entries を参照するよう修正（レガシーカラムのみ参照していたバグ）
+- Worker Web: Expense モデルに amount_pending? 条件を追加（金額未定保存時のバリデーションエラー修正）
+- HighwayEntry モデルから不要な count バリデーションを削除
+
 ### Added
+- 案件管理拡張：安全書類・技術者管理
+  - 案件に区分（一次/二次/三次）、専任区分（専任/非専任）を追加
+  - 主任技術者・現場代理人の設定機能を追加
+  - 安全書類の提出状況（未/済）・提出方法（メール/GS/CCUS/BL/GW）を追加
+  - 安全書類管理画面（事務用）を新設：一覧でステータス・提出方法を一括管理
+  - 案件一覧・詳細に安全書類ステータスバッジを表示
+- 数字入力フィールドの全角→半角自動変換（全ページ対応）
+  - 全角数字（１２３）入力時に半角（123）へ自動変換
+  - 全角記号（．，ー）も対応
+  - ペースト時も変換
+  - フォーカス時に数字フィールドを全選択（即上書き可能・再フォーカス防止付き）
+- Worker Web: 出面追加時に開始時間・終了時間・休憩を前の出面からコピー
+- Worker Web: 日報フォームの各セクション説明文を改善
+  - 原価情報：現場台帳に反映される旨を明記
+  - 経費（立替精算）：自分への払い戻し用である旨を明記
+  - 燃料・高速：仮金額→経理が確定のフローを説明
+  - 経費（立替精算）：掛け払い伝票にも対応する旨を追記
+- Platform / Worker Web: 外注入力に「常用/請負」区分を追加（両アプリ同一構成）
+  - 常用：人数・出勤区分を入力 → 予算単価×人工で自動計算
+  - 請負：数量×単価＝出来高金額（自動計算・readonly）
+  - 外注費 = 常用金額 + 請負出来高 → 原価情報に自動反映
+  - outsourcing_entriesにunit_priceカラム追加（マイグレーション）
+  - 案件変更時に常用単価を自動切替（Worker Web）
+- Platform / Worker Web: 燃料（ガソリン）を複数回追加可能に
+  - fuel_entriesテーブル新規作成（日報1件に複数の給油レコード）
+  - 追加/削除ボタン付きネストフォーム（outsourcing_entriesと同方式）
+  - 現場台帳の燃料費計算をfuel_entries対応（旧データはfallback）
+- Platform / Worker Web: 高速代（ETC）も複数回追加可能に
+  - highway_entriesテーブル新規作成（日報1件に複数の高速利用レコード）
+  - 追加/削除ボタン付きネストフォーム（fuel_entriesと同方式）
+  - 現場台帳の高速代計算をhighway_entries対応（旧データはfallback）
+
+### Fixed
+- 現場台帳の燃料・高速代が常に仮金額を参照していたバグを修正
+  - 確定済みの場合は確定金額（fuel_confirmed_amount/highway_confirmed_amount）を使用
+- 数字入力で6桁入力時にゼロが消えるバグを修正
+  - フォーカス全選択がモバイルで再発火するのを防止（1回だけ実行）
+
+### Changed
+- 単価テンプレートを「日報用原価テンプレート」に名称変更
+  - 「基本単価」（全案件共通）と「現場単価」（案件別）の2種類に分離
+  - 日報フォームの単価一覧タブで基本単価・現場単価を両方表示
+  - 現場単価は優先表示（オレンジ）、基本単価は参考表示（ブルー）
+  - 基本単価のCRUD管理画面を新規追加
+
+### Added
+- Worker Web: 3機能追加（段取り表・日報報告・有給申請）
+  - 段取り表（閲覧のみ）: 週間スケジュール表示、テーブル/カードビュー切替、自分の配置ハイライト
+  - 日報報告（フル入力）: 職長と同等の入力機能、出面・外注・経費のネストフォーム、写真アップロード、確定ワークフロー
+  - 有給申請（個人）: 申請・履歴・キャンセル、残日数動的表示、消費日数自動計算
+  - 底部固定5タブバーナビゲーション（ホーム・段取り・日報・有給・その他）
+  - 7モデル新規追加（WorkSchedule, OutsourcingSchedule, DailyScheduleNote, PaidLeaveRequest, PaidLeaveGrant, Expense, OutsourcingEntry）
+  - 6 Stimulusコントローラー新規追加（nested_form, collapsible, external_site, paid_leave_form, schedule_view, more_menu）
+- Worker Web: 基盤整備
+  - Asset pipeline構築（propshaft + importmap-rails + tailwindcss-rails + stimulus-rails）
+  - bin/dev + Procfile.dev作成
+  - CSP設定追加（unsafe-inline排除）
+  - Tailwind CDN → tailwindcss-rails移行
 - 日報一覧画面に確定ボタンを追加
   - 全日報一覧、案件別日報一覧、常用日報一覧に「確定」ボタンを追加
   - 下書き状態の日報を一覧から直接確定可能に

@@ -27,8 +27,6 @@ class ApplicationController < ActionController::Base
   def set_current_context
     return unless current_worker
 
-    # Workerはpartnerに紐づくので、partner経由でtenant_idを取得
-    Current.tenant_id = current_worker.partner&.tenant_id
     Current.user = current_worker
   end
 end

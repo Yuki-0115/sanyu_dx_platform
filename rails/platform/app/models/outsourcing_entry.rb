@@ -28,11 +28,13 @@ class OutsourcingEntry < ApplicationRecord
   validates :billing_type, presence: true, inclusion: { in: BILLING_TYPES }
   validates :headcount, presence: true, numericality: { greater_than: 0, only_integer: true }, if: :man_days_billing?
   validates :attendance_type, presence: true, inclusion: { in: ATTENDANCE_TYPES }, if: :man_days_billing?
-  validates :contract_amount, presence: true, numericality: { greater_than: 0 }, if: :contract_billing?
+  validates :quantity, presence: true, numericality: { greater_than: 0 }, if: :contract_billing?
+  validates :unit_price, presence: true, numericality: { greater_than: 0 }, if: :contract_billing?
   validate :partner_or_partner_name_present
 
   # Callbacks
   before_validation :normalize_partner_name
+  before_validation :calculate_contract_amount, if: :contract_billing?
 
   # Scopes
   scope :by_partner, ->(partner) { where(partner: partner) }
@@ -90,5 +92,12 @@ class OutsourcingEntry < ApplicationRecord
 
   def normalize_partner_name
     self.partner_name = partner_name.strip if partner_name.present?
+  end
+
+  # 請負：数量×単価＝出来高金額を自動計算
+  def calculate_contract_amount
+    if quantity.present? && unit_price.present?
+      self.contract_amount = (quantity * unit_price).round(0)
+    end
   end
 end

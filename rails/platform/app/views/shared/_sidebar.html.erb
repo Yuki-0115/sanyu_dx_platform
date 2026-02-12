@@ -147,8 +147,8 @@
           <span>見積テンプレート</span>
         <% end %>
         <%= link_to cost_templates_path,
-            class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_name == 'cost_templates' || controller_name == 'project_cost_templates' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
-          <span>単価テンプレート</span>
+            class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{%w[cost_templates project_cost_templates base_cost_templates].include?(controller_name) ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
+          <span>日報用原価テンプレート</span>
         <% end %>
         <% pending_invoice_count_sales = ReceivedInvoice.pending.count rescue 0 %>
         <%= link_to accounting_received_invoices_path,
@@ -267,8 +267,8 @@
           <% end %>
         <% end %>
         <% if current_employee.can_access?(:safety_documents) %>
-          <%= link_to safety_documents_path,
-              class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_name == 'safety_documents' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
+          <%= link_to safety_doc_tracking_index_path,
+              class: "flex items-center px-4 py-2 text-sm transition-colors rounded-lg #{controller_name == 'safety_doc_tracking' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}" do %>
             <span>安全書類</span>
           <% end %>
         <% end %>

@@ -113,7 +113,7 @@ class Expense < ApplicationRecord
   # Validations
   validates :expense_type, presence: true, inclusion: { in: EXPENSE_TYPES }
   validates :category, presence: true, inclusion: { in: CATEGORIES }
-  validates :amount, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :amount, presence: true, numericality: { greater_than_or_equal_to: 0 }, unless: :amount_pending?
   validates :payment_method, inclusion: { in: PAYMENT_METHODS }, allow_blank: true
   validates :status, inclusion: { in: STATUSES }
   validates :quantity, numericality: { greater_than: 0 }, allow_blank: true

@@ -28,8 +28,14 @@
     <div>
       <%= f.label :unit, "単位", class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%= f.text_field :unit,
+          list: "unit-options",
           class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500",
-          placeholder: "例: m3、t、式、人工" %>
+          placeholder: "選択または入力" %>
+      <datalist id="unit-options">
+        <% CostTemplateFormatting::UNITS.each do |u| %>
+          <option value="<%= u %>">
+        <% end %>
+      </datalist>
     </div>
 
     <div>
@@ -38,13 +44,6 @@
           class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500",
           min: 0, step: 1,
           placeholder: "例: 15000" %>
-    </div>
-
-    <div>
-      <%= f.label :supplier_name, "仕入先/外注先", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= f.text_field :supplier_name,
-          class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500",
-          placeholder: "例: ○○建材、△△工務店" %>
     </div>
 
     <div>

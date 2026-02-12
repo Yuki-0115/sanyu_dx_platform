@@ -46,6 +46,9 @@
                         <% else %>
                           <span class="px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded-full">4点未完</span>
                         <% end %>
+                        <span class="px-2 py-1 text-xs font-medium rounded-full <%= project.safety_doc_status == 'submitted' ? 'text-green-800 bg-green-100' : 'text-red-800 bg-red-100' %>">
+                          安全:<%= project.safety_doc_status_label %>
+                        </span>
                       </div>
                     </div>
                     <div class="mt-2 sm:flex sm:justify-between">

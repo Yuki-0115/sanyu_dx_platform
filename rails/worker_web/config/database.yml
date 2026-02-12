@@ -10,12 +10,12 @@ default: &default
 
 development:
   <<: *default
-  database: sanyu_development
+  database: sanyu_platform_development
 
 test:
   <<: *default
-  database: sanyu_test
+  database: sanyu_platform_test
 
 production:
   <<: *default
-  database: sanyu_production
+  database: sanyu_platform_production

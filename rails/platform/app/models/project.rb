@@ -21,11 +21,46 @@ class Project < ApplicationRecord
     "oral_first" => "口頭先行（口頭受注→後から注文書）"
   }.freeze
 
+  # 区分（一次/二次/三次）
+  CONTRACT_TIERS = %w[first second third].freeze
+  CONTRACT_TIER_LABELS = {
+    "first" => "一次",
+    "second" => "二次",
+    "third" => "三次"
+  }.freeze
+
+  # 専任/非専任
+  ENGINEER_TYPES = %w[exclusive non_exclusive].freeze
+  ENGINEER_TYPE_LABELS = {
+    "exclusive" => "専任",
+    "non_exclusive" => "非専任"
+  }.freeze
+
+  # 安全書類ステータス
+  SAFETY_DOC_STATUSES = %w[not_submitted submitted].freeze
+  SAFETY_DOC_STATUS_LABELS = {
+    "not_submitted" => "未",
+    "submitted" => "済"
+  }.freeze
+
+  # 安全書類提出方法
+  SAFETY_DOC_METHODS = %w[email gs ccus bl gw].freeze
+  SAFETY_DOC_METHOD_LABELS = {
+    "email" => "メール",
+    "gs" => "GS",
+    "ccus" => "CCUS",
+    "bl" => "BL",
+    "gw" => "GW"
+  }.freeze
+
   # Associations
   belongs_to :client, optional: true
   belongs_to :sales_user, class_name: "Employee", optional: true
   belongs_to :engineering_user, class_name: "Employee", optional: true
   belongs_to :construction_user, class_name: "Employee", optional: true
+  belongs_to :chief_engineer, class_name: "Employee", optional: true
+  belongs_to :site_agent, class_name: "Employee", optional: true
+  belongs_to :safety_doc_person, class_name: "Employee", optional: true
 
   has_one :budget, dependent: :destroy
   has_many :estimates, dependent: :destroy
@@ -50,6 +85,10 @@ class Project < ApplicationRecord
   validates :status, inclusion: { in: STATUSES }
   validates :project_type, inclusion: { in: PROJECT_TYPES }
   validates :order_flow, inclusion: { in: ORDER_FLOWS }
+  validates :contract_tier, inclusion: { in: CONTRACT_TIERS }
+  validates :engineer_type, inclusion: { in: ENGINEER_TYPES }
+  validates :safety_doc_status, inclusion: { in: SAFETY_DOC_STATUSES }
+  validates :safety_doc_method, inclusion: { in: SAFETY_DOC_METHODS }, allow_blank: true
 
   # Callbacks
   before_validation :generate_code, on: :create
@@ -65,6 +104,9 @@ class Project < ApplicationRecord
   attribute :has_order, :boolean, default: false
   attribute :has_payment_terms, :boolean, default: false
   attribute :has_customer_approval, :boolean, default: false
+  attribute :contract_tier, :string, default: "first"
+  attribute :engineer_type, :string, default: "non_exclusive"
+  attribute :safety_doc_status, :string, default: "not_submitted"
 
   # Scopes
   scope :active, -> { where.not(status: %w[closed paid]) }
@@ -286,10 +328,37 @@ class Project < ApplicationRecord
   end
 
   # 現場台帳：その他経費（ガソリン・高速代など）
+  # 確定済みなら確定金額、未確定なら仮金額を使用
+  # fuel_entries / highway_entries（新方式）と旧カラムの両方を集計
   def site_ledger_expense_cost
-    fuel = confirmed_daily_reports.sum(:fuel_amount).to_i
-    highway = confirmed_daily_reports.sum(:highway_amount).to_i
-    fuel + highway
+    reports = confirmed_daily_reports
+    report_ids = reports.select(:id)
+
+    # === 燃料費 ===
+    # 新方式: fuel_entriesテーブルから集計
+    fuel_from_entries = FuelEntry.where(daily_report_id: report_ids).sum(
+      Arel.sql("CASE WHEN confirmed THEN COALESCE(confirmed_amount, 0) ELSE COALESCE(amount, 0) END")
+    ).to_i
+
+    # 旧方式: daily_reports.fuel_amountカラムから集計（fuel_entriesがない日報のみ）
+    reports_with_fuel = FuelEntry.where(daily_report_id: report_ids).select(:daily_report_id).distinct
+    fuel_from_legacy = reports.where.not(id: reports_with_fuel).sum(Arel.sql(
+      "CASE WHEN fuel_confirmed THEN COALESCE(fuel_confirmed_amount, 0) ELSE COALESCE(fuel_amount, 0) END"
+    )).to_i
+
+    # === 高速代 ===
+    # 新方式: highway_entriesテーブルから集計
+    highway_from_entries = HighwayEntry.where(daily_report_id: report_ids).sum(
+      Arel.sql("CASE WHEN confirmed THEN COALESCE(confirmed_amount, 0) ELSE COALESCE(amount, 0) END")
+    ).to_i
+
+    # 旧方式: daily_reports.highway_amountカラムから集計（highway_entriesがない日報のみ）
+    reports_with_highway = HighwayEntry.where(daily_report_id: report_ids).select(:daily_report_id).distinct
+    highway_from_legacy = reports.where.not(id: reports_with_highway).sum(Arel.sql(
+      "CASE WHEN highway_confirmed THEN COALESCE(highway_confirmed_amount, 0) ELSE COALESCE(highway_amount, 0) END"
+    )).to_i
+
+    fuel_from_entries + fuel_from_legacy + highway_from_entries + highway_from_legacy
   end
 
   # 現場台帳：原価合計
@@ -394,6 +463,23 @@ class Project < ApplicationRecord
   # 仕掛かり対象か（施工中で請求前の案件）
   def wip_target?
     %w[ordered preparing in_progress].include?(status)
+  end
+
+  # ラベルメソッド
+  def contract_tier_label
+    CONTRACT_TIER_LABELS[contract_tier]
+  end
+
+  def engineer_type_label
+    ENGINEER_TYPE_LABELS[engineer_type]
+  end
+
+  def safety_doc_status_label
+    SAFETY_DOC_STATUS_LABELS[safety_doc_status]
+  end
+
+  def safety_doc_method_label
+    SAFETY_DOC_METHOD_LABELS[safety_doc_method]
   end
 
   private

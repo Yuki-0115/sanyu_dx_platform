@@ -30,7 +30,7 @@ module ProjectDocumentsHelper
           type: "見積",
           name: "見積書",
           date: project.estimate.created_at.strftime("%Y/%m/%d"),
-          path: project_estimate_path(project)
+          path: project_estimate_path(project, project.estimate)
         }
       end
 

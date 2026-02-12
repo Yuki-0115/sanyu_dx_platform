@@ -27,6 +27,8 @@ class DailyReport < ApplicationRecord
   has_many :attendances, dependent: :destroy
   has_many :expenses, dependent: :destroy
   has_many :outsourcing_entries, dependent: :destroy
+  has_many :fuel_entries, dependent: :destroy
+  has_many :highway_entries, dependent: :destroy
 
   # 写真添付（複数）
   has_many_attached :photos
@@ -34,9 +36,13 @@ class DailyReport < ApplicationRecord
   accepts_nested_attributes_for :attendances, allow_destroy: true,
                                 reject_if: ->(attrs) { attrs["attendance_type"].blank? }
   accepts_nested_attributes_for :expenses, allow_destroy: true,
-                                reject_if: ->(attrs) { attrs["amount"].blank? || attrs["amount"].to_i <= 0 }
+                                reject_if: ->(attrs) { attrs["amount_pending"] != "1" && (attrs["amount"].blank? || attrs["amount"].to_i <= 0) }
   accepts_nested_attributes_for :outsourcing_entries, allow_destroy: true,
                                 reject_if: ->(attrs) { attrs["headcount"].blank? || attrs["headcount"].to_i <= 0 }
+  accepts_nested_attributes_for :fuel_entries, allow_destroy: true,
+                                reject_if: ->(attrs) { attrs["amount"].blank? || attrs["amount"].to_i <= 0 }
+  accepts_nested_attributes_for :highway_entries, allow_destroy: true,
+                                reject_if: ->(attrs) { attrs["amount"].blank? || attrs["amount"].to_i <= 0 }
 
   # Callbacks
   before_save :set_expense_payer_and_project
@@ -115,14 +121,22 @@ class DailyReport < ApplicationRecord
       fuel_cost_for_calculation + highway_cost_for_calculation
   end
 
-  # 燃料費（計算用：確定金額があればそれを使用、なければ仮金額）
+  # 燃料費（計算用：fuel_entriesがあればそこから、なければレガシーカラム）
   def fuel_cost_for_calculation
-    fuel_confirmed? ? (fuel_confirmed_amount || 0) : (fuel_amount || 0)
+    if fuel_entries.any?
+      fuel_entries.sum { |e| e.confirmed? ? (e.confirmed_amount || 0) : (e.amount || 0) }
+    else
+      fuel_confirmed? ? (fuel_confirmed_amount || 0) : (fuel_amount || 0)
+    end
   end
 
-  # 高速代（計算用：確定金額があればそれを使用、なければ仮金額）
+  # 高速代（計算用：highway_entriesがあればそこから、なければレガシーカラム）
   def highway_cost_for_calculation
-    highway_confirmed? ? (highway_confirmed_amount || 0) : (highway_amount || 0)
+    if highway_entries.any?
+      highway_entries.sum { |e| e.confirmed? ? (e.confirmed_amount || 0) : (e.amount || 0) }
+    else
+      highway_confirmed? ? (highway_confirmed_amount || 0) : (highway_amount || 0)
+    end
   end
 
   # 燃料費を確定（単価から確定金額を計算）

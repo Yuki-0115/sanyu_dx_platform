@@ -97,10 +97,18 @@ module DailyReportActions
   end
 
   def expense_params
-    { expenses_attributes: %i[id expense_type category description amount payment_method payee_name supplier_id voucher_number receipt voucher _destroy] }
+    { expenses_attributes: %i[id expense_type category description amount amount_pending payment_method payee_name supplier_id voucher_number receipt voucher _destroy] }
   end
 
   def outsourcing_entry_params
-    { outsourcing_entries_attributes: %i[id partner_id partner_name billing_type headcount attendance_type contract_amount quantity unit work_description _destroy] }
+    { outsourcing_entries_attributes: %i[id partner_id partner_name billing_type headcount attendance_type contract_amount quantity unit unit_price work_description _destroy] }
+  end
+
+  def fuel_entry_params
+    { fuel_entries_attributes: %i[id fuel_type quantity amount _destroy] }
+  end
+
+  def highway_entry_params
+    { highway_entries_attributes: %i[id amount route_from route_to _destroy] }
   end
 end

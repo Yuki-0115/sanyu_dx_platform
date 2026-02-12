@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_09_123128) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_12_100001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -74,6 +74,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_09_123128) do
     t.index ["auditable_type", "auditable_id"], name: "index_audit_logs_on_auditable_type_and_auditable_id"
     t.index ["created_at"], name: "index_audit_logs_on_created_at"
     t.index ["user_id"], name: "index_audit_logs_on_user_id"
+  end
+
+  create_table "base_cost_templates", force: :cascade do |t|
+    t.string "category", null: false
+    t.string "item_name", null: false
+    t.string "unit"
+    t.decimal "unit_price", precision: 12, scale: 2
+    t.string "supplier_name"
+    t.text "note"
+    t.integer "sort_order", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category"], name: "index_base_cost_templates_on_category"
   end
 
   create_table "budgets", force: :cascade do |t|
@@ -298,10 +311,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_09_123128) do
     t.date "birth_date"
     t.date "paid_leave_base_date", comment: "有給基準日"
     t.datetime "last_mention_read_at"
+    t.integer "failed_attempts", default: 0, null: false
+    t.string "unlock_token"
+    t.datetime "locked_at"
     t.index ["employment_type"], name: "index_employees_on_employment_type"
     t.index ["partner_id"], name: "index_employees_on_partner_id"
     t.index ["reset_password_token"], name: "index_employees_on_reset_password_token", unique: true
     t.index ["role"], name: "index_employees_on_role"
+    t.index ["unlock_token"], name: "index_employees_on_unlock_token", unique: true
   end
 
   create_table "estimate_categories", force: :cascade do |t|
@@ -468,6 +485,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_09_123128) do
     t.boolean "reimbursed", default: false
     t.datetime "reimbursed_at"
     t.string "payee_name"
+    t.boolean "amount_pending", default: false
     t.index ["account_code"], name: "index_expenses_on_account_code"
     t.index ["accounting_status"], name: "index_expenses_on_accounting_status"
     t.index ["approved_by_id"], name: "index_expenses_on_approved_by_id"
@@ -509,6 +527,31 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_09_123128) do
     t.index ["active"], name: "index_fixed_expense_schedules_on_active"
     t.index ["category"], name: "index_fixed_expense_schedules_on_category"
     t.index ["payment_type"], name: "index_fixed_expense_schedules_on_payment_type"
+  end
+
+  create_table "fuel_entries", force: :cascade do |t|
+    t.bigint "daily_report_id", null: false
+    t.string "fuel_type", default: "regular"
+    t.decimal "quantity", precision: 10, scale: 2
+    t.decimal "amount", precision: 12, scale: 2
+    t.boolean "confirmed", default: false
+    t.decimal "confirmed_amount", precision: 12, scale: 2
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["daily_report_id"], name: "index_fuel_entries_on_daily_report_id"
+  end
+
+  create_table "highway_entries", force: :cascade do |t|
+    t.bigint "daily_report_id", null: false
+    t.integer "count", default: 1
+    t.decimal "amount", precision: 12, scale: 2
+    t.boolean "confirmed", default: false
+    t.decimal "confirmed_amount", precision: 12, scale: 2
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "route_from"
+    t.string "route_to"
+    t.index ["daily_report_id"], name: "index_highway_entries_on_daily_report_id"
   end
 
   create_table "invoice_items", force: :cascade do |t|
@@ -658,6 +701,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_09_123128) do
     t.decimal "quantity", precision: 10, scale: 2
     t.string "unit"
     t.text "work_description"
+    t.decimal "unit_price", precision: 15, scale: 2
     t.index ["billing_type"], name: "index_outsourcing_entries_on_billing_type"
     t.index ["daily_report_id"], name: "index_outsourcing_entries_on_daily_report_id"
     t.index ["partner_id"], name: "index_outsourcing_entries_on_partner_id"
@@ -877,13 +921,25 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_09_123128) do
     t.text "oral_order_note"
     t.text "estimate_memo"
     t.text "description"
+    t.string "contract_tier", default: "first"
+    t.string "engineer_type", default: "non_exclusive"
+    t.bigint "chief_engineer_id"
+    t.bigint "site_agent_id"
+    t.string "safety_doc_status", default: "not_submitted"
+    t.string "safety_doc_method"
+    t.bigint "safety_doc_person_id"
+    t.index ["chief_engineer_id"], name: "index_projects_on_chief_engineer_id"
     t.index ["client_id"], name: "index_projects_on_client_id"
     t.index ["construction_user_id"], name: "index_projects_on_construction_user_id"
+    t.index ["contract_tier"], name: "index_projects_on_contract_tier"
     t.index ["engineering_user_id"], name: "index_projects_on_engineering_user_id"
     t.index ["project_type"], name: "index_projects_on_project_type"
+    t.index ["safety_doc_person_id"], name: "index_projects_on_safety_doc_person_id"
+    t.index ["safety_doc_status"], name: "index_projects_on_safety_doc_status"
     t.index ["sales_user_id"], name: "index_projects_on_sales_user_id"
     t.index ["scheduled_end_date"], name: "index_projects_on_scheduled_end_date"
     t.index ["scheduled_start_date"], name: "index_projects_on_scheduled_start_date"
+    t.index ["site_agent_id"], name: "index_projects_on_site_agent_id"
     t.index ["status"], name: "index_projects_on_status"
   end
 
@@ -1007,6 +1063,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_09_123128) do
   add_foreign_key "expenses", "partners", column: "supplier_id"
   add_foreign_key "expenses", "projects"
   add_foreign_key "fixed_expense_monthly_amounts", "fixed_expense_schedules"
+  add_foreign_key "fuel_entries", "daily_reports"
+  add_foreign_key "highway_entries", "daily_reports"
   add_foreign_key "invoice_items", "invoices"
   add_foreign_key "invoices", "payment_terms"
   add_foreign_key "invoices", "projects"
@@ -1036,6 +1094,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_09_123128) do
   add_foreign_key "project_safety_requirements", "projects"
   add_foreign_key "project_safety_requirements", "safety_document_types"
   add_foreign_key "projects", "clients"
+  add_foreign_key "projects", "employees", column: "chief_engineer_id"
+  add_foreign_key "projects", "employees", column: "safety_doc_person_id"
+  add_foreign_key "projects", "employees", column: "site_agent_id"
   add_foreign_key "received_invoices", "clients"
   add_foreign_key "received_invoices", "employees", column: "accounting_approved_by_id"
   add_foreign_key "received_invoices", "employees", column: "approved_by_id"

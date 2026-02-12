@@ -21,7 +21,7 @@ class ProjectCostTemplatesController < ApplicationController
     @template = @project.project_cost_templates.build(template_params)
 
     if @template.save
-      redirect_to project_project_cost_templates_path(@project), notice: "単価テンプレートを登録しました"
+      redirect_to project_project_cost_templates_path(@project), notice: "現場単価を登録しました"
     else
       render :new, status: :unprocessable_entity
     end
@@ -32,7 +32,7 @@ class ProjectCostTemplatesController < ApplicationController
 
   def update
     if @template.update(template_params)
-      redirect_to project_project_cost_templates_path(@project), notice: "単価テンプレートを更新しました"
+      redirect_to project_project_cost_templates_path(@project), notice: "現場単価を更新しました"
     else
       render :edit, status: :unprocessable_entity
     end
@@ -40,7 +40,7 @@ class ProjectCostTemplatesController < ApplicationController
 
   def destroy
     @template.destroy
-    redirect_to project_project_cost_templates_path(@project), notice: "単価テンプレートを削除しました"
+    redirect_to project_project_cost_templates_path(@project), notice: "現場単価を削除しました"
   end
 
   private
@@ -51,7 +51,7 @@ class ProjectCostTemplatesController < ApplicationController
 
   def template_params
     params.require(:project_cost_template).permit(
-      :category, :item_name, :unit, :unit_price, :supplier_name, :note, :sort_order
+      :category, :item_name, :unit, :unit_price, :note, :sort_order
     )
   end
 end

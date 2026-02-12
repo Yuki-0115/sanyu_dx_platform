@@ -155,6 +155,10 @@
                             <%= l(report.report_date) %> - <%= report.external_site_name %>
                             <span class="text-xs text-orange-600">[常用]</span>
                           <% end %>
+                        <% elsif report.project.nil? %>
+                          <span class="text-sm text-gray-500">
+                            <%= l(report.report_date) %> - <span class="text-red-500">（案件未設定）</span>
+                          </span>
                         <% else %>
                           <%= link_to project_daily_report_path(report.project, report), class: "text-sm font-medium text-blue-600 hover:underline" do %>
                             <%= l(report.report_date) %> - <%= report.project.name %>

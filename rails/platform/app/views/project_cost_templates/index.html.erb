@@ -6,20 +6,20 @@
       <li>/</li>
       <li><%= link_to @project.name, project_path(@project), class: "hover:text-blue-600" %></li>
       <li>/</li>
-      <li class="text-gray-900 font-medium">単価テンプレート</li>
+      <li class="text-gray-900 font-medium">現場単価</li>
     </ol>
   </nav>
 
   <div class="flex justify-between items-center mb-6">
-    <h2 class="text-xl font-bold">単価テンプレート</h2>
+    <h2 class="text-xl font-bold">現場単価</h2>
     <%= link_to "新規登録", new_project_project_cost_template_path(@project),
         class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
   </div>
 
   <% if @templates.empty? %>
     <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-      <p class="mb-4">単価テンプレートが登録されていません</p>
-      <p class="text-sm">職長が日報入力時に参照できる単価表を登録してください</p>
+      <p class="mb-4">現場単価が登録されていません</p>
+      <p class="text-sm">この案件専用の単価がある場合に登録してください（基本単価と異なる場合のみ）</p>
     </div>
   <% else %>
     <% ProjectCostTemplate::CATEGORIES.each do |category| %>
@@ -36,7 +36,6 @@
               <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">品目名</th>
               <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">単位</th>
               <th class="px-4 py-2 text-right text-sm font-medium text-gray-500">単価</th>
-              <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">仕入先/外注先</th>
               <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">備考</th>
               <th class="px-4 py-2 text-center text-sm font-medium text-gray-500">操作</th>
             </tr>
@@ -47,7 +46,6 @@
                 <td class="px-4 py-3 text-sm font-medium"><%= template.item_name %></td>
                 <td class="px-4 py-3 text-sm"><%= template.unit.presence || "-" %></td>
                 <td class="px-4 py-3 text-sm text-right"><%= template.formatted_unit_price %></td>
-                <td class="px-4 py-3 text-sm"><%= template.supplier_name.presence || "-" %></td>
                 <td class="px-4 py-3 text-sm text-gray-500"><%= template.note.presence || "-" %></td>
                 <td class="px-4 py-3 text-center">
                   <%= link_to "編集", edit_project_project_cost_template_path(@project, template),

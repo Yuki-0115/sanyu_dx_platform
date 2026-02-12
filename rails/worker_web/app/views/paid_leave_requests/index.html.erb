@@ -1,0 +1,61 @@
+<div class="space-y-4">
+  <%# 残日数サマリー %>
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="text-lg font-semibold text-gray-900">有給休暇</h2>
+      <%= link_to new_paid_leave_request_path, class: "bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg" do %>
+        新規申請
+      <% end %>
+    </div>
+    <div class="text-center p-4 bg-blue-50 rounded-lg">
+      <div class="text-3xl font-bold text-blue-600"><%= @remaining_days.to_f %></div>
+      <div class="text-sm text-gray-600">残り日数</div>
+    </div>
+  </div>
+
+  <%# 申請履歴 %>
+  <div class="bg-white rounded-lg shadow">
+    <div class="p-4 border-b border-gray-100">
+      <h3 class="text-md font-semibold text-gray-900">申請履歴</h3>
+    </div>
+
+    <% if @requests.any? %>
+      <div class="divide-y divide-gray-100">
+        <% @requests.each do |request| %>
+          <div class="p-4">
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="text-sm font-medium text-gray-900">
+                  <%= request.leave_date.strftime("%Y/%m/%d (%a)") %>
+                </div>
+                <div class="text-xs text-gray-500 mt-0.5">
+                  <%= request.leave_type_label %>
+                  (<%= request.consumed_days %>日)
+                </div>
+                <% if request.reason.present? %>
+                  <div class="text-xs text-gray-500 mt-1"><%= request.reason.truncate(30) %></div>
+                <% end %>
+              </div>
+              <div class="flex flex-col items-end space-y-1">
+                <span class="inline-block px-2 py-0.5 text-xs rounded-full <%= request.status_badge_class %>">
+                  <%= request.status_label %>
+                </span>
+                <% if request.pending? %>
+                  <%= button_to "取消", cancel_paid_leave_request_path(request),
+                      method: :patch,
+                      class: "text-xs text-red-600 hover:text-red-800",
+                      data: { turbo_confirm: "この申請をキャンセルしますか？" } %>
+                <% end %>
+                <% if request.rejected? && request.rejection_reason.present? %>
+                  <div class="text-xs text-red-600"><%= request.rejection_reason.truncate(20) %></div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-sm text-gray-500 text-center py-8">申請履歴がありません</p>
+    <% end %>
+  </div>
+</div>

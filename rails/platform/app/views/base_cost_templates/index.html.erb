@@ -1,0 +1,66 @@
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <!-- パンくず -->
+  <nav class="mb-4">
+    <ol class="flex items-center space-x-2 text-sm text-gray-500">
+      <li><%= link_to "日報用原価テンプレート", cost_templates_path, class: "hover:text-blue-600" %></li>
+      <li>/</li>
+      <li class="text-gray-900 font-medium">基本単価</li>
+    </ol>
+  </nav>
+
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h2 class="text-xl font-bold">基本単価</h2>
+      <p class="text-sm text-gray-500 mt-1">全案件共通の参考単価です。現場固有の単価は案件別「現場単価」で管理します。</p>
+    </div>
+    <%= link_to "新規登録", new_base_cost_template_path,
+        class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+  </div>
+
+  <% if @templates.empty? %>
+    <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+      <p class="mb-4">基本単価が登録されていません</p>
+      <p class="text-sm">職長が日報入力時に参照できる標準単価を登録してください</p>
+    </div>
+  <% else %>
+    <% BaseCostTemplate::CATEGORIES.each do |category| %>
+      <% templates = @templates_by_category[category] || [] %>
+      <% next if templates.empty? %>
+
+      <div class="bg-white rounded-lg shadow mb-6">
+        <div class="px-4 py-3 bg-gray-50 border-b">
+          <h3 class="font-semibold"><%= BaseCostTemplate::CATEGORY_LABELS[category] %></h3>
+        </div>
+        <table class="w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">品目名</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">単位</th>
+              <th class="px-4 py-2 text-right text-sm font-medium text-gray-500">単価</th>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">備考</th>
+              <th class="px-4 py-2 text-center text-sm font-medium text-gray-500">操作</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% templates.each do |template| %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm font-medium"><%= template.item_name %></td>
+                <td class="px-4 py-3 text-sm"><%= template.unit.presence || "-" %></td>
+                <td class="px-4 py-3 text-sm text-right"><%= template.formatted_unit_price %></td>
+                <td class="px-4 py-3 text-sm text-gray-500"><%= template.note.presence || "-" %></td>
+                <td class="px-4 py-3 text-center">
+                  <%= link_to "編集", edit_base_cost_template_path(template),
+                      class: "text-blue-600 hover:text-blue-800 text-sm mr-2" %>
+                  <%= button_to "削除", base_cost_template_path(template),
+                      method: :delete,
+                      form: { data: { turbo_confirm: "「#{template.item_name}」を削除しますか？" } },
+                      class: "text-red-600 hover:text-red-800 text-sm" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  <% end %>
+</div>

@@ -149,8 +149,11 @@ Rails.application.routes.draw do
   # 見積項目テンプレート管理
   resources :estimate_item_templates, except: [:show]
 
-  # 案件別単価テンプレート一覧
+  # 日報用原価テンプレート一覧
   get "cost_templates", to: "cost_templates#index", as: :cost_templates
+
+  # 基本単価（全案件共通）
+  resources :base_cost_templates, except: [:show]
 
   # 常用日報（外部現場）
   resources :external_daily_reports, only: %i[index new create show edit update] do
@@ -312,6 +315,9 @@ Rails.application.routes.draw do
       get :download_expense_report
     end
   end
+
+  # 安全書類ステータス管理（事務用）
+  resources :safety_doc_tracking, only: [:index, :update]
 
   # 安全書類管理
   resources :safety_documents, only: %i[index] do

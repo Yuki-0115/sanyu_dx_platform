@@ -1,0 +1,187 @@
+<div class="space-y-3">
+  <%# ヘッダー %>
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="flex justify-between items-start">
+      <div>
+        <h2 class="text-lg font-semibold text-gray-900">
+          <%= @daily_report.report_date.strftime("%Y/%m/%d (%a)") %>
+        </h2>
+        <p class="text-sm text-gray-600"><%= @daily_report.site_name || "未設定" %></p>
+      </div>
+      <span class="inline-block px-2 py-0.5 text-xs rounded-full
+        <%= @daily_report.draft? ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800' %>">
+        <%= @daily_report.draft? ? "下書き" : "確定" %>
+      </span>
+    </div>
+
+    <% if @daily_report.weather.present? %>
+      <div class="text-sm text-gray-500 mt-1">天気: <%= @daily_report.weather_label %></div>
+    <% end %>
+
+    <div class="flex space-x-2 mt-3">
+      <% if @daily_report.draft? %>
+        <%= link_to "編集", edit_daily_report_path(@daily_report),
+            class: "flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 rounded-lg" %>
+        <%= button_to "確定", confirm_daily_report_path(@daily_report),
+            method: :patch,
+            class: "flex-1 text-center bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 rounded-lg",
+            data: { turbo_confirm: "日報を確定しますか？確定後は編集できません。" } %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# 作業内容 %>
+  <% if @daily_report.work_content.present? %>
+    <div class="bg-white rounded-lg shadow p-4">
+      <h3 class="text-sm font-semibold text-gray-700 mb-2">作業内容</h3>
+      <p class="text-sm text-gray-600 whitespace-pre-wrap"><%= @daily_report.work_content %></p>
+    </div>
+  <% end %>
+
+  <%# 出面 %>
+  <% if @daily_report.attendances.any? %>
+    <div class="bg-white rounded-lg shadow p-4">
+      <h3 class="text-sm font-semibold text-gray-700 mb-2">出面（<%= @daily_report.attendances.size %>名）</h3>
+      <div class="space-y-2">
+        <% @daily_report.attendances.each do |att| %>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+            <div>
+              <div class="text-sm font-medium text-gray-900"><%= att.worker_name %></div>
+              <div class="text-xs text-gray-500">
+                <%= att.work_category_label %>
+                <% if att.start_time.present? && att.end_time.present? %>
+                  · <%= att.start_time.strftime("%H:%M") %>-<%= att.end_time.strftime("%H:%M") %>
+                <% end %>
+              </div>
+            </div>
+            <span class="text-xs px-2 py-0.5 rounded <%= att.attendance_type == 'full' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' %>">
+              <%= att.attendance_type == "full" ? "1日" : "半日" %>
+            </span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# 外注 %>
+  <% if @daily_report.outsourcing_entries.any? %>
+    <div class="bg-white rounded-lg shadow p-4">
+      <h3 class="text-sm font-semibold text-gray-700 mb-2">外注</h3>
+      <div class="space-y-2">
+        <% @daily_report.outsourcing_entries.each do |entry| %>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+            <div>
+              <div class="text-sm font-medium text-gray-900"><%= entry.company_name %></div>
+              <% if entry.work_description.present? %>
+                <div class="text-xs text-gray-500"><%= entry.work_description %></div>
+              <% end %>
+            </div>
+            <span class="text-xs text-gray-600"><%= entry.headcount %>名</span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# 経費（立替精算） %>
+  <% if @daily_report.expenses.any? %>
+    <div class="bg-white rounded-lg shadow p-4">
+      <h3 class="text-sm font-semibold text-gray-700 mb-2">経費（立替精算）</h3>
+      <div class="space-y-2">
+        <% @daily_report.expenses.each do |expense| %>
+          <div class="py-2 border-b border-gray-100 last:border-0">
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="text-sm font-medium text-gray-900"><%= expense.category_label %></div>
+                <% if expense.description.present? %>
+                  <div class="text-xs text-gray-500"><%= expense.description %></div>
+                <% end %>
+              </div>
+              <span class="text-sm font-semibold text-gray-900"><%= number_to_currency(expense.amount, unit: "¥", precision: 0) %></span>
+            </div>
+            <% if expense.receipt.attached? %>
+              <div class="mt-1">
+                <%= image_tag expense.receipt, class: "h-16 rounded border border-gray-200 object-cover" %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# 燃料・高速（立替精算） %>
+  <% if @daily_report.fuel_amount.to_i > 0 || @daily_report.highway_amount.to_i > 0 %>
+    <div class="bg-white rounded-lg shadow p-4">
+      <h3 class="text-sm font-semibold text-gray-700 mb-2">燃料・高速（立替精算）</h3>
+      <div class="space-y-3">
+        <% if @daily_report.fuel_amount.to_i > 0 %>
+          <div class="border-b border-gray-100 pb-2">
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="text-sm font-medium text-gray-900">燃料</div>
+                <div class="text-xs text-gray-500">
+                  <%= @daily_report.fuel_type.present? ? DailyReport::FUEL_TYPE_LABELS[@daily_report.fuel_type] : "" %>
+                  <% if @daily_report.fuel_quantity.to_f > 0 %>
+                    · <%= @daily_report.fuel_quantity %>L
+                  <% end %>
+                </div>
+              </div>
+              <span class="text-sm font-semibold text-gray-900"><%= number_to_currency(@daily_report.fuel_amount, unit: "¥", precision: 0) %></span>
+            </div>
+            <% if @daily_report.fuel_receipt.attached? %>
+              <div class="mt-1">
+                <%= image_tag @daily_report.fuel_receipt, class: "h-16 rounded border border-gray-200 object-cover" %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+        <% if @daily_report.highway_amount.to_i > 0 %>
+          <div>
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="text-sm font-medium text-gray-900">高速代</div>
+                <div class="text-xs text-gray-500">
+                  <% if @daily_report.highway_count.to_i > 0 %><%= @daily_report.highway_count %>回<% end %>
+                  <% if @daily_report.highway_route.present? %> · <%= @daily_report.highway_route %><% end %>
+                </div>
+              </div>
+              <span class="text-sm font-semibold text-gray-900"><%= number_to_currency(@daily_report.highway_amount, unit: "¥", precision: 0) %></span>
+            </div>
+            <% if @daily_report.highway_receipt.attached? %>
+              <div class="mt-1">
+                <%= image_tag @daily_report.highway_receipt, class: "h-16 rounded border border-gray-200 object-cover" %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# 写真 %>
+  <% if @daily_report.photos.attached? %>
+    <div class="bg-white rounded-lg shadow p-4">
+      <h3 class="text-sm font-semibold text-gray-700 mb-2">現場写真</h3>
+      <div class="grid grid-cols-3 gap-2">
+        <% @daily_report.photos.each do |photo| %>
+          <div class="aspect-square rounded-lg overflow-hidden bg-gray-100">
+            <%= image_tag photo, class: "w-full h-full object-cover" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# 備考 %>
+  <% if @daily_report.notes.present? %>
+    <div class="bg-white rounded-lg shadow p-4">
+      <h3 class="text-sm font-semibold text-gray-700 mb-2">備考</h3>
+      <p class="text-sm text-gray-600 whitespace-pre-wrap"><%= @daily_report.notes %></p>
+    </div>
+  <% end %>
+
+  <div class="text-center pb-4">
+    <%= link_to "一覧に戻る", daily_reports_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+</div>

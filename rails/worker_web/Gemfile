@@ -2,8 +2,6 @@
 
 source "https://rubygems.org"
 
-ruby "3.3.5"
-
 # Rails
 gem "rails", "~> 8.0.0"
 
@@ -15,6 +13,7 @@ gem "puma", "~> 6.5"
 
 # Assets
 gem "propshaft"
+gem "importmap-rails"
 gem "tailwindcss-rails"
 
 # Hotwire
@@ -23,6 +22,12 @@ gem "stimulus-rails"
 
 # Security
 gem "bcrypt", "~> 3.1.7"
+
+# Holidays
+gem "holiday_jp"
+
+# Image processing (Active Storage)
+gem "image_processing", "~> 1.2"
 
 # Timezone
 gem "tzinfo-data", platforms: %i[windows jruby]

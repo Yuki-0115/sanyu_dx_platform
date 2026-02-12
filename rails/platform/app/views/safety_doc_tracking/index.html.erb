@@ -1,0 +1,60 @@
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <h2 class="text-2xl font-bold text-gray-900 mb-6">安全書類管理</h2>
+
+  <p class="text-sm text-gray-600 mb-4">受注済み以降の案件の安全書類ステータスを管理します。ステータス・提出方法を変更すると自動保存されます。</p>
+
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <% if @projects.any? %>
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">工事件名</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">発注者</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">区分</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">主任技術者</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">現場代理人</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">安全書類担当</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-700 w-32">ステータス</th>
+            <th class="px-4 py-3 text-center text-sm font-medium text-gray-700 w-40">提出方法</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% @projects.each do |project| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3 text-sm">
+                <%= link_to project.name, project_path(project), class: "text-blue-600 hover:underline" %>
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-700"><%= project.client&.name || "-" %></td>
+              <td class="px-4 py-3 text-sm text-gray-700"><%= project.contract_tier_label %></td>
+              <td class="px-4 py-3 text-sm text-gray-700"><%= project.chief_engineer&.name || "-" %></td>
+              <td class="px-4 py-3 text-sm text-gray-700"><%= project.site_agent&.name || "-" %></td>
+              <td class="px-4 py-3 text-sm text-gray-700"><%= project.safety_doc_person&.name || "-" %></td>
+              <td class="px-4 py-3 text-center">
+                <%= form_with model: project, url: safety_doc_tracking_path(project), method: :patch, data: { controller: "auto-submit" } do |f| %>
+                  <%= f.select :safety_doc_status,
+                      Project::SAFETY_DOC_STATUS_LABELS.map { |k, v| [v, k] },
+                      {},
+                      { class: "text-sm rounded border-gray-300 #{project.safety_doc_status == 'submitted' ? 'bg-green-100' : 'bg-red-100'}",
+                        data: { action: "change->auto-submit#submit" } } %>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <%= form_with model: project, url: safety_doc_tracking_path(project), method: :patch, data: { controller: "auto-submit" } do |f| %>
+                  <%= f.select :safety_doc_method,
+                      [["--", ""], ["メール", "email"], ["GS", "gs"], ["CCUS", "ccus"], ["BL", "bl"], ["GW", "gw"]],
+                      {},
+                      { class: "text-sm rounded border-gray-300",
+                        data: { action: "change->auto-submit#submit" } } %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="px-4 py-8 text-center text-gray-500">
+        対象の案件がありません
+      </div>
+    <% end %>
+  </div>
+</div>

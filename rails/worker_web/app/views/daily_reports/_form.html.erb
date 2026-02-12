@@ -1,0 +1,718 @@
+<%= form_with model: daily_report, data: { controller: "external-site" } do |f| %>
+  <%# エラー表示 %>
+  <% if daily_report.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+      <ul class="list-disc list-inside text-sm text-red-700">
+        <% daily_report.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# === 基本情報 === %>
+  <div class="bg-white rounded-lg shadow p-4 mb-3">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3">基本情報</h3>
+
+    <div class="space-y-3">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">日付</label>
+        <%= f.date_field :report_date, class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500", required: true %>
+      </div>
+
+      <%# 外部現場切替 %>
+      <label class="flex items-center space-x-2">
+        <%= f.check_box :is_external, class: "rounded text-blue-600", data: { action: "change->external-site#toggle" } %>
+        <span class="text-sm text-gray-700">外部現場（他社現場）</span>
+      </label>
+
+      <div data-external-site-target="projectField" class="<%= 'hidden' if daily_report.is_external? %>">
+        <label class="block text-sm font-medium text-gray-700 mb-1">案件</label>
+        <%= f.collection_select :project_id, projects, :id, :name,
+            { include_blank: "選択してください" },
+            class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500",
+            data: { outsourcing_project_select: true } %>
+      </div>
+
+      <div data-external-site-target="externalFields" class="<%= 'hidden' unless daily_report.is_external? %>">
+        <label class="block text-sm font-medium text-gray-700 mb-1">外部現場名</label>
+        <%= f.text_field :external_site_name, class: "w-full px-3 py-2 border border-gray-300 rounded-lg", placeholder: "現場名を入力" %>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">天気</label>
+        <%= f.select :weather, DailyReport::WEATHERS.map { |w| [DailyReport::WEATHER_LABELS[w], w] },
+            { include_blank: "選択" },
+            class: "w-full px-3 py-2 border border-gray-300 rounded-lg" %>
+      </div>
+    </div>
+  </div>
+
+  <%# === 作業内容 === %>
+  <div class="bg-white rounded-lg shadow p-4 mb-3">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3">作業内容</h3>
+    <%= f.text_area :work_content, rows: 4,
+        class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500",
+        placeholder: "本日の作業内容を記入" %>
+  </div>
+
+  <%# === 出面（勤怠） === %>
+  <div class="bg-white rounded-lg shadow p-4 mb-3" data-controller="collapsible nested-form attendance-copy">
+    <button type="button" data-action="click->collapsible#toggle" class="w-full flex justify-between items-center">
+      <h3 class="text-sm font-semibold text-gray-700">出面（勤怠）</h3>
+      <svg data-collapsible-target="icon" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+
+    <div data-collapsible-target="content" class="mt-3">
+      <div data-nested-form-target="container" data-attendance-copy-target="container" class="space-y-3">
+        <% daily_report.attendances.each_with_index do |attendance, index| %>
+          <%= f.fields_for :attendances, attendance, child_index: attendance.persisted? ? attendance.id : index do |af| %>
+            <div data-nested-form-target="item" class="border border-gray-200 rounded-lg p-3 space-y-2">
+              <%= af.hidden_field :_destroy %>
+
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-medium text-gray-500">出面 #<%= index + 1 %></span>
+                <button type="button" data-action="click->nested-form#remove" class="text-xs text-red-500 hover:text-red-700">削除</button>
+              </div>
+
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">社員</label>
+                <%= af.collection_select :employee_id, employees, :id, :name,
+                    { include_blank: "選択" },
+                    class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">勤務区分</label>
+                  <%= af.select :work_category, Attendance::WORK_CATEGORIES.map { |c| [Attendance::WORK_CATEGORY_LABELS[c], c] },
+                      {},
+                      class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">出勤区分</label>
+                  <%= af.select :attendance_type, [["1日", "full"], ["半日", "half"]],
+                      {},
+                      class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2">
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">開始</label>
+                  <%= af.time_field :start_time, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">終了</label>
+                  <%= af.time_field :end_time, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">休憩(分)</label>
+                  <%= af.number_field :break_minutes, value: af.object.break_minutes || 60, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">移動距離(km)</label>
+                  <%= af.number_field :travel_distance, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">現場メモ</label>
+                  <%= af.text_field :site_note, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+
+      <%# テンプレート（新規行追加用） %>
+      <template data-nested-form-target="template">
+        <%= f.fields_for :attendances, Attendance.new, child_index: "NEW_RECORD" do |af| %>
+          <div data-nested-form-target="item" class="border border-gray-200 rounded-lg p-3 space-y-2">
+            <%= af.hidden_field :_destroy %>
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-medium text-gray-500">出面</span>
+              <button type="button" data-action="click->nested-form#remove" class="text-xs text-red-500 hover:text-red-700">削除</button>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-600 mb-0.5">社員</label>
+              <%= af.collection_select :employee_id, employees, :id, :name,
+                  { include_blank: "選択" },
+                  class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">勤務区分</label>
+                <%= af.select :work_category, Attendance::WORK_CATEGORIES.map { |c| [Attendance::WORK_CATEGORY_LABELS[c], c] },
+                    {},
+                    class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">出勤区分</label>
+                <%= af.select :attendance_type, [["1日", "full"], ["半日", "half"]],
+                    {},
+                    class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">開始</label>
+                <%= af.time_field :start_time, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">終了</label>
+                <%= af.time_field :end_time, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">休憩(分)</label>
+                <%= af.number_field :break_minutes, value: 60, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">移動距離(km)</label>
+                <%= af.number_field :travel_distance, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">現場メモ</label>
+                <%= af.text_field :site_note, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </template>
+
+      <button type="button" data-action="click->nested-form#add click->attendance-copy#copyTimes"
+              class="mt-2 w-full py-2 text-sm text-blue-600 border border-dashed border-blue-300 rounded-lg hover:bg-blue-50">
+        + 出面を追加
+      </button>
+    </div>
+  </div>
+
+  <%# === 外注 === %>
+  <% current_unit_price = daily_report.project_id.present? && @outsourcing_unit_prices ? @outsourcing_unit_prices[daily_report.project_id] : 18_000 %>
+  <div class="bg-white rounded-lg shadow p-4 mb-3" data-controller="collapsible nested-form outsourcing-form"
+      data-outsourcing-form-unit-price-value="<%= current_unit_price %>"
+      data-outsourcing-form-unit-prices-value="<%= (@outsourcing_unit_prices || {}).to_json %>"
+  >
+    <button type="button" data-action="click->collapsible#toggle" class="w-full flex justify-between items-center">
+      <h3 class="text-sm font-semibold text-gray-700">外注</h3>
+      <svg data-collapsible-target="icon" class="w-5 h-5 text-gray-400 transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+
+    <div data-collapsible-target="content" class="mt-3 hidden">
+      <div data-nested-form-target="container" data-outsourcing-form-target="container" class="space-y-3">
+        <% daily_report.outsourcing_entries.each_with_index do |entry, index| %>
+          <%= f.fields_for :outsourcing_entries, entry, child_index: entry.persisted? ? entry.id : index do |oef| %>
+            <div data-nested-form-target="item" class="border border-gray-200 rounded-lg p-3 space-y-2">
+              <%= oef.hidden_field :_destroy %>
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-medium text-gray-500">外注 #<%= index + 1 %></span>
+                <button type="button" data-action="click->nested-form#remove click->outsourcing-form#entryRemoved" class="text-xs text-red-500 hover:text-red-700">削除</button>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">協力会社</label>
+                  <%= oef.collection_select :partner_id, partners, :id, :name,
+                      { include_blank: "選択" },
+                      class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">区分</label>
+                  <%= oef.select :billing_type, [["常用", "man_days"], ["請負", "contract"]],
+                      {},
+                      class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg",
+                      data: { action: "change->outsourcing-form#toggleType" } %>
+                </div>
+              </div>
+              <%# 常用フィールド %>
+              <div data-man-days-fields class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">人数</label>
+                  <%= oef.number_field :headcount, value: oef.object.headcount || 1, min: 1,
+                      class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg",
+                      data: { action: "input->outsourcing-form#calculateManDays" } %>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">出勤区分</label>
+                  <%= oef.select :attendance_type, [["1日", "full"], ["半日", "half"]],
+                      {},
+                      class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg",
+                      data: { action: "change->outsourcing-form#calculateManDays" } %>
+                </div>
+              </div>
+              <%# 請負フィールド %>
+              <div data-contract-fields class="hidden space-y-2">
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <label class="block text-xs text-gray-600 mb-0.5">数量</label>
+                    <%= oef.number_field :quantity, step: 0.01, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg",
+                        data: { action: "input->outsourcing-form#calculateAmount" } %>
+                  </div>
+                  <div>
+                    <label class="block text-xs text-gray-600 mb-0.5">単位</label>
+                    <%= oef.select :unit, OutsourcingEntry::UNITS.map { |u| [u, u] },
+                        { include_blank: "選択" },
+                        class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                  </div>
+                  <div>
+                    <label class="block text-xs text-gray-600 mb-0.5">単価</label>
+                    <%= oef.number_field :unit_price, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg",
+                        data: { action: "input->outsourcing-form#calculateAmount" } %>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">出来高金額</label>
+                  <%= oef.number_field :contract_amount, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50", readonly: true %>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">作業内容</label>
+                <%= oef.text_field :work_description, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+
+      <template data-nested-form-target="template">
+        <%= f.fields_for :outsourcing_entries, OutsourcingEntry.new, child_index: "NEW_RECORD" do |oef| %>
+          <div data-nested-form-target="item" class="border border-gray-200 rounded-lg p-3 space-y-2">
+            <%= oef.hidden_field :_destroy %>
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-medium text-gray-500">外注</span>
+              <button type="button" data-action="click->nested-form#remove click->outsourcing-form#entryRemoved" class="text-xs text-red-500 hover:text-red-700">削除</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">協力会社</label>
+                <%= oef.collection_select :partner_id, partners, :id, :name,
+                    { include_blank: "選択" },
+                    class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">区分</label>
+                <%= oef.select :billing_type, [["常用", "man_days"], ["請負", "contract"]],
+                    {},
+                    class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg",
+                    data: { action: "change->outsourcing-form#toggleType" } %>
+              </div>
+            </div>
+            <%# 常用フィールド %>
+            <div data-man-days-fields class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">人数</label>
+                <%= oef.number_field :headcount, value: 1, min: 1,
+                    class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg",
+                    data: { action: "input->outsourcing-form#calculateManDays" } %>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">出勤区分</label>
+                <%= oef.select :attendance_type, [["1日", "full"], ["半日", "half"]],
+                    {},
+                    class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg",
+                    data: { action: "change->outsourcing-form#calculateManDays" } %>
+              </div>
+            </div>
+            <%# 請負フィールド %>
+            <div data-contract-fields class="hidden space-y-2">
+              <div class="grid grid-cols-3 gap-2">
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">数量</label>
+                  <%= oef.number_field :quantity, step: 0.01, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg",
+                      data: { action: "input->outsourcing-form#calculateAmount" } %>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">単位</label>
+                  <%= oef.select :unit, OutsourcingEntry::UNITS.map { |u| [u, u] },
+                      { include_blank: "選択" },
+                      class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">単価</label>
+                  <%= oef.number_field :unit_price, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg",
+                      data: { action: "input->outsourcing-form#calculateAmount" } %>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">出来高金額</label>
+                <%= oef.number_field :contract_amount, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50", readonly: true %>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-600 mb-0.5">作業内容</label>
+              <%= oef.text_field :work_description, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+            </div>
+          </div>
+        <% end %>
+      </template>
+
+      <button type="button" data-action="click->nested-form#add click->outsourcing-form#entryAdded"
+              class="mt-2 w-full py-2 text-sm text-blue-600 border border-dashed border-blue-300 rounded-lg hover:bg-blue-50">
+        + 外注を追加
+      </button>
+    </div>
+  </div>
+
+  <%# === 原価情報（案件原価管理用） === %>
+  <div class="bg-white rounded-lg shadow p-4 mb-3" data-controller="collapsible">
+    <button type="button" data-action="click->collapsible#toggle" class="w-full flex justify-between items-center">
+      <h3 class="text-sm font-semibold text-gray-700">原価情報</h3>
+      <svg data-collapsible-target="icon" class="w-5 h-5 text-gray-400 transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+
+    <div data-collapsible-target="content" class="mt-3 hidden space-y-3">
+      <p class="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+        <span class="font-semibold text-amber-700">現場台帳の原価に反映</span>
+        &mdash; 材料費・外注費など案件にかかった原価を入力してください。経費精算や払い戻しには使われません。
+      </p>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs text-gray-600 mb-0.5">材料費</label>
+          <%= f.number_field :material_cost, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-600 mb-0.5">外注費（請負）</label>
+          <%= f.number_field :outsourcing_cost, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg",
+              data: { outsourcing_cost_field: true } %>
+          <p class="text-xs text-gray-400 mt-0.5">常用（予算単価×人工）+ 請負出来高 = 自動計算</p>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-600 mb-0.5">運搬費</label>
+          <%= f.number_field :transportation_cost, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-600 mb-0.5">機械(自社)</label>
+          <%= f.number_field :machinery_own_cost, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-600 mb-0.5">機械(レンタル)</label>
+          <%= f.number_field :machinery_rental_cost, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# === 現場写真 === %>
+  <div class="bg-white rounded-lg shadow p-4 mb-3" data-controller="collapsible">
+    <button type="button" data-action="click->collapsible#toggle" class="w-full flex justify-between items-center">
+      <h3 class="text-sm font-semibold text-gray-700">現場写真</h3>
+      <svg data-collapsible-target="icon" class="w-5 h-5 text-gray-400 transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+
+    <div data-collapsible-target="content" class="mt-3 hidden">
+      <%= f.file_field :photos, multiple: true, accept: "image/*",
+          class: "w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" %>
+      <% if daily_report.photos.attached? %>
+        <div class="mt-2 grid grid-cols-3 gap-2">
+          <% daily_report.photos.each do |photo| %>
+            <div class="aspect-square rounded-lg overflow-hidden bg-gray-100">
+              <%= image_tag photo, class: "w-full h-full object-cover" %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# === 備考 === %>
+  <div class="bg-white rounded-lg shadow p-4 mb-3">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3">備考</h3>
+    <%= f.text_area :notes, rows: 3,
+        class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500",
+        placeholder: "連絡事項など" %>
+  </div>
+
+  <%# === 経費（立替精算） === %>
+  <div class="bg-white rounded-lg shadow p-4 mb-3" data-controller="collapsible nested-form expense-form">
+    <button type="button" data-action="click->collapsible#toggle" class="w-full flex justify-between items-center">
+      <h3 class="text-sm font-semibold text-gray-700">経費（立替精算）</h3>
+      <svg data-collapsible-target="icon" class="w-5 h-5 text-gray-400 transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+
+    <div data-collapsible-target="content" class="mt-3 hidden">
+      <p class="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 mb-3">
+        <span class="font-semibold">経理処理用（立替精算・掛け払い伝票）</span>
+        &mdash; 立替えた費用や掛け払いの伝票を申請してください。領収書・伝票の写真を添付してください。現場台帳の原価には入りません。
+      </p>
+      <div data-nested-form-target="container" class="space-y-3">
+        <% daily_report.expenses.each_with_index do |expense, index| %>
+          <%= f.fields_for :expenses, expense, child_index: expense.persisted? ? expense.id : index do |ef| %>
+            <div data-nested-form-target="item" class="border border-gray-200 rounded-lg p-3 space-y-2">
+              <%= ef.hidden_field :_destroy %>
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-medium text-gray-500">経費 #<%= index + 1 %></span>
+                <button type="button" data-action="click->nested-form#remove" class="text-xs text-red-500 hover:text-red-700">削除</button>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">科目</label>
+                  <%= ef.select :category, Expense::CATEGORIES.map { |c| [Expense::CATEGORY_LABELS[c], c] },
+                      { include_blank: "選択" },
+                      class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg expense-category",
+                      data: { action: "change->expense-form#categoryChanged" } %>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">金額</label>
+                  <%= ef.number_field :amount, min: 0,
+                      placeholder: ef.object.amount_pending? ? "金額未定" : nil,
+                      disabled: ef.object.amount_pending?,
+                      class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg expense-amount #{ef.object.amount_pending? ? 'bg-gray-100 text-gray-400' : ''}" %>
+                </div>
+              </div>
+              <%= ef.hidden_field :expense_type, value: "site" %>
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">支払方法</label>
+                <%= ef.select :payment_method, Expense::PAYMENT_METHODS.map { |m| [Expense::PAYMENT_METHOD_LABELS[m], m] },
+                    { include_blank: "選択" },
+                    class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg expense-payment-method",
+                    data: { action: "change->expense-form#paymentMethodChanged" } %>
+              </div>
+              <div class="expense-amount-pending-field <%= 'hidden' unless ef.object.payment_method == 'credit' %>">
+                <label class="inline-flex items-center cursor-pointer">
+                  <%= ef.hidden_field :amount_pending, value: "0" %>
+                  <%= ef.check_box :amount_pending, { data: { action: "change->expense-form#amountPendingChanged" }, class: "rounded border-gray-300 text-orange-600 focus:ring-orange-500" }, "1", "0" %>
+                  <span class="ml-1.5 text-xs text-orange-700 font-medium">金額未定（伝票に金額記載なし）</span>
+                </label>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">摘要</label>
+                <%= ef.text_field :description, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg", placeholder: "購入品名など" %>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">領収書</label>
+                <%= ef.file_field :receipt, accept: "image/*",
+                    class: "w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700" %>
+                <% if expense.persisted? && expense.receipt.attached? %>
+                  <div class="mt-1 text-xs text-green-600">添付済み</div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+
+      <template data-nested-form-target="template">
+        <%= f.fields_for :expenses, Expense.new(expense_type: "site"), child_index: "NEW_RECORD" do |ef| %>
+          <div data-nested-form-target="item" class="border border-gray-200 rounded-lg p-3 space-y-2">
+            <%= ef.hidden_field :_destroy %>
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-medium text-gray-500">経費</span>
+              <button type="button" data-action="click->nested-form#remove" class="text-xs text-red-500 hover:text-red-700">削除</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">科目</label>
+                <%= ef.select :category, Expense::CATEGORIES.map { |c| [Expense::CATEGORY_LABELS[c], c] },
+                    { include_blank: "選択" },
+                    class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg expense-category",
+                    data: { action: "change->expense-form#categoryChanged" } %>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">金額</label>
+                <%= ef.number_field :amount, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg expense-amount" %>
+              </div>
+            </div>
+            <%= ef.hidden_field :expense_type, value: "site" %>
+            <div>
+              <label class="block text-xs text-gray-600 mb-0.5">支払方法</label>
+              <%= ef.select :payment_method, Expense::PAYMENT_METHODS.map { |m| [Expense::PAYMENT_METHOD_LABELS[m], m] },
+                  { include_blank: "選択" },
+                  class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg expense-payment-method",
+                  data: { action: "change->expense-form#paymentMethodChanged" } %>
+            </div>
+            <div class="expense-amount-pending-field hidden">
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="hidden" name="daily_report[expenses_attributes][NEW_RECORD][amount_pending]" value="0">
+                <input type="checkbox" name="daily_report[expenses_attributes][NEW_RECORD][amount_pending]" value="1"
+                    data-action="change->expense-form#amountPendingChanged"
+                    class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                <span class="ml-1.5 text-xs text-orange-700 font-medium">金額未定（伝票に金額記載なし）</span>
+              </label>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-600 mb-0.5">摘要</label>
+              <%= ef.text_field :description, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg", placeholder: "購入品名など" %>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-600 mb-0.5">領収書</label>
+              <%= ef.file_field :receipt, accept: "image/*",
+                  class: "w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700" %>
+            </div>
+          </div>
+        <% end %>
+      </template>
+
+      <button type="button" data-action="click->nested-form#add"
+              class="mt-2 w-full py-2 text-sm text-blue-600 border border-dashed border-blue-300 rounded-lg hover:bg-blue-50">
+        + 経費を追加
+      </button>
+    </div>
+  </div>
+
+  <%# === 燃料・高速（立替精算） === %>
+  <div class="bg-white rounded-lg shadow p-4 mb-3" data-controller="collapsible">
+    <button type="button" data-action="click->collapsible#toggle" class="w-full flex justify-between items-center">
+      <h3 class="text-sm font-semibold text-gray-700">燃料・高速（立替精算）</h3>
+      <svg data-collapsible-target="icon" class="w-5 h-5 text-gray-400 transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+
+    <div data-collapsible-target="content" class="mt-3 hidden space-y-3">
+      <p class="text-xs text-purple-700 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2">
+        <span class="font-semibold">現場台帳に反映 ＋ 経理で精算</span>
+        &mdash; ここでは概算（少し多め）で入力してください。経理が請求書と突合して確定金額に置き換えます。
+      </p>
+
+      <%# 燃料（複数追加可能） %>
+      <div class="border border-gray-200 rounded-lg p-3 space-y-2" data-controller="nested-form" data-nested-form-new-record-id-value="fuel">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs font-medium text-gray-700">燃料</span>
+          <button type="button" data-action="click->nested-form#add"
+              class="text-xs text-green-600 hover:text-green-800 font-medium">＋ 追加</button>
+        </div>
+
+        <%# テンプレート（追加用） %>
+        <template data-nested-form-target="template">
+          <%= f.fields_for :fuel_entries, FuelEntry.new, child_index: "NEW_RECORD" do |fe| %>
+            <div data-nested-form-target="item" class="bg-green-50 border border-green-200 rounded-lg p-2 space-y-2">
+              <%= fe.hidden_field :_destroy %>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-green-700 font-medium">給油</span>
+                <button type="button" data-action="click->nested-form#remove" class="text-xs text-red-500 hover:text-red-700">削除</button>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">油種</label>
+                  <%= fe.select :fuel_type, FuelEntry::FUEL_TYPES.map { |t| [FuelEntry::FUEL_TYPE_LABELS[t], t] },
+                      { include_blank: "選択" },
+                      class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">給油量(L)</label>
+                  <%= fe.number_field :quantity, step: 0.01, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">金額</label>
+                  <%= fe.number_field :amount, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </template>
+
+        <div data-nested-form-target="container" class="space-y-2">
+          <% daily_report.fuel_entries.each_with_index do |entry, index| %>
+            <%= f.fields_for :fuel_entries, entry, child_index: entry.persisted? ? entry.id : index do |fe| %>
+              <div data-nested-form-target="item" class="bg-green-50 border border-green-200 rounded-lg p-2 space-y-2">
+                <%= fe.hidden_field :_destroy %>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-green-700 font-medium">給油 #<%= index + 1 %></span>
+                  <button type="button" data-action="click->nested-form#remove" class="text-xs text-red-500 hover:text-red-700">削除</button>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <label class="block text-xs text-gray-600 mb-0.5">油種</label>
+                    <%= fe.select :fuel_type, FuelEntry::FUEL_TYPES.map { |t| [FuelEntry::FUEL_TYPE_LABELS[t], t] },
+                        { include_blank: "選択" },
+                        class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                  </div>
+                  <div>
+                    <label class="block text-xs text-gray-600 mb-0.5">給油量(L)</label>
+                    <%= fe.number_field :quantity, step: 0.01, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                  </div>
+                  <div>
+                    <label class="block text-xs text-gray-600 mb-0.5">金額</label>
+                    <%= fe.number_field :amount, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+
+        <% if daily_report.fuel_entries.empty? %>
+          <p class="text-xs text-gray-400 text-center py-2">「＋ 追加」ボタンで給油を追加</p>
+        <% end %>
+      </div>
+
+      <%# 高速（複数追加可能） %>
+      <div class="border border-gray-200 rounded-lg p-3 space-y-2" data-controller="nested-form" data-nested-form-new-record-id-value="highway">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs font-medium text-gray-700">高速代</span>
+          <button type="button" data-action="click->nested-form#add"
+              class="text-xs text-blue-600 hover:text-blue-800 font-medium">＋ 追加</button>
+        </div>
+
+        <%# テンプレート（追加用） %>
+        <template data-nested-form-target="template">
+          <%= f.fields_for :highway_entries, HighwayEntry.new, child_index: "NEW_RECORD" do |he| %>
+            <div data-nested-form-target="item" class="bg-blue-50 border border-blue-200 rounded-lg p-2 space-y-2">
+              <%= he.hidden_field :_destroy %>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-blue-700 font-medium">高速</span>
+                <button type="button" data-action="click->nested-form#remove" class="text-xs text-red-500 hover:text-red-700">削除</button>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">どこから</label>
+                  <%= he.text_field :route_from, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg", placeholder: "例: 東京IC" %>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">どこまで</label>
+                  <%= he.text_field :route_to, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg", placeholder: "例: 名古屋IC" %>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-0.5">仮金額</label>
+                <%= he.number_field :amount, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+              </div>
+            </div>
+          <% end %>
+        </template>
+
+        <div data-nested-form-target="container" class="space-y-2">
+          <% daily_report.highway_entries.each_with_index do |entry, index| %>
+            <%= f.fields_for :highway_entries, entry, child_index: entry.persisted? ? entry.id : index do |he| %>
+              <div data-nested-form-target="item" class="bg-blue-50 border border-blue-200 rounded-lg p-2 space-y-2">
+                <%= he.hidden_field :_destroy %>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-blue-700 font-medium">高速 #<%= index + 1 %></span>
+                  <button type="button" data-action="click->nested-form#remove" class="text-xs text-red-500 hover:text-red-700">削除</button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-xs text-gray-600 mb-0.5">どこから</label>
+                    <%= he.text_field :route_from, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg", placeholder: "例: 東京IC" %>
+                  </div>
+                  <div>
+                    <label class="block text-xs text-gray-600 mb-0.5">どこまで</label>
+                    <%= he.text_field :route_to, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg", placeholder: "例: 名古屋IC" %>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-0.5">仮金額</label>
+                  <%= he.number_field :amount, min: 0, class: "w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg" %>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+
+        <% if daily_report.highway_entries.empty? %>
+          <p class="text-xs text-gray-400 text-center py-2">「＋ 追加」ボタンで高速利用を追加</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# === 送信ボタン === %>
+  <div class="space-y-2 pb-4">
+    <%= f.submit "保存（下書き）",
+        class: "w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 cursor-pointer" %>
+    <div class="text-center">
+      <%= link_to "戻る", daily_reports_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    </div>
+  </div>
+<% end %>

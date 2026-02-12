@@ -1,0 +1,16 @@
+<div class="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <nav class="mb-4">
+    <ol class="flex items-center space-x-2 text-sm text-gray-500">
+      <li><%= link_to "日報用原価テンプレート", cost_templates_path, class: "hover:text-blue-600" %></li>
+      <li>/</li>
+      <li><%= link_to "基本単価", base_cost_templates_path, class: "hover:text-blue-600" %></li>
+      <li>/</li>
+      <li class="text-gray-900 font-medium">新規登録</li>
+    </ol>
+  </nav>
+
+  <div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-xl font-bold mb-6">基本単価登録</h2>
+    <%= render "form", template: @template %>
+  </div>
+</div>

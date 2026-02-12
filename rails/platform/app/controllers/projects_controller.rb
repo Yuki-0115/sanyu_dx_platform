@@ -91,7 +91,9 @@ class ProjectsController < ApplicationController
       :safety_docs_checked, :delivery_checked,
       :scheduled_start_date, :scheduled_end_date, :actual_start_date, :actual_end_date,
       :order_flow, :oral_order_amount, :oral_order_received_at, :oral_order_note,
-      :order_document_received_at, :description, :estimate_memo
+      :order_document_received_at, :description, :estimate_memo,
+      :contract_tier, :engineer_type, :chief_engineer_id, :site_agent_id,
+      :safety_doc_status, :safety_doc_method, :safety_doc_person_id
     )
   end
 end

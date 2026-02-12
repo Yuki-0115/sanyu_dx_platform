@@ -3,15 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>sunyutech Worker</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title><%= content_for(:title) || "SanyuTech Worker" %></title>
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+  <%= javascript_importmap_tags %>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen" data-controller="number-input">
   <% if logged_in? %>
+    <%# Top header %>
     <nav class="bg-blue-600 text-white shadow-lg">
-      <div class="max-w-md mx-auto px-4">
+      <div class="max-w-4xl mx-auto px-4">
         <div class="flex justify-between items-center h-14">
-          <%= link_to "sunyutech", root_path, class: "text-lg font-bold" %>
+          <%= link_to "SanyuTech", root_path, class: "text-lg font-bold" %>
           <div class="flex items-center space-x-2">
             <span class="text-sm"><%= current_worker.name %></span>
             <%= button_to "ログアウト", logout_path, method: :delete,
@@ -20,20 +27,9 @@
         </div>
       </div>
     </nav>
-
-    <div class="max-w-md mx-auto px-4 py-2">
-      <div class="flex space-x-1 text-sm">
-        <%= link_to "ホーム", root_path,
-            class: "flex-1 text-center py-2 rounded #{current_page?(root_path) ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-600'}" %>
-        <%= link_to "出勤履歴", attendances_path,
-            class: "flex-1 text-center py-2 rounded #{controller_name == 'attendances' ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-600'}" %>
-        <%= link_to "現場一覧", assignments_path,
-            class: "flex-1 text-center py-2 rounded #{controller_name == 'assignments' ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-600'}" %>
-      </div>
-    </div>
   <% end %>
 
-  <main class="max-w-md mx-auto px-4 py-4">
+  <main class="<%= content_for?(:wide_layout) ? 'max-w-4xl' : 'max-w-md' %> mx-auto px-4 py-4 pb-20">
     <% if flash[:notice] %>
       <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
         <%= flash[:notice] %>
@@ -47,5 +43,52 @@
 
     <%= yield %>
   </main>
+
+  <% if logged_in? %>
+    <%# Bottom tab bar %>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50" data-controller="more-menu">
+      <div class="max-w-md mx-auto grid grid-cols-5 h-14">
+        <%= link_to root_path, class: "flex flex-col items-center justify-center text-xs #{current_page?(root_path) ? 'text-blue-600' : 'text-gray-500'}" do %>
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          <span>ホーム</span>
+        <% end %>
+
+        <%= link_to schedule_index_path, class: "flex flex-col items-center justify-center text-xs #{controller_name == 'schedule' ? 'text-blue-600' : 'text-gray-500'}" do %>
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span>段取り</span>
+        <% end %>
+
+        <%= link_to daily_reports_path, class: "flex flex-col items-center justify-center text-xs #{controller_name == 'daily_reports' ? 'text-blue-600' : 'text-gray-500'}" do %>
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <span>日報</span>
+        <% end %>
+
+        <%= link_to paid_leave_requests_path, class: "flex flex-col items-center justify-center text-xs #{controller_name == 'paid_leave_requests' ? 'text-blue-600' : 'text-gray-500'}" do %>
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>有給</span>
+        <% end %>
+
+        <button type="button" data-action="click->more-menu#toggle"
+                class="flex flex-col items-center justify-center text-xs text-gray-500">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg>
+          <span>その他</span>
+        </button>
+      </div>
+
+      <%# More menu dropdown %>
+      <div data-more-menu-target="menu" class="hidden bg-white border-t border-gray-200 px-4 py-3">
+        <div class="max-w-md mx-auto space-y-2">
+          <%= link_to attendances_path, class: "flex items-center px-3 py-2 rounded-lg #{controller_name == 'attendances' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}" do %>
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <span>出勤履歴</span>
+          <% end %>
+          <%= link_to assignments_path, class: "flex items-center px-3 py-2 rounded-lg #{controller_name == 'assignments' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}" do %>
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            <span>現場一覧</span>
+          <% end %>
+        </div>
+      </div>
+    </nav>
+  <% end %>
 </body>
 </html>
