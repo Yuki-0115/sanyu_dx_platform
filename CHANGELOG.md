@@ -23,11 +23,16 @@
   - 環境変数でオン/オフ切り替え可能
 
 ### Fixed
+- Worker Web: 出面追加時に開始時間・終了時間・休憩・移動距離が自動コピーされないバグを修正
+  - attendance_copy_controllerをPlatform版と同等の堅牢な実装に統一（setTimeout + offsetParentチェック）
 - DailyReport#total_cost が fuel_entries / highway_entries を参照するよう修正（レガシーカラムのみ参照していたバグ）
 - Worker Web: Expense モデルに amount_pending? 条件を追加（金額未定保存時のバリデーションエラー修正）
 - HighwayEntry モデルから不要な count バリデーションを削除
 
 ### Added
+- Worker Web: 燃料（ガソリン）・高速代（ETC）にレシート写真添付機能を追加
+  - FuelEntry / HighwayEntry に has_one_attached :receipt を追加
+  - 日報フォームの燃料・高速セクションに写真アップロードフィールドを追加
 - 案件管理拡張：安全書類・技術者管理
   - 案件に区分（一次/二次/三次）、専任区分（専任/非専任）を追加
   - 主任技術者・現場代理人の設定機能を追加

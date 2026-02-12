@@ -108,8 +108,8 @@ class DailyReportsController < ApplicationController
         :payment_method, :payee_name, :voucher_number, :receipt, :_destroy],
       outsourcing_entries_attributes: [:id, :partner_id, :partner_name, :billing_type,
         :headcount, :attendance_type, :contract_amount, :quantity, :unit, :unit_price, :work_description, :_destroy],
-      fuel_entries_attributes: [:id, :fuel_type, :quantity, :amount, :_destroy],
-      highway_entries_attributes: [:id, :amount, :route_from, :route_to, :_destroy]
+      fuel_entries_attributes: [:id, :fuel_type, :quantity, :amount, :receipt, :_destroy],
+      highway_entries_attributes: [:id, :amount, :route_from, :route_to, :receipt, :_destroy]
     )
   end
 end
