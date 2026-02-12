@@ -2,8 +2,8 @@
 
 SanyuTech DX Platform の技術設計詳細
 
-**最終更新**: 2025-02-08
-**バージョン**: 1.0.0
+**最終更新**: 2026-02-12
+**バージョン**: 2.0.0
 
 > **Note**: 最新のDBスキーマは `rails/platform/db/schema.rb` を参照してください。
 
@@ -14,9 +14,12 @@ SanyuTech DX Platform の技術設計詳細
 - [システム概要](#システム概要)
 - [システム構成](#システム構成)
 - [データベース設計](#データベース設計)
+- [機能モジュール一覧](#機能モジュール一覧)
+- [サービス層・Concern](#サービス層concern)
 - [API設計](#api設計)
 - [認証・認可設計](#認証認可設計)
 - [セキュリティ設計](#セキュリティ設計)
+- [外部連携](#外部連携)
 
 ---
 
@@ -88,10 +91,12 @@ SanyuTech DX Platform の技術設計詳細
 │  │  │  (Rails 8)  │  │  (Rails 8)  │  │  (自動化)   │   │ │
 │  │  │   :3001     │  │   :3002     │  │   :5678     │   │ │
 │  │  │             │  │             │  │             │   │ │
-│  │  │ ・経営管理  │  │ ・日報入力  │  │ ・通知     │   │ │
-│  │  │ ・営業管理  │  │ ・工程確認  │  │ ・バック   │   │ │
-│  │  │ ・工務管理  │  │ ・多言語    │  │   アップ   │   │ │
+│  │  │ ・経営管理  │  │ ・段取り表  │  │ ・通知     │   │ │
+│  │  │ ・営業管理  │  │ ・日報入力  │  │ ・バック   │   │ │
+│  │  │ ・工務管理  │  │ ・有給申請  │  │   アップ   │   │ │
 │  │  │ ・経理管理  │  │             │  │             │   │ │
+│  │  │ ・安全書類  │  │             │  │             │   │ │
+│  │  │ ・帳票出力  │  │             │  │             │   │ │
 │  │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘   │ │
 │  │         │                │                │          │ │
 │  │         └────────────────┼────────────────┘          │ │
@@ -103,407 +108,404 @@ SanyuTech DX Platform の技術設計詳細
 │  └───────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
         │                           │
-        │ Tailscale VPN            │ バックアップ
+        │ Cloudflare Tunnel        │ バックアップ（AES-256-CBC暗号化）
         ▼                           ▼
 ┌───────────────┐           ┌───────────────┐
 │ 職長スマホ    │           │ Google Drive  │
-│ 経営層PC      │           │               │
+│ 経営層PC      │           │  (rclone)     │
+│ 作業員スマホ  │           │               │
 └───────────────┘           └───────────────┘
+        │
+        ▼
+┌───────────────┐
+│ LINE WORKS    │
+│ (Bot通知)     │
+└───────────────┘
 ```
 
 ### コンポーネント詳細
 
 | コンポーネント | ポート | 技術 | 責務 |
 |---------------|--------|------|------|
-| Platform | 3001 | Rails 8 | 基幹業務（経営/営業/工務/経理） |
-| Worker Web | 3002 | Rails 8 | 作業員向け（日報入力/工程確認） |
+| Platform | 3001 | Rails 8 | 基幹業務（経営/営業/工務/経理/事務） |
+| Worker Web | 3002 | Rails 8 | 作業員向け（段取り表/日報入力/有給申請） |
 | n8n | 5678 | n8n 2.1.1 | ワークフロー自動化・通知 |
-| PostgreSQL | 5432 | PostgreSQL 16 | データベース |
+| PostgreSQL | 5432 | PostgreSQL 16 | データベース（Platform/Worker Web共有） |
 
 ---
 
 ## データベース設計
 
-### ER図（主要テーブル）
+### テーブル一覧（58テーブル）
+
+#### コアマスタ
+
+| テーブル | 説明 |
+|----------|------|
+| `employees` | 社員マスタ（認証・権限含む） |
+| `clients` | 顧客マスタ |
+| `partners` | 協力会社マスタ |
+| `projects` | 案件マスタ（中心テーブル） |
+
+#### 見積・予算
+
+| テーブル | 説明 |
+|----------|------|
+| `estimates` | 見積書 |
+| `estimate_items` | 見積明細行 |
+| `estimate_categories` | 見積カテゴリ（明細グループ） |
+| `estimate_confirmations` | 見積確認チェックリスト |
+| `estimate_item_costs` | 見積項目別原価内訳 |
+| `budgets` | 実行予算 |
+
+#### 日報・出面・経費
+
+| テーブル | 説明 |
+|----------|------|
+| `daily_reports` | 日報（1案件1日1レコード） |
+| `attendances` | 出面（日報子テーブル） |
+| `expenses` | 経費（日報・日報外兼用） |
+| `fuel_entries` | 燃料経費（レシート写真添付） |
+| `highway_entries` | 高速代（レシート写真添付） |
+| `outsourcing_entries` | 外注明細（日報子テーブル） |
+
+#### 請求・入金
+
+| テーブル | 説明 |
+|----------|------|
+| `invoices` | 請求書 |
+| `invoice_items` | 請求明細行 |
+| `payments` | 入金記録 |
+| `received_invoices` | 受領請求書（3段階承認） |
+
+#### 月次確定・帳票
+
+| テーブル | 説明 |
+|----------|------|
+| `monthly_salaries` | 月次確定給与 |
+| `monthly_outsourcing_costs` | 月次確定外注費 |
+| `monthly_progresses` | 月次出来高（全社） |
+| `project_monthly_progresses` | 月次出来高（案件別） |
+| `monthly_fixed_costs` | 月次固定費（現場別） |
+| `monthly_admin_expenses` | 販管費（第1層） |
+| `monthly_cost_confirmations` | 月次原価確定ステータス |
+
+#### 相殺
+
+| テーブル | 説明 |
+|----------|------|
+| `offsets` | 仮社員相殺 |
+
+#### 安全書類
+
+| テーブル | 説明 |
+|----------|------|
+| `safety_document_types` | 安全書類種類マスタ |
+| `safety_folders` | 安全書類フォルダ |
+| `safety_files` | 安全書類ファイル（複数添付対応） |
+| `project_safety_requirements` | 案件別必要書類設定 |
+
+#### 有給管理
+
+| テーブル | 説明 |
+|----------|------|
+| `paid_leave_grants` | 有給付与（FIFO消化） |
+| `paid_leave_requests` | 有給申請（承認ワークフロー） |
+
+#### スケジュール・配置
+
+| テーブル | 説明 |
+|----------|------|
+| `work_schedules` | 作業員スケジュール |
+| `outsourcing_schedules` | 外注配置スケジュール |
+| `daily_schedule_notes` | 段取り表備考 |
+| `project_assignments` | 案件配置計画 |
+
+#### 資金繰り
+
+| テーブル | 説明 |
+|----------|------|
+| `cash_flow_entries` | 資金繰りエントリ（予実管理） |
+
+#### テンプレート
+
+| テーブル | 説明 |
+|----------|------|
+| `estimate_templates` | 見積テンプレート |
+| `estimate_item_templates` | 見積項目テンプレート |
+| `cost_breakdown_templates` | 原価内訳テンプレート |
+| `cost_units` | 単位マスタ |
+| `base_cost_templates` | 基本単価テンプレート（全案件共通） |
+| `project_cost_templates` | 案件別単価テンプレート |
+
+#### マスタ（その他）
+
+| テーブル | 説明 |
+|----------|------|
+| `payment_terms` | 支払条件（polymorphic: Client/Partner） |
+| `fixed_expense_schedules` | 固定費スケジュール |
+| `fixed_expense_monthly_amounts` | 固定費月別金額 |
+| `company_holidays` | 会社休日カレンダー |
+| `company_events` | 会社イベント |
+
+#### プロジェクト付帯
+
+| テーブル | 説明 |
+|----------|------|
+| `project_messages` | 案件内メッセージ（@メンション対応） |
+| `project_documents` | 案件書類ファイリング |
+
+#### システム
+
+| テーブル | 説明 |
+|----------|------|
+| `audit_logs` | 監査ログ |
+| `data_imports` | データ取込履歴 |
+| `active_storage_blobs` | ファイルストレージ（Rails標準） |
+| `active_storage_attachments` | ファイル関連付け |
+| `active_storage_variant_records` | 画像バリアント |
+
+### ER図（主要リレーション）
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   clients   │────<│  projects   │>────│   budgets   │
-│  (顧客)     │     │  (案件)     │     │ (実行予算)  │
-└─────────────┘     └──────┬──────┘     └─────────────┘
-                          │
-        ┌─────────────────┼─────────────────┐
-        │                 │                 │
-        ▼                 ▼                 ▼
-┌─────────────┐   ┌─────────────┐   ┌─────────────┐
-│  estimates  │   │daily_reports│   │  invoices   │
-│   (見積)    │   │   (日報)    │   │   (請求)    │
-└─────────────┘   └──────┬──────┘   └──────┬──────┘
-                         │                 │
-              ┌──────────┴──────────┐      │
-              │                     │      │
-              ▼                     ▼      ▼
-        ┌───────────┐        ┌───────────┐ ┌───────────┐
-        │attendances│        │ expenses  │ │ payments  │
-        │  (出面)   │        │  (経費)   │ │  (入金)   │
-        └───────────┘        └───────────┘ └───────────┘
+                          ┌───────────────┐
+                          │   clients     │
+                          │   (顧客)      │
+                          └───────┬───────┘
+                                  │ 1:N
+                                  ▼
+┌───────────────┐         ┌───────────────┐         ┌───────────────┐
+│  estimates    │◄────────│   projects    │────────►│   budgets     │
+│   (見積)      │  1:N    │   (案件)      │   1:1   │  (実行予算)   │
+└───────┬───────┘         └───────┬───────┘         └───────────────┘
+        │                   │    │    │
+  estimate_items       ┌────┘    │    └────┐
+  estimate_categories  │         │         │
+  estimate_item_costs  ▼         ▼         ▼
+               ┌────────────┐ ┌──────────┐ ┌───────────┐
+               │daily_reports│ │ invoices │ │  offsets   │
+               │  (日報)     │ │ (請求)   │ │  (相殺)   │
+               └──────┬─────┘ └────┬─────┘ └───────────┘
+                      │            │
+           ┌──────────┼──────┐     │
+           ▼          ▼      ▼     ▼
+     ┌──────────┐ ┌────────┐ ┌──────────┐ ┌──────────┐
+     │attendances│ │expenses│ │fuel/hwy  │ │ payments │
+     │  (出面)   │ │ (経費) │ │(燃料/高速)│ │  (入金)  │
+     └──────────┘ └────────┘ └──────────┘ └──────────┘
+
+  ┌───────────────────────────────────────────┐
+  │  月次確定系（横断）                        │
+  │  monthly_salaries / monthly_outsourcing   │
+  │  monthly_progresses / monthly_fixed_costs │
+  │  monthly_admin_expenses                   │
+  └───────────────────────────────────────────┘
+
+  ┌───────────────────────────────────────────┐
+  │  安全書類系                               │
+  │  safety_document_types → safety_folders   │
+  │  → safety_files / project_safety_req.     │
+  └───────────────────────────────────────────┘
 ```
 
 ### 主要テーブル定義
 
-#### clients（顧客マスタ）
-
-```sql
-CREATE TABLE clients (
-  id SERIAL PRIMARY KEY,
-  code VARCHAR(50) UNIQUE NOT NULL,     -- 顧客コード
-  name VARCHAR(255) NOT NULL,           -- 顧客名
-  name_kana VARCHAR(255),               -- フリガナ
-  postal_code VARCHAR(10),              -- 郵便番号
-  address TEXT,                         -- 住所
-  phone VARCHAR(20),                    -- 電話番号
-  contact_name VARCHAR(100),            -- 担当者名
-  contact_email VARCHAR(255),           -- 担当者メール
-  payment_terms VARCHAR(50),            -- 支払条件
-  notes TEXT,                           -- 備考
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL
-);
-```
+> 全カラムの詳細は `rails/platform/db/schema.rb` を参照。以下は設計意図の補足。
 
 #### projects（案件マスタ）
 
-```sql
-CREATE TABLE projects (
-  id SERIAL PRIMARY KEY,
-  code VARCHAR(50) UNIQUE NOT NULL,     -- 案件コード
-  name VARCHAR(255) NOT NULL,           -- 案件名
-  client_id INTEGER REFERENCES clients(id),
-  site_address TEXT,                    -- 現場住所
-  site_lat DECIMAL(10,7),               -- 緯度
-  site_lng DECIMAL(10,7),               -- 経度
-  
-  -- 4点チェック
-  has_contract BOOLEAN DEFAULT FALSE,   -- 契約書あり
-  has_order BOOLEAN DEFAULT FALSE,      -- 発注書あり
-  has_payment_terms BOOLEAN DEFAULT FALSE, -- 入金条件明記
-  has_customer_approval BOOLEAN DEFAULT FALSE, -- 顧客承認
-  four_point_completed_at TIMESTAMP,    -- 4点完了日時
-  
-  -- 着工前ゲート
-  pre_construction_check JSONB,         -- 着工前チェック項目
-  pre_construction_approved_at TIMESTAMP,
-  
-  -- 金額
-  estimated_amount DECIMAL(15,2),       -- 見積金額
-  order_amount DECIMAL(15,2),           -- 受注金額
-  budget_amount DECIMAL(15,2),          -- 予算金額
-  actual_cost DECIMAL(15,2),            -- 実績原価
-  
-  -- ステータス
-  status VARCHAR(50) DEFAULT 'draft',   -- ステータス
-  
-  -- 担当
-  sales_user_id INTEGER,                -- 営業担当
-  engineering_user_id INTEGER,          -- 工務担当
-  construction_user_id INTEGER,         -- 工事担当
-  
-  -- Google Drive
-  drive_folder_url TEXT,                -- フォルダURL
-  
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL
-);
+案件がシステムの中心。全データが `project_id` で紐付く。
 
--- ステータス: draft, estimating, ordered, preparing, 
---            in_progress, completed, invoiced, paid, closed
+```
+ステータス遷移:
+  draft → estimating → ordered → preparing → in_progress → completed → invoiced → paid → closed
+                        ↑
+                  4点チェック完了
 ```
 
-#### employees（社員マスタ）
-
-```sql
-CREATE TABLE employees (
-  id SERIAL PRIMARY KEY,
-  code VARCHAR(50) UNIQUE NOT NULL,     -- 社員コード
-  name VARCHAR(100) NOT NULL,           -- 氏名
-  name_kana VARCHAR(100),               -- フリガナ
-  email VARCHAR(255),                   -- メール
-  phone VARCHAR(20),                    -- 電話番号
-  
-  -- 雇用情報
-  employment_type VARCHAR(20) NOT NULL, -- 正社員/仮社員
-  partner_id INTEGER,                   -- 紐づけ協力会社（仮社員）
-  hire_date DATE,                       -- 入社日
-  
-  -- 権限
-  role VARCHAR(50) NOT NULL,            -- 権限グループ
-  
-  -- 認証
-  encrypted_password VARCHAR(255),
-  
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL
-);
-
--- employment_type: regular（正社員）, temporary（仮社員）
--- role: admin, management, accounting, sales, engineering, construction, worker
-```
-
-#### paid_leave_grants（有給付与）
-
-```sql
-CREATE TABLE paid_leave_grants (
-  id SERIAL PRIMARY KEY,
-  employee_id INTEGER REFERENCES employees(id) NOT NULL,
-
-  grant_type VARCHAR(20) NOT NULL,       -- auto/manual/special
-  grant_date DATE NOT NULL,              -- 付与日
-  expiry_date DATE NOT NULL,             -- 失効日（付与日+2年）
-
-  granted_days DECIMAL(3,1) NOT NULL,    -- 付与日数
-  used_days DECIMAL(3,1) DEFAULT 0,      -- 消化済み日数
-  remaining_days DECIMAL(3,1) NOT NULL,  -- 残日数
-
-  reason TEXT,                           -- 付与理由（特別付与時）
-  granted_by_id INTEGER REFERENCES employees(id), -- 付与者
-
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL
-);
-
-CREATE INDEX idx_paid_leave_grants_employee ON paid_leave_grants(employee_id);
-CREATE INDEX idx_paid_leave_grants_active ON paid_leave_grants(expiry_date) WHERE remaining_days > 0;
-
--- grant_type: auto（自動付与）, manual（手動調整）, special（特別付与）
--- FIFO消化: 古い付与分（grant_date順）から消化
-```
-
-#### paid_leave_requests（有給申請）
-
-```sql
-CREATE TABLE paid_leave_requests (
-  id SERIAL PRIMARY KEY,
-  employee_id INTEGER REFERENCES employees(id) NOT NULL,
-  paid_leave_grant_id INTEGER REFERENCES paid_leave_grants(id), -- 消化対象付与
-
-  leave_date DATE NOT NULL,              -- 取得日
-  leave_type VARCHAR(10) NOT NULL,       -- full/half_am/half_pm
-  consumed_days DECIMAL(2,1) NOT NULL,   -- 消化日数（1.0 or 0.5）
-
-  reason TEXT,                           -- 申請理由
-  status VARCHAR(20) DEFAULT 'pending',  -- pending/approved/rejected/cancelled
-
-  approved_by_id INTEGER REFERENCES employees(id),
-  approved_at TIMESTAMP,
-  rejection_reason TEXT,                 -- 却下理由
-
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL,
-
-  UNIQUE(employee_id, leave_date)        -- 1社員1日1申請
-);
-
-CREATE INDEX idx_paid_leave_requests_employee ON paid_leave_requests(employee_id);
-CREATE INDEX idx_paid_leave_requests_status ON paid_leave_requests(status);
-CREATE INDEX idx_paid_leave_requests_leave_date ON paid_leave_requests(leave_date);
-
--- leave_type: full（全日）, half_am（午前半休）, half_pm（午後半休）
--- status: pending（承認待ち）, approved（承認）, rejected（却下）, cancelled（取消）
-```
-
-#### partners（協力会社マスタ）
-
-```sql
-CREATE TABLE partners (
-  id SERIAL PRIMARY KEY,
-  code VARCHAR(50) UNIQUE NOT NULL,     -- 協力会社コード
-  name VARCHAR(255) NOT NULL,           -- 会社名
-  
-  -- 仮社員関連
-  has_temporary_employees BOOLEAN DEFAULT FALSE,
-  offset_rule VARCHAR(50),              -- 相殺ルール
-  closing_day INTEGER,                  -- 締日
-  carryover_balance DECIMAL(15,2) DEFAULT 0, -- 繰越残高
-  
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL
-);
-```
+- `has_contract`, `has_order`, `has_payment_terms`, `has_customer_approval`: 4点チェック
+- `pre_construction_check` (JSONB): 着工前ゲートチェック項目
+- `drive_folder_url`: Google Drive案件フォルダURL
+- `sales_user_id`, `engineering_user_id`, `construction_user_id`: 担当者
+- `initial_revenue`, `initial_cost`: データ移行時の初期値
 
 #### daily_reports（日報）
 
-```sql
-CREATE TABLE daily_reports (
-  id SERIAL PRIMARY KEY,
-  project_id INTEGER REFERENCES projects(id),
-  report_date DATE NOT NULL,            -- 日報日付
-  foreman_id INTEGER REFERENCES employees(id), -- 入力者（職長）
-  
-  -- 天気
-  weather VARCHAR(20),                  -- 天気
-  temperature_high INTEGER,             -- 最高気温
-  temperature_low INTEGER,              -- 最低気温
-  
-  -- 作業内容
-  work_content TEXT,                    -- 作業内容
-  notes TEXT,                           -- 備考
-  
-  -- ステータス
-  status VARCHAR(20) DEFAULT 'draft',   -- draft/confirmed/revised
-  confirmed_at TIMESTAMP,               -- 確定日時
-  
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL,
-  
-  UNIQUE(project_id, report_date)       -- 1案件1日1レコード
-);
+1案件1日1レコード。職長が一括入力。
+
+子テーブル:
+- `attendances`: 出面（1社員1レコード）
+- `expenses`: 経費
+- `fuel_entries`: 燃料（`has_one_attached :receipt`）
+- `highway_entries`: 高速代（`has_one_attached :receipt`）
+- `outsourcing_entries`: 外注明細
+
+#### received_invoices（受領請求書）
+
+3段階承認ワークフロー:
+```
+登録 → accounting_ok → sales_ok → engineering_ok → 確認済
+```
+各段階で承認者IDと日時を記録。却下時は `rejection_reason` 必須。
+
+#### payment_terms（支払条件）
+
+Polymorphic: `termable_type` / `termable_id` で Client または Partner に紐付く。
+
+---
+
+## 機能モジュール一覧
+
+### Platform コントローラー構成
+
+```
+app/controllers/
+├── dashboard_controller.rb            # トップダッシュボード
+├── management_dashboard_controller.rb # 経営ダッシュボード
+│
+├── projects_controller.rb             # 案件管理
+├── estimates_controller.rb            # 見積管理（projects nested）
+├── budgets_controller.rb              # 実行予算（projects nested）
+├── site_ledgers_controller.rb         # 現場台帳（projects nested）
+│
+├── schedule_controller.rb             # 段取り表
+├── daily_reports_controller.rb        # 日報（projects nested）
+├── all_daily_reports_controller.rb    # 全日報一覧
+├── external_daily_reports_controller.rb # 常用日報（外部現場）
+├── attendance_sheets_controller.rb    # 勤怠管理表
+│
+├── invoices_controller.rb             # 請求管理（projects nested）
+├── all_invoices_controller.rb         # 全請求書一覧
+├── payments_controller.rb             # 入金管理（invoices nested）
+│
+├── monthly_profit_losses_controller.rb     # 月次損益（年度・トレンド・比較）
+├── monthly_income_statements_controller.rb # 月次損益計算書（第1層）
+├── monthly_salaries_controller.rb          # 月次確定給与
+├── monthly_outsourcing_costs_controller.rb # 月次確定外注費
+├── monthly_progresses_controller.rb        # 月次出来高
+├── monthly_fixed_costs_controller.rb       # 月次固定費
+├── monthly_admin_expenses_controller.rb    # 販管費
+├── monthly_reports_controller.rb           # 月次帳票（CSV出力）
+│
+├── cash_flow_calendar_controller.rb   # 資金繰り表
+├── offsets_controller.rb              # 仮社員相殺
+├── provisional_expenses_controller.rb # 仮経費確定
+├── expense_reports_controller.rb      # 経費報告（日報外）
+│
+├── safety_documents_controller.rb     # 安全書類管理
+├── safety_doc_tracking_controller.rb  # 安全書類ステータス
+├── safety_document_types_controller.rb # 安全書類種類マスタ
+│
+├── paid_leaves_controller.rb          # 有給管理（管理者向け）
+├── paid_leave_requests_controller.rb  # 有給申請（社員向け）
+│
+├── templates_controller.rb            # テンプレート統合ダッシュボード
+├── estimate_templates_controller.rb   # 見積テンプレート
+├── estimate_item_templates_controller.rb # 見積項目テンプレート
+├── cost_breakdown_templates_controller.rb # 原価内訳テンプレート
+├── cost_units_controller.rb           # 単位マスタ
+├── base_cost_templates_controller.rb  # 基本単価テンプレート
+├── cost_templates_controller.rb       # 日報用原価テンプレート一覧
+│
+├── project_messages_controller.rb     # 案件内メッセージ
+├── project_documents_controller.rb    # 書類ファイリング
+├── project_assignments_controller.rb  # 案件配置
+├── outsourcing_reports_controller.rb  # 外注レポート
+├── data_imports_controller.rb         # データ取込
+│
+├── accounting/                        # 経理名前空間
+│   ├── expenses_controller.rb         #   経費処理・精算
+│   ├── reimbursements_controller.rb   #   立替精算管理
+│   └── received_invoices_controller.rb #  受領請求書（3段階承認）
+│
+├── admin/                             # 管理者名前空間
+│   ├── quick_projects_controller.rb   #   簡易案件登録
+│   └── data_imports_controller.rb     #   Excel一括取込
+│
+└── master/                            # マスタ管理名前空間
+    ├── clients_controller.rb          #   顧客マスタ
+    ├── partners_controller.rb         #   協力会社マスタ
+    ├── employees_controller.rb        #   社員マスタ
+    ├── payment_terms_controller.rb    #   支払条件
+    ├── fixed_expense_schedules_controller.rb    # 固定費スケジュール
+    ├── fixed_expense_monthly_amounts_controller.rb # 固定費月別金額
+    ├── company_holidays_controller.rb #   休日カレンダー
+    └── company_events_controller.rb   #   イベント管理
 ```
 
-#### attendances（出面）
+### Worker Web コントローラー構成
 
-```sql
-CREATE TABLE attendances (
-  id SERIAL PRIMARY KEY,
-  daily_report_id INTEGER REFERENCES daily_reports(id),
-  employee_id INTEGER REFERENCES employees(id),
-  
-  attendance_type VARCHAR(20) NOT NULL, -- 出勤/半日/休み
-  start_time TIME,                      -- 開始時刻
-  end_time TIME,                        -- 終了時刻
-  travel_distance INTEGER,              -- 移動距離（km）※50km以上のみ
-  
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL,
-  
-  UNIQUE(daily_report_id, employee_id)  -- 重複防止
-);
+```
+app/controllers/
+├── dashboard_controller.rb            # ホーム
+├── sessions_controller.rb             # ログイン
+├── schedule_controller.rb             # 段取り表（閲覧）
+├── assignments_controller.rb          # 配置確認
+├── daily_reports_controller.rb        # 日報入力
+├── attendances_controller.rb          # 出面入力
+└── paid_leave_requests_controller.rb  # 有給申請
 ```
 
-#### expenses（経費）
+---
 
-```sql
-CREATE TABLE expenses (
-  id SERIAL PRIMARY KEY,
-  daily_report_id INTEGER,              -- 日報経費の場合
-  expense_type VARCHAR(50) NOT NULL,    -- 経費区分
-  
-  category VARCHAR(50) NOT NULL,        -- 材料/交通/重機レンタル等
-  description TEXT,                     -- 内容
-  amount DECIMAL(15,2) NOT NULL,        -- 金額
-  
-  payer_id INTEGER REFERENCES employees(id), -- 支払者
-  payment_method VARCHAR(20),           -- 現金/会社カード/立替/掛け
-  
-  -- 承認
-  status VARCHAR(20) DEFAULT 'pending', -- pending/approved/rejected
-  approved_by INTEGER,
-  approved_at TIMESTAMP,
-  
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL
-);
+## サービス層・Concern
 
--- expense_type: site（現場経費）, sales（営業経費）, admin（販管費）
-```
+### サービスクラス
 
-#### invoices（請求）
+| サービス | 責務 |
+|----------|------|
+| `EstimatePdfGenerator` | 見積書PDF生成 |
+| `MonthlyReportGenerator` | 月次帳票CSV生成（原価・損益・経費） |
+| `PaidLeaveGrantService` | 有給付与処理（FIFO消化ロジック） |
+| `PaidLeaveReportService` | 有給レポート集計 |
+| `PaidLeavePdfService` | 有給管理簿PDF生成（Grover） |
+| `CashFlowEntryGenerator` | 資金繰りエントリ自動生成 |
+| `LineWorksNotifier` | LINE WORKS Bot API通知送信 |
+| `GoogleDriveService` | Google Drive API操作 |
+| `GoogleDriveRcloneService` | rcloneによるDrive同期 |
+| `GoogleSheetsService` | Google Sheets操作 |
+| `MigrationImportService` | Excelデータ移行（ヘッダマッピング） |
 
-```sql
-CREATE TABLE invoices (
-  id SERIAL PRIMARY KEY,
-  project_id INTEGER REFERENCES projects(id),
-  invoice_number VARCHAR(50) UNIQUE,    -- 請求書番号
-  
-  amount DECIMAL(15,2) NOT NULL,        -- 請求金額
-  tax_amount DECIMAL(15,2),             -- 消費税
-  total_amount DECIMAL(15,2),           -- 合計
-  
-  issued_date DATE,                     -- 発行日
-  due_date DATE,                        -- 支払期日
-  
-  -- ステータス
-  status VARCHAR(20) DEFAULT 'draft',   -- draft/issued/waiting/paid/overdue
-  
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL
-);
-```
+### Model Concern
 
-#### offsets（仮社員相殺）
+| Concern | 責務 |
+|---------|------|
+| `Auditable` | 変更ログ自動記録（create/update/delete） |
+| `Notifiable` | LINE WORKS通知トリガー |
+| `MonthlyScoped` | 年月によるスコープフィルタ |
+| `CostTemplateFormatting` | テンプレート表示フォーマット |
 
-```sql
-CREATE TABLE offsets (
-  id SERIAL PRIMARY KEY,
-  partner_id INTEGER REFERENCES partners(id),
-  year_month VARCHAR(7) NOT NULL,       -- 2025-01
-  
-  -- 計算結果
-  total_salary DECIMAL(15,2),           -- 給与総額
-  social_insurance DECIMAL(15,2),       -- 社保会社負担
-  offset_amount DECIMAL(15,2),          -- 相殺対象額（A）
-  revenue_amount DECIMAL(15,2),         -- 出来高（B）
-  balance DECIMAL(15,2),                -- 差額（B-A）
-  
-  -- ステータス
-  status VARCHAR(20) DEFAULT 'draft',   -- draft/confirmed
-  confirmed_by INTEGER,
-  confirmed_at TIMESTAMP,
-  
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL,
-  
-  UNIQUE(partner_id, year_month)
-);
-```
+### Controller Concern
 
-#### audit_logs（監査ログ）
-
-```sql
-CREATE TABLE audit_logs (
-  id SERIAL PRIMARY KEY,
-  auditable_type VARCHAR(100) NOT NULL, -- モデル名
-  auditable_id INTEGER NOT NULL,        -- レコードID
-  
-  user_id INTEGER REFERENCES employees(id), -- 操作者
-  action VARCHAR(20) NOT NULL,          -- create/update/delete
-  changes JSONB,                        -- 変更内容
-  
-  created_at TIMESTAMP NOT NULL
-);
-
-CREATE INDEX idx_audit_logs_auditable ON audit_logs(auditable_type, auditable_id);
-CREATE INDEX idx_audit_logs_user ON audit_logs(user_id);
-CREATE INDEX idx_audit_logs_created ON audit_logs(created_at);
-```
+| Concern | 責務 |
+|---------|------|
+| `Authorizable` | RBAC認可チェック |
+| `ProjectScoped` | 案件スコープフィルタ |
+| `MonthlyPeriod` | 年月パラメータ処理 |
+| `DailyReportActions` | 日報CRUD共通ロジック |
 
 ---
 
 ## API設計
 
-### RESTful API
+### RESTful API（n8n連携用）
 
 ```
-# 案件
-GET    /api/v1/projects           # 一覧
-POST   /api/v1/projects           # 作成
-GET    /api/v1/projects/:id       # 詳細
-PATCH  /api/v1/projects/:id       # 更新
-DELETE /api/v1/projects/:id       # 削除
+# データ取得
+GET    /api/v1/projects              # 案件一覧
+GET    /api/v1/projects/:id          # 案件詳細
+GET    /api/v1/projects/summary      # 案件サマリ
+GET    /api/v1/projects/:id/assignments # 案件配置情報
+GET    /api/v1/daily_reports         # 日報一覧
+GET    /api/v1/daily_reports/:id     # 日報詳細
+GET    /api/v1/daily_reports/unconfirmed # 未確定日報
 
-# 4点チェック
-POST   /api/v1/projects/:id/four_point_check  # 4点チェック完了
-
-# 日報
-GET    /api/v1/daily_reports      # 一覧
-POST   /api/v1/daily_reports      # 作成
-GET    /api/v1/daily_reports/:id  # 詳細
-PATCH  /api/v1/daily_reports/:id  # 更新
-POST   /api/v1/daily_reports/:id/confirm  # 確定
-
-# ダッシュボード
-GET    /api/v1/dashboard/summary  # サマリ
-GET    /api/v1/dashboard/profit_ranking  # 粗利ランキング
-GET    /api/v1/dashboard/alerts   # アラート
+# Webhook（n8n → LINE WORKS通知）
+POST   /api/v1/webhooks/project_created        # 案件作成
+POST   /api/v1/webhooks/four_point_completed   # 4点チェック完了
+POST   /api/v1/webhooks/budget_confirmed       # 予算確定
+POST   /api/v1/webhooks/daily_report_submitted # 日報提出
+POST   /api/v1/webhooks/offset_confirmed       # 相殺確定
 ```
 
 ---
@@ -513,46 +515,45 @@ GET    /api/v1/dashboard/alerts   # アラート
 ### 認証（Devise）
 
 ```ruby
-# config/routes.rb
 devise_for :employees, path: 'auth', path_names: {
   sign_in: 'login',
   sign_out: 'logout'
 }
 ```
 
+Platform と Worker Web は同じ `employees` テーブルを共有。Worker Web は独自のセッション管理。
+
 ### 認可（RBAC）
 
 ```ruby
-# app/models/employee.rb
-class Employee < ApplicationRecord
-  ROLES = %w[
-    admin        # 管理者（全権限）
-    management   # 経営層（全閲覧＋承認）
-    accounting   # 経理（会計・請求・相殺）
-    sales        # 営業（案件・見積・契約）
-    engineering  # 工務（予算・原価・着工）
-    construction # 工事（日報・配置・追加工事）
-    worker       # 作業員（閲覧のみ）
-  ]
-  
-  def can_access?(resource, action)
-    PERMISSIONS[role.to_sym][resource.to_sym]&.include?(action.to_sym)
-  end
-end
+ROLES = %w[
+  admin        # 管理者（全権限）
+  management   # 経営層（全閲覧＋承認）
+  accounting   # 経理（会計・請求・相殺・精算）
+  sales        # 営業（案件・見積・契約）
+  engineering  # 工務（予算・原価・着工）
+  construction # 工事（日報・配置・追加工事）
+  worker       # 作業員（Worker Web利用）
+]
 ```
 
 ### 権限マトリクス
 
-| 機能 | admin | management | accounting | sales | engineering | construction |
-|------|-------|------------|------------|-------|-------------|--------------|
-| ダッシュボード | ◎ | ◎ | ○ | ○ | ○ | - |
-| 案件管理 | ◎ | ○ | - | ◎ | ○ | ○ |
-| 見積・契約 | ◎ | ○ | - | ◎ | - | - |
-| 実行予算 | ◎ | ○ | - | - | ◎ | ○ |
-| 日報入力 | ◎ | - | - | - | - | ◎ |
-| 請求・入金 | ◎ | ○ | ◎ | - | - | - |
-| 相殺処理 | ◎ | ○ | ◎ | - | - | - |
-| ユーザー管理 | ◎ | - | - | - | - | - |
+| 機能 | admin | management | accounting | sales | engineering | construction | worker |
+|------|-------|------------|------------|-------|-------------|--------------|--------|
+| 経営ダッシュボード | ◎ | ◎ | ○ | ○ | ○ | - | - |
+| 案件管理 | ◎ | ○ | - | ◎ | ○ | ○ | - |
+| 見積・契約 | ◎ | ○ | - | ◎ | - | - | - |
+| 実行予算 | ◎ | ○ | - | - | ◎ | ○ | - |
+| 日報入力 | ◎ | - | - | - | - | ◎ | ○ |
+| 請求・入金 | ◎ | ○ | ◎ | - | - | - | - |
+| 相殺処理 | ◎ | ○ | ◎ | - | - | - | - |
+| 受領請求書承認 | ◎ | - | ◎ | ◎ | ◎ | - | - |
+| 月次確定 | ◎ | ◎ | ◎ | - | - | - | - |
+| 安全書類 | ◎ | - | - | - | ○ | ◎ | - |
+| 有給管理 | ◎ | ◎ | - | - | - | - | - |
+| マスタ管理 | ◎ | - | - | - | - | - | - |
+| データ取込 | ◎ | - | - | - | - | - | - |
 
 ◎: 全権限 ○: 閲覧+一部編集 -: アクセス不可
 
@@ -562,25 +563,53 @@ end
 
 ### ネットワーク
 
-- **Tailscale VPN**: 認証済み端末のみアクセス可能
-- **インターネット直接公開なし**: 攻撃対象にならない
+- **Cloudflare Tunnel**: 社外アクセス用（Tailscale VPNから移行）
+- **Docker内部ネットワーク**: サービス間通信は内部ネットワーク内
 
 ### アプリケーション
 
 | 対策 | 実装 |
 |------|------|
 | 認証 | Devise + セッション管理 |
-| 認可 | RBAC + before_action |
+| 認可 | RBAC + before_action (Authorizable concern) |
 | SQLインジェクション | パラメータバインディング |
-| XSS | ERB自動エスケープ + CSP |
+| XSS | ERB自動エスケープ + CSP（unsafe-inline禁止） |
 | CSRF | Rails標準トークン |
-| 監査 | 全変更ログ記録 |
+| JS | Stimulus必須（インラインスクリプト禁止） |
+| 監査 | 全変更ログ記録（Auditable concern） |
+| ファイル添付 | Active Storage + バリデーション |
 
 ### バックアップ
 
-- **日次**: PostgreSQL → Google Drive
-- **保持期間**: 7日間
-- **暗号化**: gzip圧縮
+| 項目 | 内容 |
+|------|------|
+| 頻度 | 日次自動 |
+| 暗号化 | AES-256-CBC |
+| 世代管理 | 20世代 |
+| リモート同期 | Google Drive（rclone） |
+| リストア | `make restore` で復元可能 |
+
+---
+
+## 外部連携
+
+### LINE WORKS
+
+- **方式**: Bot API（JWT認証）
+- **サービス**: `LineWorksNotifier`
+- **通知イベント**: 案件作成、4点チェック完了、着工、日報提出、相殺確定
+- **@メンション**: `ProjectMessage` から直接通知
+
+### Google Drive
+
+- **方式**: API + rclone同期
+- **サービス**: `GoogleDriveService` / `GoogleDriveRcloneService`
+- **機能**: 案件フォルダ自動作成、バックアップ同期
+
+### n8n
+
+- **方式**: Webhook（Platform → n8n → LINE WORKS）
+- **エンドポイント**: `/api/v1/webhooks/*`（5種）
 
 ---
 
@@ -589,8 +618,9 @@ end
 - [CLAUDE.md](./CLAUDE.md) - 開発クイックリファレンス
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - 開発規約
 - [要件定義書](./docs/SANYU-DX-REQUIREMENTS.md) - 機能要件詳細
+- [docs/adr/](./docs/adr/) - 設計判断記録
 
 ---
 
-**Document Version**: 0.1.0
-**Last Updated**: 2025-01-15
+**Document Version**: 2.0.0
+**Last Updated**: 2026-02-12
